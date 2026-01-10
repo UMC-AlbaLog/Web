@@ -5,6 +5,7 @@ import Recommend from "../components/Recommend";
 
 const Home: React.FC = () => {
   return (
+    
     <main className="p-6 space-y-8">
       <h1 className="text-xl font-bold">홈</h1>
 

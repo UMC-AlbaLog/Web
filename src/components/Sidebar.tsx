@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 const menus = [
-  { name: "홈", path: "/" },
+  { name: "홈", path: "/home" },
   { name: "스케줄", path: "/schedule" },
   { name: "수입", path: "/income" },
   { name: "아르바이트", path: "/jobs" },
