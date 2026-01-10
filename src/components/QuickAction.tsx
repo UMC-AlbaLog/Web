@@ -10,16 +10,17 @@ const QuickAction: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => {
       <div className="space-y-4">
         <button 
           onClick={onAddClick}
-          className="w-full p-5 bg-gray-50 rounded-[20px] text-left text-sm font-bold flex justify-between items-center transition-all hover:bg-gray-100"
+          className="w-full p-5 bg-[#FFD600] rounded-[20px] text-left text-sm font-bold flex justify-between items-center transition-all hover:bg-yellow-400"
         >
           알바 일정 직접 추가
           <span className="text-gray-300">▶</span>
         </button>
         <button 
           onClick={() => navigate("/schedule")}
-          className="bg-[#FFD600] w-full py-5 rounded-[20px] font-black text-sm shadow-md transition-all hover:bg-yellow-400"
+          className="bg-[#FFD600] w-full p-5 rounded-[20px] text-left text-sm font-black shadow-md transition-all hover:bg-yellow-400 flex justify-between items-center"
         >
-          알바 일정 추가는 캘린더로 이동
+          캘린더로 이동
+          <span className="text-gray-300">▶</span>
         </button>
       </div>
     </div>

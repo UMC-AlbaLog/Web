@@ -1,5 +1,4 @@
-export const Jobs = () => {
-  return (
-    <div>Jobs</div>
-  )
+const Jobs = () => {
+  return <div>Jobs Page</div>;
 }
+export default Jobs;
