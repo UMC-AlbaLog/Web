@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkForm } from "../hooks/useWorkForm"; 
-import type { Work } from "../types/work";
+import { useJobsData } from "../hooks/useJobsData";
 import { calculateDistance } from "../utils/geo";
 import JobBanner from "../components/jobs/JobBanner";
 import JobCard from "../components/jobs/JobCard";
 import JobHeader from "../components/jobs/JobHeader";
 import JobFilterSidebar from "../components/jobs/JobFilterSidebar";
+import type { Work } from "../types/work";
 
 const ALL_JOBS: Work[] = [
   { id: 101, name: "GS25 영등포점", address: "영등포구", time: "10:00~13:30", duration: 3.5, pay: 11500, expectedPay: 40250, status: "upcoming", date: "2026-01-13", lat: 37.5172, lng: 126.9178 },
@@ -16,21 +17,8 @@ const ALL_JOBS: Work[] = [
 const Jobs: React.FC = () => {
   const navigate = useNavigate();
   const { states, setters, actions } = useWorkForm();
-  const [userName, setUserName] = useState("회원");
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const { userName, userLocation, freeSlot } = useJobsData();
   const [filterDistance, setFilterDistance] = useState("1km");
-
-  useEffect(() => {
-    const userData = sessionStorage.getItem("googleUser");
-    if (userData) setUserName(JSON.parse(userData).name);
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        (err) => console.error(err.message)
-      );
-    }
-  }, []);
 
   const onKeywordChange = (val: string) => {
     setters.setSearchKeyword(val);
@@ -39,7 +27,7 @@ const Jobs: React.FC = () => {
 
   return (
     <main className="p-10 bg-[#F3F4F6] flex-1 overflow-y-auto">
-      <JobBanner userName={userName} freeSlot="수요일 10-14시" />
+      <JobBanner userName={userName} freeSlot={freeSlot} />
       <JobHeader /> 
       <hr className="mb-8 border-gray-200" />
 
@@ -58,12 +46,7 @@ const Jobs: React.FC = () => {
               const minutes = Math.round(km * 15);
               distanceStr = km < 1 ? `걸어서 ${minutes}분 (${Math.round(km * 1000)}m)` : `걸어서 ${minutes}분 (${km.toFixed(1)}km)`;
             }
-            return (
-              <JobCard 
-                key={job.id} job={job} distanceStr={distanceStr} 
-                onNavigate={(id) => navigate(`/jobs/${id}`)} 
-              />
-            );
+            return <JobCard key={job.id} job={job} distanceStr={distanceStr} onNavigate={(id) => navigate(`/jobs/${id}`)} />;
           })}
         </section>
       </div>
