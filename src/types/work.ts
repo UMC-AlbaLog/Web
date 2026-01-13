@@ -11,4 +11,6 @@ export interface Work {
   status: WorkStatus;
   memo?: string;
   date: string;
+  lat?: number;
+  lng?: number;
 }

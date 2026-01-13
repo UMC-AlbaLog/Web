@@ -6,27 +6,36 @@ import HomeLayout from "./layouts/HomeLayout";
 import GlobalAuthGuard from "./components/GlobalAuthGuard";
 
 import Home from "./pages/Home";
+import Schedule from "./pages/Schedule";
+import Income from "./pages/Income";
+import Jobs from "./pages/Jobs";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import ApplicationStatus from "./pages/ApplicationStatus";
+import JobDetail from "./pages/JobDetail";
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <div className="flex h-screen bg-gray-200">
-        <Sidebar />
-        <div className="flex flex-col flex-1">
-          <Header />
+    <GlobalAuthGuard>
+      <Routes>
+        {/* 1. 로그인 전/외부 페이지 */}
+        <Route path="/" element={<LoginLanding />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/onboarding" element={<OnboardingRegion />} />
 
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/schedule" element={<div>스케줄 페이지</div>} />
-            <Route path="/income" element={<div>수입 페이지</div>} />
-            <Route path="/jobs" element={<div>아르바이트 페이지</div>} />
-            <Route path="/profile" element={<div>프로필 페이지</div>} />
-            <Route path="/settings" element={<div>설정 페이지</div>} />
-          </Routes>
-
-        </div>
-      </div>
-    </BrowserRouter>
+        {/* 2. 로그인 후 서비스 페이지 (HomeLayout 사용) */}
+        <Route element={<HomeLayout />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/income" element={<Income />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
+          <Route path="/jobs/status" element={<ApplicationStatus />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </GlobalAuthGuard>
   );
 };
 
