@@ -18,11 +18,12 @@ const App = () => {
   return (
     <GlobalAuthGuard>
       <Routes>
-        {/* 로그인 전 */}
+        {/* 1. 로그인 전/외부 페이지 */}
         <Route path="/" element={<LoginLanding />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/onboarding" element={<OnboardingRegion />} />
 
+        {/* 2. 로그인 후 서비스 페이지 (HomeLayout 사용) */}
         <Route element={<HomeLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/schedule" element={<Schedule />} />
