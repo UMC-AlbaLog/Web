@@ -72,3 +72,4 @@ const AddWorkplaceModal = ({ onSave, onClose }: AddWorkplaceModalProps) => {
 
 export default AddWorkplaceModal;
 
+
