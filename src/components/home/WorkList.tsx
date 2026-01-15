@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MapModal from "./MapModal";
-import type { Work } from "../types/work";
+import type { Work } from "../../types/work";
 
 interface WorkListProps {
   work: Work;

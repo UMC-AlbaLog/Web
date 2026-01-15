@@ -1,34 +1,23 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import Summary from "../components/Summary";
-import TodayWork from "../components/TodayWork";
-import QuickAction from "../components/QuickAction";
-import Recommend from "../components/Recommend";
-import WorkList from "../components/WorkList";
-import AddWorkModal from "../components/AddWorkModal";
-import NotificationSummary from "../components/NotificationSummary";
-import type { Work } from "../types/work";
+import { useHomeData } from "../hooks/useHomeData"; 
+import Summary from "../components/home/Summary";
+import AddWorkModal from "../components/home/AddWorkModal";
+import NotificationSummary from "../components/home/NotificationSummary";
+import QuickAction from "../components/home/QuickAction";
+import Recommend from "../components/home/Recommend";
+import TodayWork from "../components/home/TodayWork";
+import WorkList from "../components/home/WorkList";
 
 const Home: React.FC = () => {
-  const [workList, setWorkList] = useState<Work[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
-
-  const handleAddWork = (newWork: Omit<Work, "id" | "status">) => {
-    setWorkList((prev) => [...prev, { ...newWork, id: Date.now(), status: "upcoming" }]);
-    setIsModalOpen(false);
-  };
-
-  const handleAction = (id: number, currentStatus: string) => {
-    const nextStatus = currentStatus === "upcoming" ? "working" : "done";
-    setWorkList(prev => prev.map(w => w.id === id ? { ...w, status: nextStatus } : w));
-  };
-
-  const handleDeleteWork = (id: number) => {
-    if (window.confirm("이 알바 일정을 삭제할까요?")) {
-      setWorkList(prev => prev.filter(w => w.id !== id));
-    }
-  };
+  
+  const { 
+    workList, 
+    isModalOpen, 
+    setIsModalOpen, 
+    actions: { handleAddWork, handleAction, handleDeleteWork } 
+  } = useHomeData();
 
   return (
     <main className="p-12 space-y-12 flex-1 overflow-y-auto bg-[#F3F4F6]">
@@ -62,8 +51,15 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
       <Recommend onDetailClick={() => navigate('/jobs')} />
-      {isModalOpen && <AddWorkModal onAdd={handleAddWork} onClose={() => setIsModalOpen(false)} />}
+      
+      {isModalOpen && (
+        <AddWorkModal 
+          onAdd={handleAddWork} 
+          onClose={() => setIsModalOpen(false)} 
+        />
+      )}
     </main>
   );
 };

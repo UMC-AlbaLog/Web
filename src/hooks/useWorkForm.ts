@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export const useWorkForm = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -14,6 +14,17 @@ export const useWorkForm = () => {
   const [endTime, setEndTime] = useState("18:00");
   const [pay, setPay] = useState(10320);
   const [memo, setMemo] = useState("");
+
+  // 근무 시간 계산 로직
+  const duration = useMemo(() => {
+    const [startH, startM] = startTime.split(":").map(Number);
+    const [endH, endM] = endTime.split(":").map(Number);
+    const diff = (endH * 60 + endM) - (startH * 60 + startM);
+    return diff > 0 ? diff / 60 : 0;
+  }, [startTime, endTime]);
+
+  // 예상 총 급여 계산 로직
+  const totalPay = useMemo(() => Math.floor(duration * pay), [duration, pay]);
 
   const handleSearch = (keyword: string) => {
     if (!keyword.trim()) return; 
@@ -33,11 +44,15 @@ export const useWorkForm = () => {
     setCategory(place.category_group_name || "기타");
     setIsSearching(false);
     setSearchResults([]);
-    setSearchKeyword("");
+    setSearchKeyword(""); 
   };
 
   return {
-    states: { searchKeyword, name, address, category, searchResults, isSearching, hasSearched, date, startTime, endTime, pay, memo },
+    states: { 
+      searchKeyword, name, address, category, searchResults, 
+      isSearching, hasSearched, date, startTime, endTime, 
+      pay, memo, duration, totalPay
+    },
     setters: { setSearchKeyword, setDate, setStartTime, setEndTime, setPay, setMemo, setName, setCategory },
     actions: { handleSearch, handleSelectPlace }
   };
