@@ -1,7 +1,7 @@
 export type WorkStatus = "upcoming" | "working" | "done";
 
 export interface Work {
-  id: number;
+  id: string;
   name: string;
   address: string;
   time: string;

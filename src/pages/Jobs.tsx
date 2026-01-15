@@ -10,8 +10,8 @@ import JobFilterSidebar from "../components/jobs/JobFilterSidebar";
 import type { Work } from "../types/work";
 
 const ALL_JOBS: Work[] = [
-  { id: 101, name: "GS25 영등포점", address: "영등포구", time: "10:00~13:30", duration: 3.5, pay: 11500, expectedPay: 40250, status: "upcoming", date: "2026-01-13", lat: 37.5172, lng: 126.9178 },
-  { id: 102, name: "컴포즈커피 신길점", address: "영등포구", time: "17:00~22:00", duration: 5, pay: 11000, expectedPay: 55000, status: "upcoming", date: "2026-01-13", lat: 37.5055, lng: 126.9110 },
+  { id: "101", name: "GS25 영등포점", address: "영등포구", time: "10:00~13:30", duration: 3.5, pay: 11500, expectedPay: 40250, status: "upcoming", date: "2026-01-13", lat: 37.5172, lng: 126.9178 },
+  { id: "102", name: "컴포즈커피 신길점", address: "영등포구", time: "17:00~22:00", duration: 5, pay: 11000, expectedPay: 55000, status: "upcoming", date: "2026-01-13", lat: 37.5055, lng: 126.9110 },
 ];
 
 const Jobs: React.FC = () => {

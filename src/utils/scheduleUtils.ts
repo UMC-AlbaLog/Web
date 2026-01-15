@@ -43,3 +43,12 @@ export const findDynamicFreeSlot = (schedules: ScheduleItem[]) => {
 
   return "이번 주는 일정이 꽉 찼네요!";
 };
+
+// 시간을 넣으면 소수점 단위의 시간(duration)을 뱉어주는 함수
+export const calculateDuration = (start: string, end: string): number => {
+  const [startH, startM] = start.split(':').map(Number);
+  const [endH, endM] = end.split(':').map(Number);
+  
+  const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+  return totalMinutes > 0 ? totalMinutes / 60 : 0;
+};

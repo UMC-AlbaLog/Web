@@ -1,5 +1,5 @@
 import React from "react";
-import type { Work } from "../types/work";
+import type { Work } from "../../types/work";
 
 interface NotificationSummaryProps {
   workList: Work[];
