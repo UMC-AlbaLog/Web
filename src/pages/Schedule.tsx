@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { ScheduleItem, Workplace, DaySummary } from '../types/schedule';
 import AddScheduleModal from '../components/schedule/AddScheduleModal';
 import ScheduleEditModal from '../components/schedule/ScheduleEditModal';
@@ -7,8 +7,41 @@ import WeeklyView from '../components/schedule/WeeklyView';
 
 const Schedule = () => {
   // 상태 관리
-  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
-  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [schedules, setSchedules] = useState<ScheduleItem[]>(() => {
+    // 초기 상태를 localStorage에서 직접 로드
+    const saved = localStorage.getItem('schedules');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        console.log('🔵 schedules 초기 로드:', parsed.length, '개');
+        return parsed;
+      } catch (error) {
+        console.error('❌ schedules 초기 로드 실패:', error);
+      }
+    }
+    return [];
+  });
+
+  const [workplaces, setWorkplaces] = useState<Workplace[]>(() => {
+    // 초기 상태를 localStorage에서 직접 로드
+    const saved = localStorage.getItem('workplaces');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        console.log('🔵 workplaces 초기 로드:', parsed.length, '개');
+        return parsed;
+      } catch (error) {
+        console.error('❌ workplaces 초기 로드 실패:', error);
+      }
+    }
+    // localStorage에 없으면 기본 작업장 반환
+    return [
+      { id: '1', name: '카페 A', color: '#FF6B6B' },
+      { id: '2', name: '편의점 B', color: '#4ECDC4' },
+      { id: '3', name: '음식점 C', color: '#FFE66D' },
+    ];
+  });
+
   const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
   const [showAddModal, setShowAddModal] = useState(false);
@@ -16,33 +49,30 @@ const Schedule = () => {
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
 
-  // 로컬 스토리지에서 데이터 로드
+  // 초기화 완료 플래그
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // 컴포넌트 마운트 후 저장 활성화
   useEffect(() => {
-    const savedSchedules = localStorage.getItem('schedules');
-    const savedWorkplaces = localStorage.getItem('workplaces');
-    
-    if (savedSchedules) {
-      setSchedules(JSON.parse(savedSchedules));
-    }
-    
-    if (savedWorkplaces) {
-      setWorkplaces(JSON.parse(savedWorkplaces));
-    } else {
-      // 기본 작업장 추가
-      const defaultWorkplaces: Workplace[] = [
-        { id: '1', name: '카페 A', color: '#FF6B6B' },
-        { id: '2', name: '편의점 B', color: '#4ECDC4' },
-        { id: '3', name: '음식점 C', color: '#FFE66D' },
-      ];
-      setWorkplaces(defaultWorkplaces);
-      localStorage.setItem('workplaces', JSON.stringify(defaultWorkplaces));
-    }
+    console.log('✅ 컴포넌트 마운트 완료, 저장 활성화');
+    setIsInitialized(true);
   }, []);
 
-  // 스케줄 저장
+  // 스케줄 저장 (초기화 완료 후에만)
   useEffect(() => {
-    localStorage.setItem('schedules', JSON.stringify(schedules));
-  }, [schedules]);
+    if (isInitialized) {
+      console.log('💾 schedules 저장:', schedules.length, '개');
+      localStorage.setItem('schedules', JSON.stringify(schedules));
+    }
+  }, [schedules, isInitialized]);
+
+  // workplaces 저장 (초기화 완료 후에만)
+  useEffect(() => {
+    if (isInitialized) {
+      console.log('💾 workplaces 저장:', workplaces.length, '개');
+      localStorage.setItem('workplaces', JSON.stringify(workplaces));
+    }
+  }, [workplaces, isInitialized]);
 
   // 주간 정보 가져오기
   const getWeekInfo = (date: Date) => {
@@ -166,9 +196,55 @@ const Schedule = () => {
     }
   };
 
-  // 일정 추가
+  // 일정 추가 (반복 설정 적용)
   const handleAddSchedule = (schedule: ScheduleItem) => {
-    setSchedules([...schedules, schedule]);
+    const newSchedules: ScheduleItem[] = [schedule];
+
+    // 반복 설정이 있는 경우 추가 일정 생성
+    if (schedule.repeatType && schedule.repeatType !== 'none') {
+      const baseDate = new Date(schedule.date);
+      const endDate = new Date(baseDate);
+      endDate.setMonth(endDate.getMonth() + 3); // 3개월치 일정 생성
+
+      let currentDate = new Date(baseDate);
+
+      if (schedule.repeatType === 'daily') {
+        // 매일 반복
+        currentDate.setDate(currentDate.getDate() + 1);
+        while (currentDate <= endDate) {
+          newSchedules.push({
+            ...schedule,
+            id: `${Date.now()}-${currentDate.getTime()}`,
+            date: formatDate(currentDate),
+          });
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      } else if (schedule.repeatType === 'weekly') {
+        // 매주 반복
+        currentDate.setDate(currentDate.getDate() + 7);
+        while (currentDate <= endDate) {
+          newSchedules.push({
+            ...schedule,
+            id: `${Date.now()}-${currentDate.getTime()}`,
+            date: formatDate(currentDate),
+          });
+          currentDate.setDate(currentDate.getDate() + 7);
+        }
+      } else if (schedule.repeatType === 'biweekly') {
+        // 격주 반복
+        currentDate.setDate(currentDate.getDate() + 14);
+        while (currentDate <= endDate) {
+          newSchedules.push({
+            ...schedule,
+            id: `${Date.now()}-${currentDate.getTime()}`,
+            date: formatDate(currentDate),
+          });
+          currentDate.setDate(currentDate.getDate() + 14);
+        }
+      }
+    }
+
+    setSchedules([...schedules, ...newSchedules]);
     setShowAddModal(false);
   };
 
@@ -318,7 +394,6 @@ const Schedule = () => {
           onClose={() => setShowAddModal(false)}
           onAddWorkplace={(workplace) => {
             setWorkplaces([...workplaces, workplace]);
-            localStorage.setItem('workplaces', JSON.stringify([...workplaces, workplace]));
           }}
         />
       )}

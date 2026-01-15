@@ -60,10 +60,26 @@ const WeeklyView = ({
                 const daySchedules = getSchedulesForDate(dateStr);
                 const hasSummary = getDaySummary(dateStr);
 
+                // 현재 시간대에 일정이 있는지 확인하고 색상 가져오기
+                const currentHour = parseInt(time.split(':')[0]);
+                const currentSchedule = daySchedules.find(schedule => {
+                  const startHour = parseInt(schedule.startTime.split(':')[0]);
+                  const endHour = parseInt(schedule.endTime.split(':')[0]);
+                  return currentHour >= startHour && currentHour < endHour;
+                });
+                
+                const cellColor = currentSchedule 
+                  ? workplaces.find(w => w.id === currentSchedule.workplaceId)?.color 
+                  : null;
+
                 return (
                   <div
                     key={dayIndex}
-                    className="relative p-2 border-b border-r border-gray-300 min-h-[60px] hover:bg-gray-50 cursor-pointer"
+                    className="relative p-2 border-b border-r border-gray-300 min-h-[60px] cursor-pointer"
+                    style={{
+                      backgroundColor: cellColor ? `${cellColor}30` : 'transparent',
+                      transition: 'background-color 0.2s',
+                    }}
                     onClick={() => onCellClick(dateStr, time)}
                     onMouseEnter={(e) => onDayHover(dateStr, e)}
                     onMouseMove={(e) => {
@@ -150,4 +166,5 @@ const WeeklyView = ({
 };
 
 export default WeeklyView;
+
 
