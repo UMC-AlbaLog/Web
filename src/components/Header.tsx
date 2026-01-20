@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import NotificationModal from "./NotificationModal";
 
 interface GoogleUser {
   email: string;
@@ -10,6 +11,7 @@ interface GoogleUser {
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const user: GoogleUser | null = (() => {
     const data = sessionStorage.getItem("googleUser");
@@ -24,11 +26,21 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="h-14 bg-white flex justify-end items-center px-6 gap-4 shadow relative">
+    <header className="h-14 bg-white flex justify-end items-center px-6 gap-4 shadow relative z-40">
       {/* 알림 */}
-      <button className="text-sm hover:text-gray-600">
-        알림
-      </button>
+      <div className="relative">
+        <button 
+          onClick={() => setIsNotificationOpen(true)}
+          className="text-sm hover:text-gray-600"
+        >
+          알림
+        </button>
+
+        <NotificationModal 
+          isOpen={isNotificationOpen} 
+          onClose={() => setIsNotificationOpen(false)} 
+        />
+      </div>
 
       {/* 프로필 영역 */}
       <div className="relative">
