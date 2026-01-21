@@ -16,7 +16,7 @@ const Income = () => {
         <IncomeGoal />
       </div>
 
-      {/* 하단: 정산 리스트 */}
+      {/* 하단: 정산 리스*/}
       <SettlementTable />
     </div>
   );
