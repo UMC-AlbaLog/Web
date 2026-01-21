@@ -1,73 +1,19 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface Application {
-  id: string;
-  jobName: string;
-  address: string;
-  date: string;
-  time: string;
-  pay: number;
-  status: "pending" | "approved" | "rejected";
-  appliedDate: string;
-  duration: number;
-}
-
-const DUMMY_APPLICATIONS: Application[] = [
-  {
-    id: "app1",
-    jobName: "GS25 영등포점",
-    address: "서울시 영등포구",
-    date: "2026-01-15",
-    time: "10:00~13:30",
-    pay: 11500,
-    status: "pending",
-    appliedDate: "2026-01-10",
-    duration: 3.5,
-  },
-  {
-    id: "app2",
-    jobName: "컴포즈커피 신길점",
-    address: "서울시 영등포구",
-    date: "2026-01-16",
-    time: "17:00~22:00",
-    pay: 11000,
-    status: "approved",
-    appliedDate: "2026-01-09",
-    duration: 5,
-  },
-  {
-    id: "app3",
-    jobName: "맥도날드 여의도점",
-    address: "서울시 영등포구",
-    date: "2026-01-17",
-    time: "14:00~18:00",
-    pay: 12000,
-    status: "rejected",
-    appliedDate: "2026-01-08",
-    duration: 4,
-  },
-  {
-    id: "app4",
-    jobName: "스타벅스 당산점",
-    address: "서울시 영등포구",
-    date: "2026-01-18",
-    time: "09:00~13:00",
-    pay: 11500,
-    status: "pending",
-    appliedDate: "2026-01-11",
-    duration: 4,
-  },
-];
+import { useJobs } from "../hooks/useJobs";
+import type { ApplicationStatus } from "../types/work";
 
 type TabType = "all" | "inProgress" | "completed";
 
 const ApplicationStatus: React.FC = () => {
   const navigate = useNavigate();
+  const { getAppliedJobs } = useJobs();
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const getStatusLabel = (status: Application["status"]) => {
+  const appliedJobs = useMemo(() => getAppliedJobs(), [getAppliedJobs]);
+
+  const getStatusLabel = (status?: ApplicationStatus) => {
     switch (status) {
       case "pending":
         return { text: "대기중", color: "text-yellow-600 bg-yellow-50" };
@@ -81,26 +27,28 @@ const ApplicationStatus: React.FC = () => {
   };
 
   const filteredApplications = useMemo(() => {
-    let filtered = DUMMY_APPLICATIONS;
+    let filtered = appliedJobs;
 
     // 탭 필터링
     if (activeTab === "inProgress") {
-      filtered = filtered.filter((app) => app.status === "pending");
+      filtered = filtered.filter((job) => job.applicationStatus === "pending");
     } else if (activeTab === "completed") {
-      filtered = filtered.filter((app) => app.status === "approved" || app.status === "rejected");
+      filtered = filtered.filter(
+        (job) => job.applicationStatus === "approved" || job.applicationStatus === "rejected"
+      );
     }
 
     // 검색 필터링
     if (searchQuery.trim()) {
       filtered = filtered.filter(
-        (app) =>
-          app.jobName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          app.address.toLowerCase().includes(searchQuery.toLowerCase())
+        (job) =>
+          job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          job.address.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     return filtered;
-  }, [activeTab, searchQuery]);
+  }, [activeTab, searchQuery, appliedJobs]);
 
   return (
     <main className="p-10 bg-[#F3F4F6] flex-1 overflow-y-auto">
@@ -191,28 +139,30 @@ const ApplicationStatus: React.FC = () => {
 
       {/* 지원서 목록 */}
       <div className="space-y-4">
-        {filteredApplications.map((application) => {
-          const statusInfo = getStatusLabel(application.status);
-          const expectedPay = application.pay * application.duration;
+        {filteredApplications.map((job) => {
+          const statusInfo = getStatusLabel(job.applicationStatus);
+          const expectedPay = job.pay * job.duration;
 
           return (
             <div
-              key={application.id}
+              key={job.id}
               className="bg-white rounded-[35px] p-8 shadow-sm border border-white hover:shadow-md transition-all"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-black text-gray-800">{application.jobName}</h3>
-                    <span
-                      className={`px-4 py-1.5 rounded-full text-xs font-black ${statusInfo.color}`}
-                    >
-                      {statusInfo.text}
-                    </span>
+                    <h3 className="text-2xl font-black text-gray-800">{job.name}</h3>
+                    {job.applicationStatus && (
+                      <span
+                        className={`px-4 py-1.5 rounded-full text-xs font-black ${statusInfo.color}`}
+                      >
+                        {statusInfo.text}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm font-bold text-gray-400 mb-1">{application.address}</p>
+                  <p className="text-sm font-bold text-gray-400 mb-1">{job.address}</p>
                   <p className="text-sm font-bold text-gray-400">
-                    {application.date} | {application.time}
+                    {job.date} | {job.time}
                   </p>
                 </div>
               </div>
@@ -222,7 +172,7 @@ const ApplicationStatus: React.FC = () => {
                   <div>
                     <p className="text-xs text-gray-500 font-medium">시급</p>
                     <p className="text-lg font-black text-gray-800">
-                      {application.pay.toLocaleString()}원
+                      {job.pay.toLocaleString()}원
                     </p>
                   </div>
                   <div className="w-px h-8 bg-gray-200" />
@@ -235,18 +185,34 @@ const ApplicationStatus: React.FC = () => {
                   <div className="w-px h-8 bg-gray-200" />
                   <div>
                     <p className="text-xs text-gray-500 font-medium">지원일</p>
-                    <p className="text-sm font-bold text-gray-600">{application.appliedDate}</p>
+                    <p className="text-sm font-bold text-gray-600">
+                      {job.appliedDate || "N/A"}
+                    </p>
                   </div>
                 </div>
 
-                {application.status === "approved" && (
-                  <button className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all">
+                {job.applicationStatus === "approved" && (
+                  <button 
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                    className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
+                  >
                     상세보기
                   </button>
                 )}
-                {application.status === "rejected" && (
-                  <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all">
+                {job.applicationStatus === "rejected" && (
+                  <button 
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
+                  >
                     다시 지원하기
+                  </button>
+                )}
+                {job.applicationStatus === "pending" && (
+                  <button 
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
+                  >
+                    상세보기
                   </button>
                 )}
               </div>
