@@ -11,7 +11,8 @@ import Income from "./pages/Income";
 import Jobs from "./pages/Jobs";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
-import ApplicationStatus from "./pages/ApplicationStatus";
+import ApplicationStatusPage from "./pages/ApplicationStatus";
+import ApplicationManagement from "./pages/ApplicationManagement";
 import JobDetail from "./pages/JobDetail";
 
 const App = () => {
@@ -30,7 +31,8 @@ const App = () => {
           <Route path="/income" element={<Income />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
-          <Route path="/jobs/status" element={<ApplicationStatus />} />
+          <Route path="/jobs/status" element={<ApplicationStatusPage />} />
+          <Route path="/applications/manage" element={<ApplicationManagement />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
         </Route>

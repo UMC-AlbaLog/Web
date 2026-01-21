@@ -1,28 +1,36 @@
-import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useJobs } from "../hooks/useJobs";
 import type { ApplicationStatus } from "../types/work";
 
 type TabType = "all" | "inProgress" | "completed";
 
-const ApplicationStatusPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { getAppliedJobs } = useJobs();
+const ApplicationManagement: React.FC = () => {
+  const { getAppliedJobs, updateApplicationStatus } = useJobs();
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilter, setShowFilter] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<string | null>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   const appliedJobs = useMemo(() => getAppliedJobs(), [getAppliedJobs]);
+
+  // 고유한 매장명 목록 추출
+  const storeNames = useMemo(() => {
+    const stores = new Set<string>();
+    appliedJobs.forEach((job) => stores.add(job.name));
+    return Array.from(stores).sort();
+  }, [appliedJobs]);
 
   const getStatusLabel = (status?: ApplicationStatus) => {
     switch (status) {
       case "pending":
-        return { text: "대기중", color: "text-yellow-600 bg-yellow-50" };
+        return { text: "대기 중", color: "text-yellow-600 bg-yellow-50" };
       case "approved":
-        return { text: "승인됨", color: "text-green-600 bg-green-50" };
+        return { text: "지원 승인", color: "text-green-600 bg-green-50" };
       case "rejected":
-        return { text: "거절됨", color: "text-red-600 bg-red-50" };
+        return { text: "지원 거절", color: "text-red-600 bg-red-50" };
       default:
-        return { text: "대기중", color: "text-gray-600 bg-gray-50" };
+        return { text: "대기 중", color: "text-gray-600 bg-gray-50" };
     }
   };
 
@@ -47,20 +55,64 @@ const ApplicationStatusPage: React.FC = () => {
       );
     }
 
+    // 매장 필터링
+    if (selectedStore) {
+      filtered = filtered.filter((job) => job.name === selectedStore);
+    }
+
     return filtered;
-  }, [activeTab, searchQuery, appliedJobs]);
+  }, [activeTab, searchQuery, selectedStore, appliedJobs]);
+
+  const handleApprove = (jobId: string) => {
+    if (window.confirm("이 지원을 승인하시겠습니까?")) {
+      updateApplicationStatus(jobId, "approved");
+    }
+  };
+
+  const handleReject = (jobId: string) => {
+    if (window.confirm("이 지원을 거절하시겠습니까?")) {
+      updateApplicationStatus(jobId, "rejected");
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return dateString;
+      }
+      const days = ["일", "월", "화", "수", "목", "금", "토"];
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const dayName = days[date.getDay()];
+      return `${date.getFullYear()}.${month.toString().padStart(2, "0")}.${day.toString().padStart(2, "0")} (${dayName})`;
+    } catch {
+      return dateString;
+    }
+  };
+
+  // 필터 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setShowFilter(false);
+      }
+    };
+
+    if (showFilter) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showFilter]);
 
   return (
     <main className="p-10 bg-[#F3F4F6] flex-1 overflow-y-auto">
       <div className="mb-8">
-        <button
-          onClick={() => navigate("/jobs")}
-          className="text-gray-600 hover:text-gray-800 mb-4 flex items-center gap-2 font-medium"
-        >
-          <span>←</span> 아르바이트 목록으로
-        </button>
-        <h1 className="text-3xl font-black text-gray-800">지원 현황</h1>
-        <p className="text-gray-500 text-sm mt-2">내가 지원한 일자리 현황을 확인하세요</p>
+        <h1 className="text-3xl font-black text-gray-800">대타 지원 현황</h1>
+        <p className="text-gray-500 text-sm mt-2">지원 현황을 확인하고 승인/거절할 수 있습니다</p>
       </div>
 
       {/* 탭 */}
@@ -98,7 +150,7 @@ const ApplicationStatusPage: React.FC = () => {
       </div>
 
       {/* 검색창과 필터 */}
-      <div className="mb-6 flex gap-3">
+      <div className="mb-6 flex gap-3 relative">
         <div className="flex-1 relative">
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-800">
             <svg
@@ -126,15 +178,56 @@ const ApplicationStatusPage: React.FC = () => {
           </div>
           <input
             type="text"
-            placeholder="검색창"
+            placeholder="매장명 또는 주소로 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white rounded-xl pl-12 pr-4 py-4 text-sm font-bold text-gray-800 border border-gray-200 outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
-        <button className="bg-white px-6 py-4 rounded-xl text-sm font-black text-gray-800 border border-gray-200 hover:bg-gray-50 transition-all">
-          필터
-        </button>
+        <div className="relative" ref={filterRef}>
+          <button
+            onClick={() => setShowFilter(!showFilter)}
+            className="bg-white px-6 py-4 rounded-xl text-sm font-black text-gray-800 border border-gray-200 hover:bg-gray-50 transition-all"
+          >
+            필터
+          </button>
+          {showFilter && (
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 p-4">
+              <p className="text-xs text-gray-500 font-medium mb-3">매장명 필터</p>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                <button
+                  onClick={() => {
+                    setSelectedStore(null);
+                    setShowFilter(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedStore === null
+                      ? "bg-gray-800 text-white"
+                      : "bg-gray-50 text-gray-800 hover:bg-gray-100"
+                  }`}
+                >
+                  전체
+                </button>
+                {storeNames.map((store) => (
+                  <button
+                    key={store}
+                    onClick={() => {
+                      setSelectedStore(store);
+                      setShowFilter(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      selectedStore === store
+                        ? "bg-gray-800 text-white"
+                        : "bg-gray-50 text-gray-800 hover:bg-gray-100"
+                    }`}
+                  >
+                    {store}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 지원서 목록 */}
@@ -161,8 +254,8 @@ const ApplicationStatusPage: React.FC = () => {
                     )}
                   </div>
                   <p className="text-sm font-bold text-gray-400 mb-1">{job.address}</p>
-                  <p className="text-sm font-bold text-gray-400">
-                    {job.date} | {job.time}
+                  <p className="text-sm font-bold text-gray-400 mb-1">
+                    {formatDate(job.date)} | {job.time}
                   </p>
                 </div>
               </div>
@@ -191,29 +284,29 @@ const ApplicationStatusPage: React.FC = () => {
                   </div>
                 </div>
 
-                {job.applicationStatus === "approved" && (
-                  <button 
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-                  >
-                    상세보기
-                  </button>
-                )}
-                {job.applicationStatus === "rejected" && (
-                  <button 
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-                  >
-                    다시 지원하기
-                  </button>
-                )}
+                {/* 승인/거절 버튼 (대기 중일 때만) */}
                 {job.applicationStatus === "pending" && (
-                  <button 
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-                  >
-                    상세보기
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleReject(job.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
+                    >
+                      거절
+                    </button>
+                    <button
+                      onClick={() => handleApprove(job.id)}
+                      className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
+                    >
+                      승인
+                    </button>
+                  </div>
+                )}
+
+                {/* 완료된 상태 표시 */}
+                {(job.applicationStatus === "approved" || job.applicationStatus === "rejected") && (
+                  <div className="text-sm font-bold text-gray-500">
+                    {job.applicationStatus === "approved" ? "승인 완료" : "거절 완료"}
+                  </div>
                 )}
               </div>
             </div>
@@ -224,20 +317,13 @@ const ApplicationStatusPage: React.FC = () => {
       {filteredApplications.length === 0 && (
         <div className="bg-white rounded-[35px] p-16 text-center">
           <p className="text-gray-400 text-lg font-medium mb-4">
-            {searchQuery ? "검색 결과가 없습니다" : "아직 지원한 일자리가 없습니다"}
+            {searchQuery || selectedStore ? "검색 결과가 없습니다" : "아직 지원이 없습니다"}
           </p>
-          {!searchQuery && (
-            <button
-              onClick={() => navigate("/jobs")}
-              className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-8 py-4 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-            >
-              일자리 보러가기
-            </button>
-          )}
         </div>
       )}
     </main>
   );
 };
 
-export default ApplicationStatusPage;
+export default ApplicationManagement;
+
