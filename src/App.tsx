@@ -10,6 +10,8 @@ import Schedule from "./pages/Schedule";
 import Income from "./pages/Income";
 import Jobs from "./pages/Jobs";
 import Profile from "./pages/Profile";
+import ProfileReviews from "./pages/ProfileReviews";
+import ProfileEdit from "./pages/ProfileEdit";
 import Settings from "./pages/Settings";
 import ApplicationStatusPage from "./pages/ApplicationStatus";
 import ApplicationManagement from "./pages/ApplicationManagement";
@@ -34,6 +36,8 @@ const App = () => {
           <Route path="/jobs/status" element={<ApplicationStatusPage />} />
           <Route path="/applications/manage" element={<ApplicationManagement />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/reviews" element={<ProfileReviews />} />
+          <Route path="/profile/edit" element={<ProfileEdit />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
