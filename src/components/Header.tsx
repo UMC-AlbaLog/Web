@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NotificationModal from "./NotificationModal";
 
 interface GoogleUser {
@@ -10,6 +10,7 @@ interface GoogleUser {
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
@@ -25,60 +26,80 @@ const Header: React.FC = () => {
     navigate("/", { replace: true });
   };
 
+  // 현재 경로에 따라 제목 결정
+  const getPageTitle = () => {
+    if (location.pathname.startsWith("/profile")) {
+      return "프로필";
+    }
+    if (location.pathname === "/settings") {
+      return "설정";
+    }
+    return null;
+  };
+
+  const pageTitle = getPageTitle();
+
   return (
-    <header className="h-14 bg-white flex justify-end items-center px-6 gap-4 shadow relative z-40">
-      {/* 알림 */}
-      <div className="relative">
-        <button 
-          onClick={() => setIsNotificationOpen(true)}
-          className="text-sm hover:text-gray-600"
-        >
-          알림
-        </button>
+    <header className="h-14 bg-white flex justify-between items-center px-6 gap-4 shadow relative z-40">
+      {/* 페이지 제목 (프로필 또는 설정) */}
+      {pageTitle && (
+        <h1 className="text-xl font-black text-gray-800">{pageTitle}</h1>
+      )}
+      
+      <div className="flex items-center gap-4 ml-auto">
+        {/* 알림 */}
+        <div className="relative">
+          <button 
+            onClick={() => setIsNotificationOpen(true)}
+            className="text-sm hover:text-gray-600"
+          >
+            알림
+          </button>
 
-        <NotificationModal 
-          isOpen={isNotificationOpen} 
-          onClose={() => setIsNotificationOpen(false)} 
-        />
-      </div>
-
-      {/* 프로필 영역 */}
-      <div className="relative">
-        <button
-          onClick={() => setOpen((prev) => !prev)}
-          className="flex items-center gap-2 text-sm hover:text-gray-600"
-        >
-          {/* 프로필 사진 */}
-          <img
-            src={user.picture}
-            alt="profile"
-            className="w-8 h-8 rounded-full border"
+          <NotificationModal 
+            isOpen={isNotificationOpen} 
+            onClose={() => setIsNotificationOpen(false)} 
           />
+        </div>
 
-          {/* 이름 (모바일에서는 숨김 가능) */}
-          <span className="hidden sm:block font-medium">
-            {user.name}
-          </span>
-        </button>
+        {/* 프로필 영역 */}
+        <div className="relative">
+          <button
+            onClick={() => setOpen((prev) => !prev)}
+            className="flex items-center gap-2 text-sm hover:text-gray-600"
+          >
+            {/* 프로필 사진 */}
+            <img
+              src={user.picture}
+              alt="profile"
+              className="w-8 h-8 rounded-full border"
+            />
 
-        {/* 드롭다운 */}
-        {open && (
-          <div className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-lg p-3 z-50">
-            <p className="text-sm font-semibold">
+            {/* 이름 (모바일에서는 숨김 가능) */}
+            <span className="hidden sm:block font-medium">
               {user.name}
-            </p>
-            <p className="text-xs text-gray-500 mb-3">
-              {user.email}
-            </p>
+            </span>
+          </button>
 
-            <button
-              onClick={handleLogout}
-              className="w-full text-left text-sm px-3 py-2 rounded hover:bg-gray-100"
-            >
-              로그아웃
-            </button>
-          </div>
-        )}
+          {/* 드롭다운 */}
+          {open && (
+            <div className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-lg p-3 z-50">
+              <p className="text-sm font-semibold">
+                {user.name}
+              </p>
+              <p className="text-xs text-gray-500 mb-3">
+                {user.email}
+              </p>
+
+              <button
+                onClick={handleLogout}
+                className="w-full text-left text-sm px-3 py-2 rounded hover:bg-gray-100"
+              >
+                로그아웃
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

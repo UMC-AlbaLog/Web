@@ -17,6 +17,54 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose }
   const [isAtBottom, setIsAtBottom] = useState(false);
   const isLoadingMoreRef = useRef(false);
 
+  // 알림 설정 불러오기
+  const getNotificationSettings = () => {
+    const saved = sessionStorage.getItem("notificationSettings");
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    // 기본값: 모두 켜져있음
+    return {
+      all: true,
+      workRelated: true,
+      clockInOut: true,
+      preWorkStart: true,
+      substituteRecommendation: true,
+      newCustomJob: true,
+      settlementStatus: true,
+    };
+  };
+
+  // 알림 타입을 설정 카테고리로 매핑
+  const getNotificationCategory = (type: string): keyof ReturnType<typeof getNotificationSettings> => {
+    switch (type) {
+      case "approval":
+        return "workRelated";
+      case "reminder":
+        // reminder는 제목이나 내용에 따라 분류할 수 있지만, 일단 preWorkStart로 매핑
+        return "preWorkStart";
+      case "settlement":
+        return "settlementStatus";
+      default:
+        return "all";
+    }
+  };
+
+  // 알림 설정에 따라 필터링된 알림 목록
+  const filteredNotifications = React.useMemo(() => {
+    const settings = getNotificationSettings();
+    
+    // 전체 알림이 꺼져있으면 모든 알림 필터링
+    if (!settings.all) {
+      return [];
+    }
+
+    return notifications.filter((notification) => {
+      const category = getNotificationCategory(notification.type);
+      return settings[category] !== false; // 해당 카테고리의 알림이 켜져있으면 표시
+    });
+  }, [notifications]);
+
   // 모달이 닫힐 때 상태 초기화
   useEffect(() => {
     if (!isOpen) {
@@ -28,8 +76,8 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose }
 
   // 표시할 알림 목록
   const displayedNotifications = showAll
-    ? notifications.slice(0, displayedCount)
-    : notifications.slice(0, ITEMS_PER_PAGE);
+    ? filteredNotifications.slice(0, displayedCount)
+    : filteredNotifications.slice(0, ITEMS_PER_PAGE);
 
   // 스크롤이 끝에 도달했는지 확인
   const checkScrollBottom = useCallback(() => {
@@ -75,7 +123,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose }
         });
       }, 100);
     }
-  }, [isAtBottom, displayedCount, notifications.length, showAll]);
+  }, [isAtBottom, displayedCount, filteredNotifications.length, showAll]);
 
   // 자세히 보기 클릭
   const handleViewAll = () => {
@@ -105,9 +153,9 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose }
   };
 
   // 모든 알림을 다 봤는지 확인
-  const hasMoreNotifications = displayedCount < notifications.length;
+  const hasMoreNotifications = displayedCount < filteredNotifications.length;
   const isAllNotificationsShown =
-    showAll && !hasMoreNotifications && notifications.length > 0;
+    showAll && !hasMoreNotifications && filteredNotifications.length > 0;
 
   if (!isOpen) return null;
 
