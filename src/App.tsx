@@ -1,4 +1,4 @@
-import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import LoginLanding from "./pages/LoginLanding";
 import Signup from "./pages/Signup";
 import OnboardingRegion from "./pages/OnboardingRegion";
@@ -16,28 +16,26 @@ import JobDetail from "./pages/JobDetail";
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <GlobalAuthGuard>
-        <Routes>
-          {/* 1. 로그인 전/외부 페이지 */}
-          <Route path="/" element={<LoginLanding />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/onboarding" element={<OnboardingRegion />} />
+    <GlobalAuthGuard>
+      <Routes>
+        {/* 1. 로그인 전/외부 페이지 */}
+        <Route path="/" element={<LoginLanding />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/onboarding" element={<OnboardingRegion />} />
 
-          {/* 2. 로그인 후 서비스 페이지 (HomeLayout 사용) */}
-          <Route element={<HomeLayout />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/income" element={<Income />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/jobs/:id" element={<JobDetail />} />
-            <Route path="/jobs/status" element={<ApplicationStatus />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
-        </Routes>
-      </GlobalAuthGuard>
-    </BrowserRouter>
+        {/* 2. 로그인 후 서비스 페이지 */}
+        <Route element={<HomeLayout />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/income" element={<Income />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
+          <Route path="/jobs/status" element={<ApplicationStatus />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </GlobalAuthGuard>
   );
 };
 
