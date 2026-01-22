@@ -10,7 +10,7 @@ const Income = () => {
       {/* 상단 요약 */}
       <IncomeSummary />
 
-      {/* 중단: 차트 + 목표 */}
+      {/* 차트 + 목 */}
       <div className="grid grid-cols-2 gap-6">
         <IncomeChart />
         <IncomeGoal />

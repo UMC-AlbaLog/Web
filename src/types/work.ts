@@ -10,11 +10,13 @@ export interface Work {
   pay: number;
   expectedPay: number;
   status: WorkStatus;
-  memo?: string;
+  memo: string;
   date: string;
   lat?: number;
   lng?: number;
-  // 지원 관련 필드
   applicationStatus?: ApplicationStatus;
   appliedDate?: string;
+  description: string;
+  requirements: string;
+  notice: string;
 }
