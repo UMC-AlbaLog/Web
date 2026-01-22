@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface GoogleUser {
   email: string;
@@ -16,10 +18,10 @@ const Signup = () => {
   });
 
   const [nickname, setNickname] = useState("");
-  const [birth, setBirth] = useState("");
+  const [birth, setBirth] = useState<Date | null>(null);
   const [gender, setGender] = useState<"M" | "F" | "">("");
 
-  // 로그인 안 했으면 강제 로그인
+  // 로그인 안 했으면 강제 이동
   useEffect(() => {
     if (!user) {
       navigate("/", { replace: true });
@@ -28,39 +30,26 @@ const Signup = () => {
 
   if (!user) return null;
 
-  const isValidBirth = (birth: string) => {
-    const regex = /^\d{4}\.\d{2}\.\d{2}$/;
-    if (!regex.test(birth)) return false;
-
-    const [y, m, d] = birth.split(".").map(Number);
-    const date = new Date(y, m - 1, d);
-
-    return (
-      date.getFullYear() === y &&
-      date.getMonth() === m - 1 &&
-      date.getDate() === d &&
-      date <= new Date()
-    );
-  };
-
   const handleSubmit = () => {
     if (!nickname || !birth || !gender) {
       alert("모든 정보를 입력해주세요.");
       return;
     }
 
-    if (!isValidBirth(birth)) {
-      alert("생년월일 형식이 올바르지 않습니다. (YYYY.MM.DD)");
-      return;
-    }
+    const formattedBirth = birth
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, ".");
 
-    // 회원가입 정보 저장
     sessionStorage.setItem(
       "signupInfo",
-      JSON.stringify({ nickname, birth, gender })
+      JSON.stringify({
+        nickname,
+        birth: formattedBirth,
+        gender,
+      })
     );
 
-    // 🔥 다음 단계: 온보딩
     navigate("/onboarding");
   };
 
@@ -92,36 +81,41 @@ const Signup = () => {
         />
 
         <label className="block text-sm mb-1">생년월일</label>
-        <input
-          value={birth}
-          onChange={(e) =>
-            setBirth(e.target.value.replace(/[^0-9.]/g, ""))
-          }
-          placeholder="YYYY.MM.DD"
+        <DatePicker
+          selected={birth}
+          onChange={(date: Date | null) => setBirth(date)}
+          dateFormat="yyyy.MM.dd"
+          maxDate={new Date()}
+          showYearDropdown
+          showMonthDropdown
+          dropdownMode="select"
+          placeholderText="생년월일 선택"
           className="w-full mb-4 px-3 py-2 border rounded text-sm"
         />
 
         <label className="block text-sm mb-2">성별</label>
         <div className="flex gap-6 mb-6 text-sm">
-          <label>
+          <label className="flex items-center gap-1">
             <input
               type="radio"
               checked={gender === "M"}
               onChange={() => setGender("M")}
-            /> 남성
+            />
+            남성
           </label>
-          <label>
+          <label className="flex items-center gap-1">
             <input
               type="radio"
               checked={gender === "F"}
               onChange={() => setGender("F")}
-            /> 여성
+            />
+            여성
           </label>
         </div>
 
         <button
           onClick={handleSubmit}
-          className="w-full py-3 border rounded font-semibold"
+          className="w-full py-3 border rounded font-semibold hover:bg-gray-100"
         >
           회원가입
         </button>
