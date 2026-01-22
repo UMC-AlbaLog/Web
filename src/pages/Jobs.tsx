@@ -8,21 +8,29 @@ import JobBanner from "../components/jobs/JobBanner";
 import JobCard from "../components/jobs/JobCard";
 import JobHeader from "../components/jobs/JobHeader";
 import JobFilterSidebar from "../components/jobs/JobFilterSidebar";
+import ApplyConfirmModal from "../components/jobs/ApplyConfirmModal";
+import type { Work } from "../types/work";
 
 const Jobs: React.FC = () => {
   const navigate = useNavigate();
   const { states, setters, actions } = useWorkForm();
   const { userName, userLocation, freeSlot } = useJobsData(); 
-  const { jobs, getAvailableJobs, applyToJob } = useJobs();
+  const { getAvailableJobs, applyToJob } = useJobs();
   const [filterDistance, setFilterDistance] = useState("1km");
+
+  const [selectedJob, setSelectedJob] = useState<Work | null>(null);
 
   // 지원하지 않은 일자리만 표시
   const availableJobs = useMemo(() => getAvailableJobs(), [getAvailableJobs]);
 
-  const handleApply = (jobId: string) => {
-    applyToJob(jobId);
-    // 지원 완료 후 상세 페이지로 이동하거나 알림 표시
-    alert("지원이 완료되었습니다!");
+  // 지원 확인 버튼 클릭 시 실행
+  const handleConfirmApply = () => {
+    if (selectedJob) {
+      applyToJob(selectedJob.id);
+      setSelectedJob(null);
+      alert("지원이 완료되었습니다!");
+      navigate("/jobs/status");
+    }
   };
 
   return (
@@ -51,13 +59,21 @@ const Jobs: React.FC = () => {
                 job={job} 
                 distanceStr={distanceStr} 
                 onNavigate={(id) => navigate(`/jobs/${id}`)}
-                onApply={() => handleApply(job.id)}
+                onApply={() => setSelectedJob(job)}
                 hasApplied={job.applicationStatus !== undefined}
               />
             );
           })}
         </section>
       </div>
+
+      {selectedJob && (
+        <ApplyConfirmModal 
+          job={selectedJob} 
+          onConfirm={handleConfirmApply} 
+          onClose={() => setSelectedJob(null)} 
+        />
+      )}
     </main>
   );
 };

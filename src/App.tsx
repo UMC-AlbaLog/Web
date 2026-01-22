@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import ApplicationStatusPage from "./pages/ApplicationStatus";
 import ApplicationManagement from "./pages/ApplicationManagement";
 import JobDetail from "./pages/JobDetail";
+import ReviewPage from "./pages/ReviewPage";
 
 const App = () => {
   return (
@@ -33,6 +34,8 @@ const App = () => {
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/jobs/status" element={<ApplicationStatusPage />} />
           <Route path="/applications/manage" element={<ApplicationManagement />} />
+          <Route path="/review/:jobId" element={<ReviewPage mode="write" />} />
+          <Route path="/workplace/:workplaceId" element={<ReviewPage mode="view" />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
