@@ -112,7 +112,6 @@ const Signup = () => {
             여성
           </label>
         </div>
-
         <button
           onClick={handleSubmit}
           className="w-full py-3 border rounded font-semibold hover:bg-gray-100"
