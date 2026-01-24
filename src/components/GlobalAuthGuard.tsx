@@ -9,7 +9,7 @@ const GlobalAuthGuard = ({ children }: Props) => {
   const location = useLocation();
   const user = sessionStorage.getItem("googleUser");
 
-  // 🔒 로그인 안 됨 → 오직 "/" 만 허용
+  // 로그인 안 됨 → 오직 "/" 만 허용
   if (!user) {
     return location.pathname === "/"
       ? children
