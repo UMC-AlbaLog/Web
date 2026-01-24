@@ -11,6 +11,8 @@ interface GooglePayload {
 const LoginLanding = () => {
   const navigate = useNavigate();
 
+
+
   return (
     <div className="h-screen w-full bg-gray-300 flex items-center justify-center">
       <div className="w-[900px] h-[420px] bg-gray-200 flex items-center justify-center rounded-md">
