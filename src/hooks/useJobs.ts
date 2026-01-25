@@ -36,6 +36,10 @@ export const useJobs = () => {
     if (savedApplications) {
       jobsData = jobsData.map((job) => {
         const application = applicationsData[job.id];
+        // 더미 데이터에 이미 applicationStatus가 있으면 유지, 없으면 savedApplications에서 가져오기
+        if (job.applicationStatus) {
+          return job; // 더미 데이터의 applicationStatus 유지
+        }
         return application ? { ...job, applicationStatus: application.status, appliedDate: application.appliedDate } : job;
       });
     }
