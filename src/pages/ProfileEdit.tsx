@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface GoogleUser {
-  email: string;
-  name: string;
-  picture: string;
-}
+import { useUser } from "../hooks/useUser";
 
 const ProfileEdit: React.FC = () => {
   const navigate = useNavigate();
+  const { profile, age, address, displayName, updateProfile, updateRegion } = useUser();
   const [isEditing, setIsEditing] = useState(false);
+  
   const [profileData, setProfileData] = useState({
-    name: "홍길동",
-    age: "25세",
-    address: "서울시 마포구 거주",
+    name: displayName || "",
+    age: age || "",
+    address: address || "",
   });
 
   const [workHistory, setWorkHistory] = useState({
@@ -25,16 +22,15 @@ const ProfileEdit: React.FC = () => {
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
-  const user: GoogleUser | null = (() => {
-    const data = sessionStorage.getItem("googleUser");
-    return data ? JSON.parse(data) : null;
-  })();
-
   // 저장된 데이터 불러오기
   useEffect(() => {
-    const savedProfileData = sessionStorage.getItem("profileData");
-    if (savedProfileData) {
-      setProfileData(JSON.parse(savedProfileData));
+    // useUser에서 가져온 데이터로 초기화
+    if (displayName) {
+      setProfileData({
+        name: displayName,
+        age: age || "",
+        address: address || "",
+      });
     }
 
     const savedWorkHistory = sessionStorage.getItem("workHistory");
@@ -46,9 +42,9 @@ const ProfileEdit: React.FC = () => {
     if (savedProfileImage) {
       setProfileImage(savedProfileImage);
     }
-  }, []);
+  }, [displayName, age, address]);
 
-  if (!user) return null;
+  if (!profile) return null;
 
   // 프로필 사진 마우스 우클릭 시 수정가능하게
   const handleProfileImageContextMenu = (e: React.MouseEvent) => {
@@ -75,7 +71,22 @@ const ProfileEdit: React.FC = () => {
   const handleEditToggle = () => {
     if (isEditing) {
       // 수정완료 - 저장하고 편집 모드 종료
-      sessionStorage.setItem("profileData", JSON.stringify(profileData));
+      // 닉네임 업데이트
+      if (profileData.name !== displayName) {
+        updateProfile({ nickname: profileData.name });
+      }
+
+      // 주소 업데이트 (형식: "서울 강남구 거주" -> sido: "서울", gugun: "강남구")
+      if (profileData.address && profileData.address !== address) {
+        const addressParts = profileData.address.replace(" 거주", "").split(" ");
+        if (addressParts.length >= 2) {
+          updateRegion({
+            sido: addressParts[0],
+            gugun: addressParts.slice(1).join(" "),
+          });
+        }
+      }
+
       sessionStorage.setItem("workHistory", JSON.stringify(workHistory));
       if (profileImage) {
         sessionStorage.setItem("profileImage", profileImage);
@@ -105,7 +116,7 @@ const ProfileEdit: React.FC = () => {
         <div className="flex flex-col items-center mb-6">
           <div className="relative mb-4">
             <img
-              src={profileImage || user.picture}
+              src={profileImage || profile.picture}
               alt="profile"
               className="w-32 h-32 rounded-full border-4 border-gray-200 cursor-pointer"
               onContextMenu={handleProfileImageContextMenu}
