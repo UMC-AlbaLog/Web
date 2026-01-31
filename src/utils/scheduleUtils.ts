@@ -48,7 +48,60 @@ export const findDynamicFreeSlot = (schedules: ScheduleItem[]) => {
 export const calculateDuration = (start: string, end: string): number => {
   const [startH, startM] = start.split(':').map(Number);
   const [endH, endM] = end.split(':').map(Number);
-  
+
   const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
   return totalMinutes > 0 ? totalMinutes / 60 : 0;
+};
+
+/** 해당 월 스케줄의 총 근무 시간(시간) */
+export const getTotalHoursForMonth = (
+  schedules: ScheduleItem[],
+  year: number,
+  month: number
+): number => {
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  return schedules
+    .filter((s) => s.date.startsWith(prefix) && s.scheduleType !== 'holiday')
+    .reduce((sum, s) => sum + calculateDuration(s.startTime, s.endTime), 0);
+};
+
+/** 해당 월 근무 일수 (스케줄이 있는 날짜 수) */
+export const getWorkDaysForMonth = (
+  schedules: ScheduleItem[],
+  year: number,
+  month: number
+): number => {
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  const dates = new Set(
+    schedules
+      .filter((s) => s.date.startsWith(prefix) && s.scheduleType !== 'holiday')
+      .map((s) => s.date)
+  );
+  return dates.size;
+};
+
+/** 일정 1건 예상 급여 */
+export const getEstimatedPayForSchedule = (s: ScheduleItem): number => {
+  if (s.scheduleType === 'holiday') return 0;
+  const hours = calculateDuration(s.startTime, s.endTime);
+  if (s.salaryType === 'daily' && s.dailyWage != null) return s.dailyWage;
+  return Math.round((s.hourlyWage ?? 0) * hours);
+};
+
+/** 해당 월 스케줄의 예상 급여 합계 */
+export const getEstimatedSalaryForMonth = (
+  schedules: ScheduleItem[],
+  year: number,
+  month: number
+): number => {
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  return schedules
+    .filter((s) => s.date.startsWith(prefix))
+    .reduce((sum, s) => {
+      if (s.scheduleType === 'holiday') return sum;
+      const hours = calculateDuration(s.startTime, s.endTime);
+      if (s.salaryType === 'daily' && s.dailyWage != null) return sum + s.dailyWage;
+      const hourly = s.hourlyWage ?? 0;
+      return sum + hours * hourly;
+    }, 0);
 };

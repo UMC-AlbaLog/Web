@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { ScheduleItem, Workplace, DaySummary } from '../types/schedule';
 import AddScheduleModal from '../components/schedule/AddScheduleModal';
 import ScheduleEditModal from '../components/schedule/ScheduleEditModal';
 import MonthlyView from '../components/schedule/MonthlyView';
 import WeeklyView from '../components/schedule/WeeklyView';
+import ScheduleSummarySidebar from '../components/schedule/ScheduleSummarySidebar';
+import { getEstimatedSalaryForMonth } from '../utils/scheduleUtils';
 
 const Schedule = () => {
   // 상태 관리
@@ -165,10 +167,6 @@ const Schedule = () => {
     setCurrentWeek(newDate);
   };
 
-  const goToToday = () => {
-    setCurrentWeek(new Date());
-  };
-
   // 빈 칸 클릭 시 새 일정 추가 모달
   const handleCellClick = (date: string, timeSlot: string) => {
     const daySchedules = getSchedulesForDate(date);
@@ -280,113 +278,198 @@ const Schedule = () => {
     setHoverPosition(null);
   };
 
+  const totalEstimatedSalary = useMemo(
+    () =>
+      getEstimatedSalaryForMonth(
+        schedules,
+        monthInfo.year,
+        monthInfo.month + 1
+      ),
+    [schedules, monthInfo.year, monthInfo.month]
+  );
+
+  const monthScheduleCount = useMemo(() => {
+    const prefix = `${monthInfo.year}-${String(monthInfo.month + 1).padStart(2, '0')}`;
+    return schedules.filter((s) => s.date.startsWith(prefix) && s.scheduleType !== 'holiday').length;
+  }, [schedules, monthInfo.year, monthInfo.month]);
+
   return (
-    <div className="flex flex-col h-full bg-white p-6">
-      {/* 헤더 */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">스케줄</h1>
-          <div className="flex gap-2">
+    <div className="flex h-full bg-[#F8FAFC]">
+      {/* 메인: 내 스케줄 + 캘린더 */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* 헤더: 내 스케줄 + 월 네비 + 일정 추가 */}
+        <div className="flex items-center justify-between gap-4 p-6 pb-4">
+          <h1 className="text-xl font-bold text-gray-800">내 스케줄</h1>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={
+                  viewMode === 'monthly'
+                    ? () => {
+                        const newDate = new Date(currentWeek);
+                        newDate.setMonth(newDate.getMonth() - 1);
+                        setCurrentWeek(newDate);
+                      }
+                    : goToPreviousWeek
+                }
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              >
+                ◀
+              </button>
+              <span className="text-base font-semibold text-gray-800 min-w-[120px] text-center">
+                | {viewMode === 'monthly'
+                  ? `${monthInfo.year}년 ${monthInfo.month + 1}월`
+                  : `${startOfWeek.getFullYear()}년 ${startOfWeek.getMonth() + 1}월`}
+              </span>
+              <button
+                onClick={
+                  viewMode === 'monthly'
+                    ? () => {
+                        const newDate = new Date(currentWeek);
+                        newDate.setMonth(newDate.getMonth() + 1);
+                        setCurrentWeek(newDate);
+                      }
+                    : goToNextWeek
+                }
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              >
+                ▶
+              </button>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setViewMode('monthly')}
+                className={`px-3 py-1.5 rounded-lg text-sm ${
+                  viewMode === 'monthly'
+                    ? 'bg-gray-200 text-gray-800 font-medium'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                월
+              </button>
+              <button
+                onClick={() => setViewMode('weekly')}
+                className={`px-3 py-1.5 rounded-lg text-sm ${
+                  viewMode === 'weekly'
+                    ? 'bg-gray-200 text-gray-800 font-medium'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                주
+              </button>
+              <button
+                type="button"
+                className="px-3 py-1.5 rounded-lg text-sm bg-white border border-gray-200 text-gray-400 cursor-default"
+                aria-label="목록 뷰 (준비 중)"
+              >
+                목록
+              </button>
+            </div>
             <button
-              onClick={() => setViewMode('monthly')}
-              className={`px-4 py-2 rounded ${
-                viewMode === 'monthly' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-700'
-              }`}
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 flex items-center gap-1.5"
             >
-              월간
-            </button>
-            <button
-              onClick={() => setViewMode('weekly')}
-              className={`px-4 py-2 rounded ${
-                viewMode === 'weekly' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              주간
+              <span className="text-base">+</span>
+              근무 일정 추가
             </button>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            + 일정 추가
-          </button>
         </div>
 
-        {/* 날짜 네비게이션 */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={viewMode === 'monthly' 
-              ? () => {
-                  const newDate = new Date(currentWeek);
-                  newDate.setMonth(newDate.getMonth() - 1);
-                  setCurrentWeek(newDate);
-                }
-              : goToPreviousWeek
-            }
-            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            ◀
-          </button>
-          <span className="text-lg font-semibold">
-            {viewMode === 'monthly' 
-              ? `${monthInfo.year}년 ${monthInfo.month + 1}월`
-              : `${startOfWeek.getFullYear()}년 ${startOfWeek.getMonth() + 1}월`
-            }
-          </span>
-          <button
-            onClick={viewMode === 'monthly'
-              ? () => {
-                  const newDate = new Date(currentWeek);
-                  newDate.setMonth(newDate.getMonth() + 1);
-                  setCurrentWeek(newDate);
-                }
-              : goToNextWeek
-            }
-            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            ▶
-          </button>
-          <button
-            onClick={goToToday}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            오늘
-          </button>
-        </div>
+        {/* 빈 상태 vs 캘린더 */}
+        {viewMode === 'monthly' && schedules.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white rounded-xl mx-6 border border-gray-100">
+            <div
+              className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
+              style={{ background: 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%)' }}
+            >
+              <svg
+                className="w-12 h-12 text-indigo-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <p className="text-gray-800 font-medium mb-1">아직 일정이 등록되지 않았어요.</p>
+            <p className="text-gray-500 text-sm text-center mb-6 max-w-sm">
+              새 일정을 등록하여 근무 시간을 기록하고, 예상 급여를 확인해보세요.
+            </p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700"
+            >
+              일정 추가하기
+            </button>
+          </div>
+        ) : viewMode === 'monthly' ? (
+          <>
+            <div className="flex-1 px-6 overflow-auto">
+              <MonthlyView
+                monthInfo={monthInfo}
+                workplaces={workplaces}
+                getSchedulesForDate={getSchedulesForDate}
+                formatDate={formatDate}
+                onDayClick={handleMonthDayCellClick}
+                onScheduleClick={setEditingSchedule}
+                onDatePopupEdit={setEditingSchedule}
+              />
+            </div>
+            <div className="px-6 py-5 border-t border-gray-100 bg-white">
+              <p className="text-sm font-medium text-gray-800 mb-0.5">이번 달 예상 급여</p>
+              <p className="text-xs text-gray-500 mb-2">
+                총 {monthScheduleCount}건의 근무 일정이 있습니다. (주휴수당 포함)
+              </p>
+              <p className="text-2xl font-bold text-indigo-600">
+                {totalEstimatedSalary.toLocaleString()}원
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex-1 px-6 overflow-auto">
+              <WeeklyView
+                weekDays={weekDays}
+                workplaces={workplaces}
+                timeSlots={timeSlots}
+                getSchedulesForDate={getSchedulesForDate}
+                getDaySummary={getDaySummary}
+                formatDate={formatDate}
+                onCellClick={handleCellClick}
+                onScheduleClick={setEditingSchedule}
+                onDayHover={handleDayHover}
+                onDayLeave={handleDayLeave}
+                hoveredDay={hoveredDay}
+                hoverPosition={hoverPosition}
+              />
+            </div>
+            <div className="px-6 py-5 border-t border-gray-100 bg-white">
+              <p className="text-sm font-medium text-gray-800 mb-0.5">이번 달 예상 급여</p>
+              <p className="text-xs text-gray-500 mb-2">
+                총 {monthScheduleCount}건의 근무 일정이 있습니다. (주휴수당 포함)
+              </p>
+              <p className="text-2xl font-bold text-indigo-600">
+                {totalEstimatedSalary.toLocaleString()}원
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* 캘린더 그리드 */}
-      {viewMode === 'monthly' ? (
-        <MonthlyView
-          monthInfo={monthInfo}
-          workplaces={workplaces}
-          getSchedulesForDate={getSchedulesForDate}
-          formatDate={formatDate}
-          onDayClick={handleMonthDayCellClick}
-          onScheduleClick={setEditingSchedule}
-        />
-      ) : (
-        <WeeklyView
-          weekDays={weekDays}
-          workplaces={workplaces}
-          timeSlots={timeSlots}
-          getSchedulesForDate={getSchedulesForDate}
-          getDaySummary={getDaySummary}
-          formatDate={formatDate}
-          onCellClick={handleCellClick}
-          onScheduleClick={setEditingSchedule}
-          onDayHover={handleDayHover}
-          onDayLeave={handleDayLeave}
-          hoveredDay={hoveredDay}
-          hoverPosition={hoverPosition}
-        />
-      )}
+      {/* 오른쪽: 일정 요약 사이드바 */}
+      <ScheduleSummarySidebar
+        schedules={schedules}
+        workplaces={workplaces}
+        year={monthInfo.year}
+        month={monthInfo.month}
+        onScheduleClick={setEditingSchedule}
+      />
 
-      {/* 새 일정 추가 모달 */}
       {showAddModal && (
         <AddScheduleModal
           workplaces={workplaces}
@@ -398,7 +481,6 @@ const Schedule = () => {
         />
       )}
 
-      {/* 일정 수정 모달 */}
       {editingSchedule && (
         <ScheduleEditModal
           schedule={editingSchedule}
@@ -406,6 +488,7 @@ const Schedule = () => {
           onSave={handleEditSchedule}
           onDelete={handleDeleteSchedule}
           onClose={() => setEditingSchedule(null)}
+          onAddWorkplace={(workplace) => setWorkplaces((prev) => [...prev, workplace])}
         />
       )}
     </div>

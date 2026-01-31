@@ -54,17 +54,13 @@ const OnboardingRegion = () => {
   }, []);
 
   const handleNext = () => {
-    const regionData = {
-      sido: selectedSido,
-      gugun: selectedGugun,
-    };
-
-    // sessionStorage에 저장 (기존 로직 유지)
-    sessionStorage.setItem("userRegion", JSON.stringify(regionData));
-
-    // localStorage에도 저장 (영구 저장)
-    localStorage.setItem("user_region", JSON.stringify(regionData));
-
+    sessionStorage.setItem(
+      "userRegion",
+      JSON.stringify({
+        sido: selectedSido,
+        gugun: selectedGugun,
+      })
+    );
     navigate("/home");
   };
 

@@ -1,6 +1,5 @@
 export type WorkStatus = "upcoming" | "working" | "done";
 export type ApplicationStatus = "pending" | "approved" | "rejected";
-export type SettlementStatus = "pending" | "completed";
 
 export interface Work {
   id: string;
@@ -17,8 +16,6 @@ export interface Work {
   lng?: number;
   applicationStatus?: ApplicationStatus;
   appliedDate?: string;
-  settlementStatus?: SettlementStatus;
-  actualPay?: number; // 실제 수입 (정산 완료 시)
   description: string;
   requirements: string;
   notice: string;

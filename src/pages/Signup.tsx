@@ -41,27 +41,14 @@ const Signup = () => {
       .slice(0, 10)
       .replace(/-/g, ".");
 
-    const signupInfo = {
-      nickname,
-      birth: formattedBirth,
-      gender,
-    };
-
-    // sessionStorage에 저장 (기존 로직 유지)
-    sessionStorage.setItem("signupInfo", JSON.stringify(signupInfo));
-
-    // localStorage에도 저장 (영구 저장)
-    if (user) {
-      const userProfile = {
-        email: user.email,
-        name: user.name,
-        picture: user.picture,
+    sessionStorage.setItem(
+      "signupInfo",
+      JSON.stringify({
         nickname,
         birth: formattedBirth,
         gender,
-      };
-      localStorage.setItem("user_profile", JSON.stringify(userProfile));
-    }
+      })
+    );
 
     navigate("/onboarding");
   };
