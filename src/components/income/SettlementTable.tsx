@@ -1,40 +1,26 @@
 // components/income/SettlementTable.tsx
+import { useState } from "react";
 import type { Work, SettlementStatus } from "../../types/work";
+
+type FilterStatus = "all" | "pending" | "completed" | "unsettled";
 
 interface SettlementTableProps {
   completedWorks: Work[];
-  updateSettlementStatus: (workId: string, status: SettlementStatus, actualPay?: number) => void;
 }
 
-const SettlementTable = ({
-  completedWorks,
-  updateSettlementStatus,
-}: SettlementTableProps) => {
-  // 날짜 포맷팅 (YYYY-MM-DD -> MM/DD)
+const SettlementTable = ({ completedWorks }: SettlementTableProps) => {
+  const [filter, setFilter] = useState<FilterStatus>("all");
+
+  /* 날짜 포맷 */
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${month}/${day.toString().padStart(2, "0")}`;
+    return `${date.getMonth() + 1}/${date
+      .getDate()
+      .toString()
+      .padStart(2, "0")}`;
   };
 
-  // 시간 포맷팅 (duration -> "N시간")
-  const formatDuration = (duration: number) => {
-    return `${duration}시간`;
-  };
-
-  // 정산 상태에 따른 스타일
-  const getStatusStyle = (status?: SettlementStatus) => {
-    switch (status) {
-      case "completed":
-        return "text-green-600";
-      case "pending":
-        return "text-yellow-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
+  /* 정산 상태 텍스트 */
   const getStatusText = (status?: SettlementStatus) => {
     switch (status) {
       case "completed":
@@ -42,46 +28,94 @@ const SettlementTable = ({
       case "pending":
         return "정산 대기";
       default:
-        return "정산 대기";
+        return "미정산";
     }
   };
 
-  // 날짜순으로 정렬 (최신순)
-  const sortedWorks = [...completedWorks].sort((a, b) => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
-  });
+  /* 정산 상태 스타일 */
+  const getStatusStyle = (status?: SettlementStatus) => {
+    switch (status) {
+      case "completed":
+        return "text-green-600";
+      case "pending":
+        return "text-yellow-600";
+      default:
+        return "text-gray-500";
+    }
+  };
+
+  /* 필터링 */
+  const filteredWorks = completedWorks
+    .filter((work) => {
+      if (filter === "all") return true;
+      if (filter === "unsettled") return !work.settlementStatus;
+      return work.settlementStatus === filter;
+    })
+    .sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
 
   return (
     <div className="bg-white rounded-xl p-6 shadow">
-      <h3 className="font-semibold mb-4">정산 상태 리스트</h3>
+      <h3 className="font-semibold mb-3">정산 상태 리스트</h3>
 
-      {sortedWorks.length === 0 ? (
+      {/* 🔘 필터 버튼 */}
+      <div className="flex gap-2 mb-4">
+        {[
+          { key: "all", label: "전체" },
+          { key: "pending", label: "정산 대기" },
+          { key: "completed", label: "정산 완료" },
+          { key: "unsettled", label: "미정산" },
+        ].map((btn) => (
+          <button
+            key={btn.key}
+            onClick={() => setFilter(btn.key as FilterStatus)}
+            className={`px-3 py-1 text-sm border rounded
+              ${
+                filter === btn.key
+                  ? "bg-gray-700 text-white"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 📋 테이블 */}
+      {filteredWorks.length === 0 ? (
         <div className="text-center py-8 text-gray-400">
-          <p>완료된 작업이 없습니다</p>
+          해당 상태의 작업이 없습니다
         </div>
       ) : (
         <table className="w-full text-sm">
-          <thead className="border-b">
-            <tr className="text-left text-gray-500">
-              <th className="pb-2">근무일자</th>
-              <th className="pb-2">매장명</th>
-              <th className="pb-2">근무시간</th>
-              <th className="pb-2">예상 수입</th>
-              <th className="pb-2">실제 수입</th>
-              <th className="pb-2">정산 상태</th>
+          <thead className="border-b text-gray-500">
+            <tr>
+              <th className="pb-2 text-left">근무일자</th>
+              <th className="pb-2 text-left">매장명</th>
+              <th className="pb-2 text-left">근무 시간</th>
+              <th className="pb-2 text-left">예상 수입</th>
+              <th className="pb-2 text-left">실제 수입</th>
+              <th className="pb-2 text-left">정산 상태</th>
             </tr>
           </thead>
           <tbody>
-            {sortedWorks.map((work) => (
+            {filteredWorks.map((work) => (
               <tr key={work.id} className="border-b">
                 <td className="py-3">{formatDate(work.date)}</td>
                 <td className="py-3">{work.name}</td>
-                <td className="py-3">{formatDuration(work.duration)}</td>
-                <td className="py-3">{work.expectedPay.toLocaleString()}원</td>
+                <td className="py-3">{work.duration}시간</td>
                 <td className="py-3">
-                  {(work.actualPay || work.expectedPay).toLocaleString()}원
+                  {work.expectedPay.toLocaleString()}원
                 </td>
-                <td className={`py-3 ${getStatusStyle(work.settlementStatus)}`}>
+                <td className="py-3">
+                  {(work.actualPay ?? work.expectedPay).toLocaleString()}원
+                </td>
+                <td
+                  className={`py-3 font-medium ${getStatusStyle(
+                    work.settlementStatus
+                  )}`}
+                >
                   {getStatusText(work.settlementStatus)}
                 </td>
               </tr>
