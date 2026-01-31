@@ -14,32 +14,16 @@ export const useJobs = () => {
     const savedJobs = localStorage.getItem(JOBS_STORAGE_KEY);
     const savedApplications = localStorage.getItem(APPLICATIONS_STORAGE_KEY);
 
-    let jobsData: Work[] = savedJobs ? JSON.parse(savedJobs) : [];
+    let jobsData: Work[] = savedJobs ? JSON.parse(savedJobs) : INITIAL_JOBS;
     let applicationsData: Record<string, { status: ApplicationStatus; appliedDate: string }> = savedApplications ? JSON.parse(savedApplications) : {};
 
-    // localStorage에 데이터가 없거나, INITIAL_JOBS의 완료된 작업들이 없는 경우 병합
-    if (!savedJobs || jobsData.length === 0) {
-      jobsData = INITIAL_JOBS;
+    if (!savedJobs) {
       localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(INITIAL_JOBS));
-    } else {
-      // localStorage에 데이터가 있더라도, INITIAL_JOBS의 완료된 작업들(status: "done")은 항상 포함
-      const existingIds = new Set(jobsData.map((job) => job.id));
-      const completedJobsFromInitial = INITIAL_JOBS.filter(
-        (job) => job.status === "done" && !existingIds.has(job.id)
-      );
-      if (completedJobsFromInitial.length > 0) {
-        jobsData = [...jobsData, ...completedJobsFromInitial];
-        localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobsData));
-      }
     }
 
     if (savedApplications) {
       jobsData = jobsData.map((job) => {
         const application = applicationsData[job.id];
-        // 더미 데이터에 이미 applicationStatus가 있으면 유지, 없으면 savedApplications에서 가져오기
-        if (job.applicationStatus) {
-          return job; // 더미 데이터의 applicationStatus 유지
-        }
         return application ? { ...job, applicationStatus: application.status, appliedDate: application.appliedDate } : job;
       });
     }

@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../hooks/useUser";
+
+interface GoogleUser {
+  email: string;
+  name: string;
+  picture: string;
+}
 
 interface Badge {
   id: string;
@@ -10,13 +15,24 @@ interface Badge {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { profile, age, address, displayName } = useUser();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [badges, setBadges] = useState<Badge[]>([
     { id: "1", name: "주말 대타 5회 달성", achieved: false },
     { id: "2", name: "편의점 최초 근무", achieved: false },
     { id: "3", name: "지각 없이 연속 10회 근무", achieved: false },
   ]);
+
+  // 저장된 프로필 데이터 불러오기
+  const [profileData, setProfileData] = useState(() => {
+    const saved = sessionStorage.getItem("profileData");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          name: "홍길동",
+          age: "25세",
+          address: "서울시 마포구 거주",
+        };
+  });
 
   // 저장된 대표 이력 불러오기
   const [workHistory, setWorkHistory] = useState(() => {
@@ -31,8 +47,13 @@ const Profile: React.FC = () => {
         };
   });
 
+  const user: GoogleUser | null = (() => {
+    const data = sessionStorage.getItem("googleUser");
+    return data ? JSON.parse(data) : null;
+  })();
+
   // 저장된 프로필 이미지 불러오기
-  useEffect(() => {
+  React.useEffect(() => {
     const savedImage = sessionStorage.getItem("profileImage");
     if (savedImage) {
       setProfileImage(savedImage);
@@ -40,6 +61,11 @@ const Profile: React.FC = () => {
 
     // sessionStorage 변경 감지 (다른 탭에서 변경되었을 경우)
     const handleStorageChange = () => {
+      const savedProfileData = sessionStorage.getItem("profileData");
+      if (savedProfileData) {
+        setProfileData(JSON.parse(savedProfileData));
+      }
+
       const savedWorkHistory = sessionStorage.getItem("workHistory");
       if (savedWorkHistory) {
         setWorkHistory(JSON.parse(savedWorkHistory));
@@ -55,7 +81,7 @@ const Profile: React.FC = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  if (!profile) return null;
+  if (!user) return null;
 
   // 프로필 사진 클릭 또는 우클릭 시 수정 가능하게
   const handleProfileImageClick = () => {
@@ -116,7 +142,7 @@ const Profile: React.FC = () => {
               onContextMenu={handleProfileImageContextMenu}
             >
               <img
-                src={profileImage || profile.picture}
+                src={profileImage || user.picture}
                 alt="profile"
                 className="w-32 h-32 rounded-full object-cover"
               />
@@ -125,10 +151,10 @@ const Profile: React.FC = () => {
             <div className="flex-1">
               <div className="space-y-2">
                 <div>
-                  <span className="text-2xl font-black text-gray-800">{displayName}</span>
+                  <span className="text-2xl font-black text-gray-800">{profileData.name}</span>
                 </div>
-                {age && <p className="text-lg font-bold text-gray-600">{age}</p>}
-                {address && <p className="text-sm font-bold text-gray-500">{address}</p>}
+                <p className="text-lg font-bold text-gray-600">{profileData.age}</p>
+                <p className="text-sm font-bold text-gray-500">{profileData.address}</p>
               </div>
             </div>
           </div>

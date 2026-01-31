@@ -1,36 +1,19 @@
 // components/income/IncomeGoal.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-interface IncomeGoalProps {
-  currentMonthIncome: number;
-}
-
-const GOAL_STORAGE_KEY = "income_goal";
-
-const IncomeGoal = ({ currentMonthIncome }: IncomeGoalProps) => {
+const IncomeGoal = () => {
   const [goal, setGoal] = useState(600000);
+  const [current] = useState(480000);
+
   const [isEditing, setIsEditing] = useState(false);
   const [tempGoal, setTempGoal] = useState(goal.toString());
 
-  // 목표 금액 로드
-  useEffect(() => {
-    const savedGoal = localStorage.getItem(GOAL_STORAGE_KEY);
-    if (savedGoal) {
-      const goalValue = Number(savedGoal);
-      if (!isNaN(goalValue) && goalValue > 0) {
-        setGoal(goalValue);
-        setTempGoal(goalValue.toString());
-      }
-    }
-  }, []);
-
-  const percent = Math.min((currentMonthIncome / goal) * 100, 100);
+  const percent = Math.min((current / goal) * 100, 100);
 
   const handleSave = () => {
     const value = Number(tempGoal.replace(/,/g, ""));
     if (!isNaN(value) && value > 0) {
       setGoal(value);
-      localStorage.setItem(GOAL_STORAGE_KEY, value.toString());
     }
     setIsEditing(false);
   };
@@ -61,7 +44,7 @@ const IncomeGoal = ({ currentMonthIncome }: IncomeGoalProps) => {
         </div>
 
         <p className="text-lg font-bold mt-2">
-          현재: {currentMonthIncome.toLocaleString()}원
+          현재: {current.toLocaleString()}원
         </p>
 
         {/* 진행 바 */}
