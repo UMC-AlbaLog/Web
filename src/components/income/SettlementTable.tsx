@@ -55,6 +55,9 @@ const SettlementTable = ({ completedWorks }: SettlementTableProps) => {
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
+
+const SettlementTable = () => {
+
   return (
     <div className="bg-white rounded-xl p-6 shadow">
       <h3 className="font-semibold mb-3">정산 상태 리스트</h3>
@@ -82,7 +85,8 @@ const SettlementTable = ({ completedWorks }: SettlementTableProps) => {
         ))}
       </div>
 
-      {/* 📋 테이블 */}
+
+      {/*  테이블 */}
       {filteredWorks.length === 0 ? (
         <div className="text-center py-8 text-gray-400">
           해당 상태의 작업이 없습니다
@@ -123,6 +127,37 @@ const SettlementTable = ({ completedWorks }: SettlementTableProps) => {
           </tbody>
         </table>
       )}
+
+      <table className="w-full text-sm">
+        <thead className="border-b">
+          <tr className="text-left text-gray-500">
+            <th>근무일자</th>
+            <th>매장명</th>
+            <th>근무시간</th>
+            <th>예상 수입</th>
+            <th>실제 수입</th>
+            <th>정산 상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-b">
+            <td>11/01</td>
+            <td>CU 홍대점</td>
+            <td>4시간</td>
+            <td>44,000원</td>
+            <td>44,000원</td>
+            <td className="text-green-600">정산 완료</td>
+          </tr>
+          <tr>
+            <td>11/11</td>
+            <td>CU 홍대점</td>
+            <td>4시간</td>
+            <td>44,000원</td>
+            <td>44,000원</td>
+            <td className="text-yellow-600">정산 대기</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 };
