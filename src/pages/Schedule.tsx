@@ -1,48 +1,15 @@
-import { useState, useEffect, useMemo } from 'react';
-import type { ScheduleItem, Workplace, DaySummary } from '../types/schedule';
+import { useState, useMemo } from 'react';
+import type { ScheduleItem, DaySummary } from '../types/schedule';
 import AddScheduleModal from '../components/schedule/AddScheduleModal';
 import ScheduleEditModal from '../components/schedule/ScheduleEditModal';
 import MonthlyView from '../components/schedule/MonthlyView';
 import WeeklyView from '../components/schedule/WeeklyView';
 import ScheduleSummarySidebar from '../components/schedule/ScheduleSummarySidebar';
 import { getEstimatedSalaryForMonth } from '../utils/scheduleUtils';
+import { useSchedules } from '../contexts/SchedulesContext';
 
 const Schedule = () => {
-  // 상태 관리
-  const [schedules, setSchedules] = useState<ScheduleItem[]>(() => {
-    // 초기 상태를 localStorage에서 직접 로드
-    const saved = localStorage.getItem('schedules');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        console.log('🔵 schedules 초기 로드:', parsed.length, '개');
-        return parsed;
-      } catch (error) {
-        console.error('❌ schedules 초기 로드 실패:', error);
-      }
-    }
-    return [];
-  });
-
-  const [workplaces, setWorkplaces] = useState<Workplace[]>(() => {
-    // 초기 상태를 localStorage에서 직접 로드
-    const saved = localStorage.getItem('workplaces');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        console.log('🔵 workplaces 초기 로드:', parsed.length, '개');
-        return parsed;
-      } catch (error) {
-        console.error('❌ workplaces 초기 로드 실패:', error);
-      }
-    }
-    // localStorage에 없으면 기본 작업장 반환
-    return [
-      { id: '1', name: '카페 A', color: '#FF6B6B' },
-      { id: '2', name: '편의점 B', color: '#4ECDC4' },
-      { id: '3', name: '음식점 C', color: '#FFE66D' },
-    ];
-  });
+  const { schedules, workplaces, setSchedules, setWorkplaces } = useSchedules();
 
   const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
@@ -50,31 +17,6 @@ const Schedule = () => {
   const [editingSchedule, setEditingSchedule] = useState<ScheduleItem | null>(null);
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
-
-  // 초기화 완료 플래그
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // 컴포넌트 마운트 후 저장 활성화
-  useEffect(() => {
-    console.log('✅ 컴포넌트 마운트 완료, 저장 활성화');
-    setIsInitialized(true);
-  }, []);
-
-  // 스케줄 저장 (초기화 완료 후에만)
-  useEffect(() => {
-    if (isInitialized) {
-      console.log('💾 schedules 저장:', schedules.length, '개');
-      localStorage.setItem('schedules', JSON.stringify(schedules));
-    }
-  }, [schedules, isInitialized]);
-
-  // workplaces 저장 (초기화 완료 후에만)
-  useEffect(() => {
-    if (isInitialized) {
-      console.log('💾 workplaces 저장:', workplaces.length, '개');
-      localStorage.setItem('workplaces', JSON.stringify(workplaces));
-    }
-  }, [workplaces, isInitialized]);
 
   // 주간 정보 가져오기
   const getWeekInfo = (date: Date) => {
@@ -294,11 +236,11 @@ const Schedule = () => {
   }, [schedules, monthInfo.year, monthInfo.month]);
 
   return (
-    <div className="flex h-full bg-[#F8FAFC]">
+    <div className="flex h-full bg-slate-50">
       {/* 메인: 내 스케줄 + 캘린더 */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* 헤더: 내 스케줄 + 월 네비 + 일정 추가 */}
-        <div className="flex items-center justify-between gap-4 p-6 pb-4">
+        <div className="flex items-center justify-between gap-4 p-6 pb-6">
           <h1 className="text-xl font-bold text-gray-800">내 스케줄</h1>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -375,41 +317,70 @@ const Schedule = () => {
           </div>
         </div>
 
-        {/* 빈 상태 vs 캘린더 */}
+        {/* 빈 상태: 캘린더 그리드 + 아래 빈 상태 박스 */}
         {viewMode === 'monthly' && schedules.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white rounded-xl mx-6 border border-gray-100">
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
-              style={{ background: 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%)' }}
-            >
-              <svg
-                className="w-12 h-12 text-indigo-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+          <>
+            <div className="flex-1 px-6 pt-2 pb-4 overflow-auto min-h-[65vh]">
+              <WeeklyView
+                weekDays={weekDays}
+                workplaces={workplaces}
+                timeSlots={timeSlots}
+                getSchedulesForDate={getSchedulesForDate}
+                getDaySummary={getDaySummary}
+                formatDate={formatDate}
+                onCellClick={handleCellClick}
+                onScheduleClick={setEditingSchedule}
+                onDayHover={handleDayHover}
+                onDayLeave={handleDayLeave}
+                hoveredDay={hoveredDay}
+                hoverPosition={hoverPosition}
+              />
             </div>
-            <p className="text-gray-800 font-medium mb-1">아직 일정이 등록되지 않았어요.</p>
-            <p className="text-gray-500 text-sm text-center mb-6 max-w-sm">
-              새 일정을 등록하여 근무 시간을 기록하고, 예상 급여를 확인해보세요.
-            </p>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700"
-            >
-              일정 추가하기
-            </button>
-          </div>
+            <div className="px-6 py-6 flex justify-center">
+              <div className="w-full max-w-[894px] min-h-[280px] bg-slate-100 rounded-lg flex flex-col items-center justify-center py-12 px-4">
+                <div className="w-20 h-20 bg-indigo-200/70 rounded-[40px] border border-black/10 flex items-center justify-center mb-6">
+                  <svg
+                    className="w-8 h-8 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-gray-900 text-base font-medium font-['Pretendard'] mb-2">
+                  등록된 근무 일정이 없어요
+                </p>
+                <p className="text-slate-400 text-xs font-medium font-['Pretendard'] text-center leading-5 mb-6 max-w-[20rem]">
+                  첫 근무 일정을 등록하면 근무 시간과 예상 급여를 한 번에
+                  <br />
+                  확인할 수 있어요.
+                </p>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="px-4 py-2 bg-indigo-600 rounded-lg inline-flex items-center gap-1.5 text-white text-xs font-medium font-['Pretendard'] hover:bg-indigo-700"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  첫 근무 일정 등록하기
+                </button>
+                <p className="text-slate-400 text-xs font-medium font-['Pretendard'] text-center leading-5 mt-6 max-w-[20rem]">
+                  오른쪽 상단 버튼이나 날짜 셀을 눌러서도 일정을 추가할 수
+                  <br />
+                  있어요.
+                </p>
+              </div>
+            </div>
+          </>
         ) : viewMode === 'monthly' ? (
           <>
-            <div className="flex-1 px-6 overflow-auto">
+            <div className="flex-1 px-6 pt-2 pb-4 overflow-auto min-h-[65vh]">
               <MonthlyView
                 monthInfo={monthInfo}
                 workplaces={workplaces}
@@ -432,7 +403,7 @@ const Schedule = () => {
           </>
         ) : (
           <>
-            <div className="flex-1 px-6 overflow-auto">
+            <div className="flex-1 px-6 pt-2 pb-4 overflow-auto min-h-[65vh]">
               <WeeklyView
                 weekDays={weekDays}
                 workplaces={workplaces}

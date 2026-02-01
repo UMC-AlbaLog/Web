@@ -14,12 +14,19 @@ export const useJobs = () => {
     const savedJobs = localStorage.getItem(JOBS_STORAGE_KEY);
     const savedApplications = localStorage.getItem(APPLICATIONS_STORAGE_KEY);
 
-    let jobsData: Work[] = savedJobs ? JSON.parse(savedJobs) : INITIAL_JOBS;
-    let applicationsData: Record<string, { status: ApplicationStatus; appliedDate: string }> = savedApplications ? JSON.parse(savedApplications) : {};
-
-    if (!savedJobs) {
-      localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(INITIAL_JOBS));
+    let jobsData: Work[] = [];
+    if (savedJobs) {
+      try {
+        jobsData = JSON.parse(savedJobs);
+      } catch {
+        jobsData = INITIAL_JOBS;
+      }
     }
+    if (jobsData.length === 0) {
+      jobsData = [...INITIAL_JOBS];
+      localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobsData));
+    }
+    let applicationsData: Record<string, { status: ApplicationStatus; appliedDate: string }> = savedApplications ? JSON.parse(savedApplications) : {};
 
     if (savedApplications) {
       jobsData = jobsData.map((job) => {

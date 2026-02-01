@@ -1,6 +1,8 @@
 // 일정 타입 정의
 export type ScheduleType = 'work' | 'holiday';
 export type SalaryType = 'hourly' | 'daily' | 'monthly' | 'per_task';
+/** 홈 출근/퇴근 상태 (useHomeData, 수입 동기화용) */
+export type ScheduleStatus = 'upcoming' | 'working' | 'done';
 
 export interface ScheduleItem {
   id: string;
@@ -25,6 +27,8 @@ export interface ScheduleItem {
   color?: string;
   /** 알림 설정 */
   notification?: boolean;
+  /** 출근/퇴근 상태 (홈·수입 동기화용) */
+  status?: ScheduleStatus;
 }
 
 export const SCHEDULE_COLORS = [

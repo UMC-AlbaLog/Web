@@ -74,7 +74,7 @@ const MonthlyView = ({
         {DAY_NAMES.map((day, index) => (
           <div
             key={index}
-            className="p-2.5 border-r border-gray-100 text-center text-sm font-medium text-gray-600 last:border-r-0"
+            className="p-3 border-r border-gray-100 text-center text-base font-medium text-gray-600 last:border-r-0"
           >
             {day}
           </div>
@@ -82,7 +82,7 @@ const MonthlyView = ({
       </div>
 
       {monthInfo.weeks.map((week, weekIndex) => (
-        <div key={weekIndex} className="grid grid-cols-7 min-h-[100px]">
+        <div key={weekIndex} className="grid grid-cols-7 min-h-[140px]">
           {week.map((day, dayIndex) => {
             const dateStr = formatDate(day);
             const daySchedules = getSchedulesForDate(dateStr);
@@ -95,13 +95,13 @@ const MonthlyView = ({
             return (
               <div
                 key={dayIndex}
-                className={`min-h-[100px] p-2 border-b border-r border-gray-100 cursor-pointer hover:bg-gray-50/50 last:border-r-0 ${
+                className={`min-h-[140px] p-3 border-b border-r border-gray-100 cursor-pointer hover:bg-gray-50/50 last:border-r-0 ${
                   !isCurrentMonth ? 'bg-gray-50/50 text-gray-400' : ''
                 } ${isToday ? 'ring-1 ring-indigo-200 ring-inset bg-indigo-50/30' : ''}`}
                 onClick={(e) => handleCellClick(day, e)}
               >
-                <div className="text-sm font-medium text-gray-700 mb-1">{day.getDate()}</div>
-                <div className="space-y-1">
+                <div className="text-base font-medium text-gray-700 mb-1.5">{day.getDate()}</div>
+                <div className="space-y-1.5">
                   {daySchedules.slice(0, 3).map((schedule) => {
                     const color = getColor(schedule, workplaces);
                     const isHoliday = schedule.scheduleType === 'holiday';
@@ -109,7 +109,7 @@ const MonthlyView = ({
                     return (
                       <div
                         key={schedule.id}
-                        className="text-xs rounded p-1.5 cursor-pointer hover:opacity-90 bg-gray-50 border-l-2"
+                        className="text-sm rounded p-2 cursor-pointer hover:opacity-90 bg-gray-50 border-l-2"
                         style={{ borderLeftColor: isHoliday ? '#DC2626' : color }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -132,7 +132,7 @@ const MonthlyView = ({
                     );
                   })}
                   {daySchedules.length > 3 && (
-                    <div className="text-xs text-gray-400">+{daySchedules.length - 3}</div>
+                    <div className="text-sm text-gray-400">+{daySchedules.length - 3}</div>
                   )}
                 </div>
               </div>
