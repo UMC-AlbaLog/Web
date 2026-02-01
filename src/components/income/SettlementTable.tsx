@@ -6,9 +6,10 @@ type FilterStatus = "all" | "pending" | "completed" | "unsettled";
 
 interface SettlementTableProps {
   completedWorks: Work[];
+  updateSettlementStatus?: (workId: string, status: SettlementStatus, actualPay?: number) => void;
 }
 
-const SettlementTable = ({ completedWorks }: SettlementTableProps) => {
+const SettlementTable = ({ completedWorks, updateSettlementStatus: _updateSettlementStatus }: SettlementTableProps) => {
   const [filter, setFilter] = useState<FilterStatus>("all");
 
   /* 날짜 포맷 */
@@ -51,12 +52,7 @@ const SettlementTable = ({ completedWorks }: SettlementTableProps) => {
       if (filter === "unsettled") return !work.settlementStatus;
       return work.settlementStatus === filter;
     })
-    .sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-
-const SettlementTable = () => {
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="bg-white rounded-xl p-6 shadow">
@@ -65,28 +61,24 @@ const SettlementTable = () => {
       {/* 🔘 필터 버튼 */}
       <div className="flex gap-2 mb-4">
         {[
-          { key: "all", label: "전체" },
-          { key: "pending", label: "정산 대기" },
-          { key: "completed", label: "정산 완료" },
-          { key: "unsettled", label: "미정산" },
+          { key: "all" as const, label: "전체" },
+          { key: "pending" as const, label: "정산 대기" },
+          { key: "completed" as const, label: "정산 완료" },
+          { key: "unsettled" as const, label: "미정산" },
         ].map((btn) => (
           <button
             key={btn.key}
-            onClick={() => setFilter(btn.key as FilterStatus)}
-            className={`px-3 py-1 text-sm border rounded
-              ${
-                filter === btn.key
-                  ? "bg-gray-700 text-white"
-                  : "bg-gray-100 text-gray-600"
-              }`}
+            onClick={() => setFilter(btn.key)}
+            className={`px-3 py-1 text-sm border rounded ${
+              filter === btn.key ? "bg-gray-700 text-white" : "bg-gray-100 text-gray-600"
+            }`}
           >
             {btn.label}
           </button>
         ))}
       </div>
 
-
-      {/*  테이블 */}
+      {/* 테이블 */}
       {filteredWorks.length === 0 ? (
         <div className="text-center py-8 text-gray-400">
           해당 상태의 작업이 없습니다
@@ -109,16 +101,12 @@ const SettlementTable = () => {
                 <td className="py-3">{formatDate(work.date)}</td>
                 <td className="py-3">{work.name}</td>
                 <td className="py-3">{work.duration}시간</td>
-                <td className="py-3">
-                  {work.expectedPay.toLocaleString()}원
-                </td>
+                <td className="py-3">{work.expectedPay.toLocaleString()}원</td>
                 <td className="py-3">
                   {(work.actualPay ?? work.expectedPay).toLocaleString()}원
                 </td>
                 <td
-                  className={`py-3 font-medium ${getStatusStyle(
-                    work.settlementStatus
-                  )}`}
+                  className={`py-3 font-medium ${getStatusStyle(work.settlementStatus)}`}
                 >
                   {getStatusText(work.settlementStatus)}
                 </td>
@@ -127,37 +115,6 @@ const SettlementTable = () => {
           </tbody>
         </table>
       )}
-
-      <table className="w-full text-sm">
-        <thead className="border-b">
-          <tr className="text-left text-gray-500">
-            <th>근무일자</th>
-            <th>매장명</th>
-            <th>근무시간</th>
-            <th>예상 수입</th>
-            <th>실제 수입</th>
-            <th>정산 상태</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b">
-            <td>11/01</td>
-            <td>CU 홍대점</td>
-            <td>4시간</td>
-            <td>44,000원</td>
-            <td>44,000원</td>
-            <td className="text-green-600">정산 완료</td>
-          </tr>
-          <tr>
-            <td>11/11</td>
-            <td>CU 홍대점</td>
-            <td>4시간</td>
-            <td>44,000원</td>
-            <td>44,000원</td>
-            <td className="text-yellow-600">정산 대기</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   );
 };
