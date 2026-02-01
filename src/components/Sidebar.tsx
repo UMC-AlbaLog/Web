@@ -55,48 +55,54 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   return (
-    <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-5 border-b border-gray-100 flex items-center gap-2">
-        <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        <span className="text-lg font-bold text-gray-800">알바로그</span>
+    <aside className="w-64 px-6 pt-10 pb-8 bg-slate-100 shadow-[0px_4px_11px_0px_rgba(0,0,0,0.10)] border-r border-black/10 flex flex-col items-start">
+      <div className="w-52 pb-12 flex flex-col justify-start items-center">
+        <div className="w-44 inline-flex justify-start items-center gap-3">
+          <div className="w-6 h-6 relative overflow-hidden shrink-0">
+            <div className="absolute left-[2px] top-[7px] w-5 h-3.5 border-2 border-gray-900 rounded-sm" />
+            <div className="absolute left-[8px] top-[3px] w-2 h-4 border-2 border-gray-900 rounded-sm" />
+          </div>
+          <span className="text-gray-900 text-xl font-bold font-['Pretendard']">알바로그</span>
+        </div>
       </div>
 
-      <nav className="flex-1 p-3">
-        <ul className="space-y-0.5">
-          {menus.map((menu) => (
-            <li key={menu.path}>
-              <NavLink
-                to={menu.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-indigo-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`
-                }
-              >
-                <Icon name={menu.icon} className="w-5 h-5 shrink-0" />
-                {menu.name}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+      <nav className="w-52 flex-1 flex flex-col justify-start items-start gap-2">
+        {menus.map((menu) => (
+          <NavLink
+            key={menu.path}
+            to={menu.path}
+            className={({ isActive }) =>
+              `self-stretch h-12 py-3 rounded-xl inline-flex justify-start items-center gap-4 transition-colors font-['Pretendard'] ${
+                menu.path === "/settings"
+                  ? "px-5"
+                  : "px-4"
+              } ${
+                isActive
+                  ? "bg-indigo-600 text-white shadow-[0px_4px_12px_0px_rgba(59,130,246,0.25)] text-lg font-semibold"
+                  : "text-gray-500 text-lg font-medium hover:bg-slate-200/60"
+              } ${menu.path === "/settings" && !isActive ? "text-xl" : ""}`
+            }
+          >
+            <Icon name={menu.icon} className={menu.path === "/schedule" ? "w-6 h-6 shrink-0" : "w-5 h-5 shrink-0"} />
+            {menu.name}
+          </NavLink>
+        ))}
       </nav>
 
-      <div className="p-3 border-t border-gray-100">
+      <div className="w-52 px-4 py-3 inline-flex justify-start items-center gap-4">
+        <div className="w-5 h-5 flex justify-center items-center shrink-0">
+          <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </div>
         <button
           type="button"
           onClick={() => {
             sessionStorage.clear();
             navigate("/", { replace: true });
           }}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100"
+          className="justify-center text-slate-600 text-base font-medium font-['Pretendard'] hover:text-slate-800"
         >
-          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
           Logout
         </button>
       </div>

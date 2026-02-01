@@ -31,17 +31,17 @@ const WeeklyView = ({
 }: WeeklyViewProps) => {
   return (
     <>
-      <div className="flex-1 overflow-auto border border-gray-300 rounded">
-        <div className="min-w-[800px]">
+      <div className="flex-1 overflow-auto border border-gray-300 rounded-xl">
+        <div className="min-w-[900px]">
           {/* 요일 헤더 */}
           <div className="grid grid-cols-8 bg-gray-100 sticky top-0 z-10">
-            <div className="p-3 border-b border-r border-gray-300 text-center font-semibold">
+            <div className="p-4 border-b border-r border-gray-300 text-center text-base font-semibold">
               시간
             </div>
             {weekDays.map((day, index) => (
               <div
                 key={index}
-                className="p-3 border-b border-r border-gray-300 text-center font-semibold"
+                className="p-4 border-b border-r border-gray-300 text-center text-base font-semibold"
               >
                 <div>{['일', '월', '화', '수', '목', '금', '토'][day.getDay()]}</div>
                 <div className="text-sm text-gray-600">{day.getDate()}</div>
@@ -75,7 +75,7 @@ const WeeklyView = ({
                 return (
                   <div
                     key={dayIndex}
-                    className="relative p-2 border-b border-r border-gray-300 min-h-[60px] cursor-pointer"
+                    className="relative p-2 border-b border-r border-gray-300 min-h-[80px] cursor-pointer"
                     style={{
                       backgroundColor: cellColor ? `${cellColor}30` : 'transparent',
                       transition: 'background-color 0.2s',

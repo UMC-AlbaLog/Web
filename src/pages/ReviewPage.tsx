@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useJobs } from "../hooks/useJobs";
+import { useSchedules } from "../contexts/SchedulesContext";
 import { DUMMY_BOSS_REVIEWS, DUMMY_WORKPLACE_REVIEWS } from "../data/reviewData";
 import RatingRow from "../components/jobs/review/RatingRow";
 import ReviewAccordion from "../components/jobs/review/ReviewAccordion";
@@ -8,8 +9,9 @@ import ReviewAccordion from "../components/jobs/review/ReviewAccordion";
 const ReviewPage: React.FC<{ mode: "view" | "write" }> = ({ mode }) => {
   const { jobId, workplaceId } = useParams();
   const navigate = useNavigate();
-  const { jobs } = useJobs(); 
-  
+  const { jobs } = useJobs();
+  const { schedules, workplaces } = useSchedules();
+
   const [targetInfo, setTargetInfo] = useState<{ name: string; date: string } | null>(null);
   const [openSection, setOpenSection] = useState<'boss' | 'workplace' | null>(null);
   const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set());
@@ -17,19 +19,17 @@ const ReviewPage: React.FC<{ mode: "view" | "write" }> = ({ mode }) => {
   useEffect(() => {
     const id = jobId || workplaceId;
     if (!id) return;
-    const foundInJobs = jobs.find(j => j.id === id);
+    const foundInJobs = jobs.find((j) => j.id === id);
     if (foundInJobs) {
       setTargetInfo({ name: foundInJobs.name, date: foundInJobs.date });
     } else {
-      const schedules = JSON.parse(localStorage.getItem('schedules') || '[]');
-      const workplaces = JSON.parse(localStorage.getItem('workplaces') || '[]');
-      const schedule = schedules.find((s: any) => s.id === id || s.jobId === id);
+      const schedule = schedules.find((s) => s.id === id || (s as { jobId?: string }).jobId === id);
       if (schedule) {
-        const wp = workplaces.find((w: any) => w.id === schedule.workplaceId);
-        setTargetInfo({ name: wp?.name || schedule.workplaceName || "알바 매장", date: schedule.date });
+        const wp = workplaces.find((w) => w.id === schedule.workplaceId);
+        setTargetInfo({ name: wp?.name ?? "알바 매장", date: schedule.date });
       }
     }
-  }, [jobs, jobId, workplaceId]);
+  }, [jobs, schedules, workplaces, jobId, workplaceId]);
 
   const [ratings, setRatings] = useState({ kindness: 5, communication: 5, settlement: 5, restTime: 5, cleanliness: 5, congestion: 5, safety: 5, restSpace: 5 });
   const [bossComment, setBossComment] = useState("");

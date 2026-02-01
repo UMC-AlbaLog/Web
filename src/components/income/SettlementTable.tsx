@@ -1,27 +1,25 @@
 // components/income/SettlementTable.tsx
 import { useState } from "react";
-import type { Work, SettlementStatus } from "../../types/work";
+import type { SettlementStatus } from "../../types/work";
+import type { IncomeWorkItem } from "../../hooks/useIncome";
 
 type FilterStatus = "all" | "pending" | "completed" | "unsettled";
 
 interface SettlementTableProps {
-  completedWorks: Work[];
+  completedWorks: IncomeWorkItem[];
   updateSettlementStatus?: (workId: string, status: SettlementStatus, actualPay?: number) => void;
+  /** 제목 뒤에 붙일 텍스트 (예: " (2025년 12월)") */
+  titleSuffix?: string;
 }
 
-const SettlementTable = ({ completedWorks, updateSettlementStatus: _updateSettlementStatus }: SettlementTableProps) => {
+const SettlementTable = ({ completedWorks, titleSuffix }: SettlementTableProps) => {
   const [filter, setFilter] = useState<FilterStatus>("all");
 
-  /* 날짜 포맷 */
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date
-      .getDate()
-      .toString()
-      .padStart(2, "0")}`;
+    return `${date.getMonth() + 1}/${date.getDate().toString().padStart(2, "0")}`;
   };
 
-  /* 정산 상태 텍스트 */
   const getStatusText = (status?: SettlementStatus) => {
     switch (status) {
       case "completed":
@@ -33,19 +31,6 @@ const SettlementTable = ({ completedWorks, updateSettlementStatus: _updateSettle
     }
   };
 
-  /* 정산 상태 스타일 */
-  const getStatusStyle = (status?: SettlementStatus) => {
-    switch (status) {
-      case "completed":
-        return "text-green-600";
-      case "pending":
-        return "text-yellow-600";
-      default:
-        return "text-gray-500";
-    }
-  };
-
-  /* 필터링 */
   const filteredWorks = completedWorks
     .filter((work) => {
       if (filter === "all") return true;
@@ -54,67 +39,124 @@ const SettlementTable = ({ completedWorks, updateSettlementStatus: _updateSettle
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  return (
-    <div className="bg-white rounded-xl p-6 shadow">
-      <h3 className="font-semibold mb-3">정산 상태 리스트</h3>
+  const filterTabs: { key: FilterStatus; label: string }[] = [
+    { key: "all", label: "전체" },
+    { key: "pending", label: "정산 대기" },
+    { key: "completed", label: "정산 완료" },
+    { key: "unsettled", label: "미정산" },
+  ];
 
-      {/* 🔘 필터 버튼 */}
-      <div className="flex gap-2 mb-4">
-        {[
-          { key: "all" as const, label: "전체" },
-          { key: "pending" as const, label: "정산 대기" },
-          { key: "completed" as const, label: "정산 완료" },
-          { key: "unsettled" as const, label: "미정산" },
-        ].map((btn) => (
+  return (
+    <div className="flex flex-col gap-5">
+      <h2 className="text-gray-900 text-4xl font-bold font-['Pretendard']">
+        {titleSuffix ? `근무 내역${titleSuffix}` : "오늘의 근무"}
+      </h2>
+
+      {/* 필터 탭: 전체 / 정산 대기 / 정산 완료 / 미정산 - 선택값에 맞게 필터링 */}
+      <div className="h-16 bg-neutral-100 rounded-[20px] inline-flex w-full">
+        {filterTabs.map((tab) => (
           <button
-            key={btn.key}
-            onClick={() => setFilter(btn.key)}
-            className={`px-3 py-1 text-sm border rounded ${
-              filter === btn.key ? "bg-gray-700 text-white" : "bg-gray-100 text-gray-600"
+            key={tab.key}
+            type="button"
+            onClick={() => setFilter(tab.key)}
+            className={`flex-1 h-full p-2.5 rounded-[20px] flex justify-center items-center gap-2.5 transition-colors ${
+              filter === tab.key
+                ? "bg-white outline outline-[1.5px] outline-offset-[-1.5px] outline-indigo-600 text-indigo-600 text-2xl font-semibold font-['Pretendard']"
+                : "text-zinc-600 text-2xl font-normal font-['Pretendard'] hover:bg-neutral-200/50"
             }`}
           >
-            {btn.label}
+            {tab.label}
           </button>
         ))}
       </div>
 
       {/* 테이블 */}
-      {filteredWorks.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          해당 상태의 작업이 없습니다
+      <div className="flex flex-col gap-0 overflow-hidden rounded-b-[20px] border border-t-0 border-zinc-200">
+        <div className="inline-flex w-full">
+          <div className="flex-1 px-6 py-4 bg-slate-100 rounded-tl-[20px] border-b-[1.5px] border-zinc-400 flex justify-center items-center">
+            <span className="text-center text-black text-2xl font-medium font-['Pretendard']">
+              근무일자
+            </span>
+          </div>
+          <div className="flex-1 px-6 py-4 bg-slate-100 border-b-[1.5px] border-zinc-400 flex justify-center items-center">
+            <span className="text-center text-black text-2xl font-medium font-['Pretendard']">
+              매장 명
+            </span>
+          </div>
+          <div className="flex-1 px-6 py-4 bg-slate-100 border-b-[1.5px] border-zinc-400 flex justify-center items-center">
+            <span className="text-center text-black text-2xl font-medium font-['Pretendard']">
+              근무 시간
+            </span>
+          </div>
+          <div className="flex-1 px-6 py-4 bg-slate-100 border-b-[1.5px] border-zinc-400 flex justify-center items-center">
+            <span className="text-center text-black text-2xl font-medium font-['Pretendard']">
+              예상 수입
+            </span>
+          </div>
+          <div className="flex-1 px-6 py-4 bg-slate-100 border-b-[1.5px] border-zinc-400 flex justify-center items-center">
+            <span className="text-center text-black text-2xl font-medium font-['Pretendard']">
+              실제 수입
+            </span>
+          </div>
+          <div className="flex-1 px-6 py-4 bg-slate-100 rounded-tr-[20px] border-b-[1.5px] border-zinc-400 flex justify-center items-center">
+            <span className="text-center text-black text-2xl font-medium font-['Pretendard']">
+              정산 상태
+            </span>
+          </div>
         </div>
-      ) : (
-        <table className="w-full text-sm">
-          <thead className="border-b text-gray-500">
-            <tr>
-              <th className="pb-2 text-left">근무일자</th>
-              <th className="pb-2 text-left">매장명</th>
-              <th className="pb-2 text-left">근무 시간</th>
-              <th className="pb-2 text-left">예상 수입</th>
-              <th className="pb-2 text-left">실제 수입</th>
-              <th className="pb-2 text-left">정산 상태</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredWorks.map((work) => (
-              <tr key={work.id} className="border-b">
-                <td className="py-3">{formatDate(work.date)}</td>
-                <td className="py-3">{work.name}</td>
-                <td className="py-3">{work.duration}시간</td>
-                <td className="py-3">{work.expectedPay.toLocaleString()}원</td>
-                <td className="py-3">
+
+        {filteredWorks.length === 0 ? (
+          <div className="py-12 bg-white text-center text-zinc-500 text-xl font-['Pretendard']">
+            해당 상태의 작업이 없습니다
+          </div>
+        ) : (
+          filteredWorks.map((work) => (
+            <div
+              key={work.id}
+              className="inline-flex w-full border-b border-zinc-200 last:border-b-0"
+            >
+              <div className="flex-1 px-6 py-4 bg-white flex justify-center items-center">
+                <span className="text-center text-black text-2xl font-normal font-['Pretendard']">
+                  {formatDate(work.date)}
+                </span>
+              </div>
+              <div className="flex-1 px-6 py-4 bg-white flex justify-center items-center">
+                <span className="text-center text-black text-2xl font-normal font-['Pretendard']">
+                  {work.name}
+                </span>
+              </div>
+              <div className="flex-1 px-6 py-4 bg-white flex justify-center items-center">
+                <span className="text-center text-black text-2xl font-normal font-['Pretendard']">
+                  {work.duration}시간
+                </span>
+              </div>
+              <div className="flex-1 px-6 py-4 bg-white flex justify-center items-center">
+                <span className="text-center text-black text-2xl font-normal font-['Pretendard']">
+                  {work.expectedPay.toLocaleString()}원
+                </span>
+              </div>
+              <div className="flex-1 px-6 py-4 bg-white flex justify-center items-center">
+                <span className="text-center text-black text-2xl font-medium font-['Pretendard']">
                   {(work.actualPay ?? work.expectedPay).toLocaleString()}원
-                </td>
-                <td
-                  className={`py-3 font-medium ${getStatusStyle(work.settlementStatus)}`}
+                </span>
+              </div>
+              <div className="flex-1 px-6 py-4 bg-white flex justify-center items-center">
+                <span
+                  className={`px-4 py-2 rounded-[110px] text-xl font-semibold font-['Pretendard'] ${
+                    work.settlementStatus === "completed"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : work.settlementStatus === "pending"
+                        ? "bg-slate-100 text-indigo-600"
+                        : "bg-slate-100 text-zinc-500"
+                  }`}
                 >
                   {getStatusText(work.settlementStatus)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };
