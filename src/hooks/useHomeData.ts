@@ -6,7 +6,6 @@ import { calculateDuration } from "../utils/scheduleUtils";
 export const useHomeData = () => {
   const { schedules, workplaces, setSchedules, setWorkplaces } = useSchedules();
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const today = new Date().toLocaleDateString("en-CA");
 
   const workList = useMemo<Work[]>(() => {
@@ -18,7 +17,8 @@ export const useHomeData = () => {
         return {
           id: s.id,
           name: workplace?.name || "알바",
-          address: "",
+          category: (s as any).category || "기타",
+          address: (s as any).address || "",
           time: `${s.startTime} ~ ${s.endTime}`,
           duration: actualDuration,
           pay: s.hourlyWage || 0,
@@ -33,7 +33,7 @@ export const useHomeData = () => {
       });
   }, [schedules, workplaces, today]);
 
-  const handleAddWork = (newWork: Omit<Work, "id" | "status">) => {
+  const handleAddWork = (newWork: Omit<Work, "id" | "status"> & { category?: string }) => {
     const newId = Date.now().toString();
     const newWpId = `wp-${newId}`;
     const [startTime, endTime] = newWork.time.split(" ~ ");
@@ -44,7 +44,7 @@ export const useHomeData = () => {
       targetWorkplaceId = existing.id;
     } else {
       targetWorkplaceId = newWpId;
-      setWorkplaces((prev) => [...prev, { id: newWpId, name: newWork.name, color: "#4ECDC4" }]);
+      setWorkplaces((prev) => [...prev, { id: newWpId, name: newWork.name, color: "#5D5FEF" }]);
     }
 
     const scheduleEntry = {
@@ -56,29 +56,27 @@ export const useHomeData = () => {
       hourlyWage: newWork.pay,
       memo: newWork.memo,
       status: "upcoming" as const,
+      category: newWork.category,
+      address: newWork.address,
     };
 
     setSchedules((prev) => [...prev, scheduleEntry]);
     setIsModalOpen(false);
   };
 
-  const handleAction = (id: string, currentStatus: string) => {
-    const nextStatus: WorkStatus = currentStatus === "upcoming" ? "working" : "done";
-    setSchedules((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: nextStatus } : s))
-    );
-  };
-
-  const handleDeleteWork = (id: string) => {
-    if (window.confirm("이 알바 일정을 삭제할까요?")) {
-      setSchedules((prev) => prev.filter((s) => s.id !== id));
-    }
-  };
-
   return {
     workList,
     isModalOpen,
     setIsModalOpen,
-    actions: { handleAddWork, handleAction, handleDeleteWork }
+    actions: { 
+      handleAddWork, 
+      handleAction: (id: string, currentStatus: string) => {
+        const nextStatus: WorkStatus = currentStatus === "upcoming" ? "working" : "done";
+        setSchedules((prev) => prev.map((s) => (s.id === id ? { ...s, status: nextStatus } : s)));
+      }, 
+      handleDeleteWork: (id: string) => {
+        if (window.confirm("이 알바 일정을 삭제할까요?")) setSchedules((prev) => prev.filter((s) => s.id !== id));
+      } 
+    }
   };
 };
