@@ -6,14 +6,21 @@ const GOAL_STORAGE_KEY = "income_goal";
 interface IncomeGoalProps {
   currentMonthIncome: number;
   monthOverMonthGrowth?: number;
+  /** API 대시보드에서 내려준 수입 목표 (있으면 우선 표시) */
+  incomeGoalFromApi?: number;
 }
 
-const IncomeGoal = ({ currentMonthIncome, monthOverMonthGrowth = 0 }: IncomeGoalProps) => {
-  const [goal, setGoal] = useState(600000);
+const IncomeGoal = ({ currentMonthIncome, monthOverMonthGrowth = 0, incomeGoalFromApi }: IncomeGoalProps) => {
+  const [goal, setGoal] = useState(incomeGoalFromApi ?? 600000);
   const [isEditing, setIsEditing] = useState(false);
   const [tempGoal, setTempGoal] = useState(goal.toString());
 
   useEffect(() => {
+    if (incomeGoalFromApi != null && incomeGoalFromApi > 0) {
+      setGoal(incomeGoalFromApi);
+      setTempGoal(incomeGoalFromApi.toString());
+      return;
+    }
     const savedGoal = localStorage.getItem(GOAL_STORAGE_KEY);
     if (savedGoal) {
       const goalValue = Number(savedGoal);
@@ -22,7 +29,7 @@ const IncomeGoal = ({ currentMonthIncome, monthOverMonthGrowth = 0 }: IncomeGoal
         setTempGoal(goalValue.toString());
       }
     }
-  }, []);
+  }, [incomeGoalFromApi]);
 
   const percent = Math.min((currentMonthIncome / goal) * 100, 100);
 

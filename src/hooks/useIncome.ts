@@ -3,8 +3,29 @@ import { useJobs } from "./useJobs";
 import { useSchedules } from "../contexts/SchedulesContext";
 import type { SettlementStatus } from "../types/work";
 import { getEstimatedPayForSchedule, calculateDuration } from "../utils/scheduleUtils";
+import { getAccessToken, ApiAuthError } from "../api/client";
+import { getSettlementStatusList, getIncomeDashboard } from "../api/income";
+import type { SettlementStatusItem, IncomeDashboardSuccess } from "../api/types";
 
 const SETTLEMENTS_STORAGE_KEY = "settlements";
+
+function mapApiStatusToLocal(api: "waiting" | "paid" | "unpaid"): SettlementStatus {
+  if (api === "paid") return "completed";
+  if (api === "unpaid") return "unpaid";
+  return "pending";
+}
+
+function apiItemToIncomeWorkItem(item: SettlementStatusItem, index: number): IncomeWorkItem {
+  return {
+    id: `api-${item.workDate}-${item.workplaceName}-${item.workMinutes}-${index}`,
+    name: item.workplaceName,
+    date: item.workDate,
+    duration: item.workMinutes / 60,
+    expectedPay: item.expectedPay,
+    actualPay: item.actualPay,
+    settlementStatus: mapApiStatusToLocal(item.settlementStatus),
+  };
+}
 
 interface Settlement {
   status: SettlementStatus;
@@ -22,10 +43,17 @@ export interface IncomeWorkItem {
   settlementStatus?: SettlementStatus;
 }
 
-export const useIncome = () => {
+export const useIncome = (selectedYear?: number, selectedMonth?: number) => {
   const { jobs } = useJobs();
   const { schedules, workplaces } = useSchedules();
   const [settlements, setSettlements] = useState<Record<string, Settlement>>({});
+  const [apiSettlementItems, setApiSettlementItems] = useState<SettlementStatusItem[]>([]);
+  const [apiDashboard, setApiDashboard] = useState<IncomeDashboardSuccess | null>(null);
+  const [apiError, setApiError] = useState<boolean>(false);
+
+  const monthKey = selectedYear != null && selectedMonth != null
+    ? `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`
+    : null;
 
   // 정산 데이터 로드
   useEffect(() => {
@@ -35,15 +63,39 @@ export const useIncome = () => {
     }
   }, []);
 
-  // 정산 데이터 저장
+  // API: 정산 목록 조회 (토큰 있을 때)
+  useEffect(() => {
+    if (!getAccessToken()) return;
+    setApiError(false);
+    getSettlementStatusList({ status: "all", sort: "latest", size: 100 })
+      .then((res) => setApiSettlementItems(res.items ?? []))
+      .catch((e) => {
+        if (e instanceof ApiAuthError) setApiError(true);
+        else setApiSettlementItems([]);
+      });
+  }, []);
+
+  // API: 수입 대시보드 조회 (선택 월 변경 시)
+  useEffect(() => {
+    if (!getAccessToken() || !monthKey) return;
+    getIncomeDashboard(monthKey)
+      .then((data) => setApiDashboard(data ?? null))
+      .catch(() => setApiDashboard(null));
+  }, [monthKey]);
+
+  // 정산 데이터 저장 (로컬용)
   useEffect(() => {
     if (Object.keys(settlements).length > 0) {
       localStorage.setItem(SETTLEMENTS_STORAGE_KEY, JSON.stringify(settlements));
     }
   }, [settlements]);
 
-  // 완료된 작업: 일자리(승인+완료) + 근무 일정(퇴근 완료)
+  const useApiData = apiSettlementItems.length > 0 && !apiError;
+
   const completedWorks = useMemo((): IncomeWorkItem[] => {
+    if (useApiData) {
+      return apiSettlementItems.map(apiItemToIncomeWorkItem);
+    }
     const fromJobs: IncomeWorkItem[] = jobs
       .filter((job) => job.status === "done" && job.applicationStatus === "approved")
       .map((job) => {
@@ -79,7 +131,7 @@ export const useIncome = () => {
       });
 
     return [...fromJobs, ...fromSchedules];
-  }, [jobs, schedules, workplaces, settlements]);
+  }, [useApiData, apiSettlementItems, jobs, schedules, workplaces, settlements]);
 
   // 정산 상태 업데이트
   const updateSettlementStatus = useCallback(
@@ -99,12 +151,11 @@ export const useIncome = () => {
     []
   );
 
-  // 특정 월의 수입 계산
+  // 특정 월의 수입 계산 (API 대시보드 우선)
   const getMonthlyIncome = useCallback(
     (year: number, month: number) => {
-      const monthStr = month.toString().padStart(2, "0");
-      const yearMonth = `${year}-${monthStr}`;
-
+      const yearMonth = `${year}-${String(month).padStart(2, "0")}`;
+      if (apiDashboard?.month === yearMonth) return apiDashboard.actualIncome;
       return completedWorks
         .filter((work) => work.date.startsWith(yearMonth))
         .reduce((sum, work) => {
@@ -113,7 +164,7 @@ export const useIncome = () => {
           return sum + pay;
         }, 0);
     },
-    [completedWorks, settlements]
+    [apiDashboard, completedWorks, settlements]
   );
 
   // 현재 월 수입
@@ -179,23 +230,25 @@ export const useIncome = () => {
     return ((currentMonthIncome - previousMonthIncome) / previousMonthIncome) * 100;
   }, [currentMonthIncome, previousMonthIncome]);
 
-  // 특정 월의 예상 수입 (expectedPay 합계)
+  // 특정 월의 예상 수입 (API 대시보드 우선)
   const getExpectedIncomeForMonth = useCallback(
     (year: number, month: number) => {
-      const monthStr = month.toString().padStart(2, "0");
-      const yearMonth = `${year}-${monthStr}`;
+      const yearMonth = `${year}-${String(month).padStart(2, "0")}`;
+      if (apiDashboard?.month === yearMonth) return apiDashboard.expectedIncome;
       return completedWorks
         .filter((work) => work.date.startsWith(yearMonth))
         .reduce((sum, work) => sum + work.expectedPay, 0);
     },
-    [completedWorks]
+    [apiDashboard, completedWorks]
   );
 
-  // 특정 월의 매장별 수입
+  // 특정 월의 매장별 수입 (API 대시보드 우선)
   const getIncomeByStoreForMonth = useCallback(
     (year: number, month: number) => {
-      const monthStr = month.toString().padStart(2, "0");
-      const yearMonth = `${year}-${monthStr}`;
+      const yearMonth = `${year}-${String(month).padStart(2, "0")}`;
+      if (apiDashboard?.month === yearMonth && apiDashboard.brandIncomes?.length) {
+        return apiDashboard.brandIncomes.map((b) => ({ name: b.brandName, value: b.actualPay }));
+      }
       const storeMap: Record<string, number> = {};
       completedWorks
         .filter((work) => work.date.startsWith(yearMonth))
@@ -208,7 +261,7 @@ export const useIncome = () => {
         });
       return Object.entries(storeMap).map(([name, value]) => ({ name, value }));
     },
-    [completedWorks, settlements]
+    [apiDashboard, completedWorks, settlements]
   );
 
   // 특정 월의 완료된 작업만 (정산 테이블용)
@@ -241,6 +294,8 @@ export const useIncome = () => {
     previousMonthIncome,
     monthOverMonthGrowth,
     incomeByStore,
+    /** API 대시보드의 수입 목표 (해당 월, API 사용 시에만) */
+    incomeGoalFromApi: apiDashboard?.incomeGoal,
   };
 };
 

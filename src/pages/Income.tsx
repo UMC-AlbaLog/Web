@@ -7,6 +7,10 @@ import SettlementTable from "../components/income/SettlementTable";
 import { useIncome } from "../hooks/useIncome";
 
 const Income = () => {
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+
   const {
     getMonthlyIncome,
     getExpectedIncomeForMonth,
@@ -14,11 +18,8 @@ const Income = () => {
     getCompletedWorksForMonth,
     getPreviousMonth,
     updateSettlementStatus,
-  } = useIncome();
-
-  const now = new Date();
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+    incomeGoalFromApi,
+  } = useIncome(selectedYear, selectedMonth);
 
   const actualIncome = useMemo(
     () => getMonthlyIncome(selectedYear, selectedMonth),
@@ -134,6 +135,7 @@ const Income = () => {
           <IncomeGoal
             currentMonthIncome={actualIncome}
             monthOverMonthGrowth={monthOverMonthGrowth}
+            incomeGoalFromApi={incomeGoalFromApi}
           />
           <IncomeSummary
             expectedIncome={expectedIncome}

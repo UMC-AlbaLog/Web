@@ -1,6 +1,6 @@
 export type WorkStatus = "upcoming" | "working" | "done";
 export type ApplicationStatus = "pending" | "approved" | "rejected";
-export type SettlementStatus = "pending" | "completed";
+export type SettlementStatus = "pending" | "completed" | "unpaid";
 
 export interface Work {
   id: string;

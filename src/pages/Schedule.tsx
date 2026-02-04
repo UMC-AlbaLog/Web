@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { ScheduleItem, DaySummary } from '../types/schedule';
+import type { ScheduleItem, DaySummary, Workplace } from '../types/schedule';
 import AddScheduleModal from '../components/schedule/AddScheduleModal';
 import ScheduleEditModal from '../components/schedule/ScheduleEditModal';
 import MonthlyView from '../components/schedule/MonthlyView';
@@ -7,6 +7,43 @@ import WeeklyView from '../components/schedule/WeeklyView';
 import ScheduleSummarySidebar from '../components/schedule/ScheduleSummarySidebar';
 import { getEstimatedSalaryForMonth } from '../utils/scheduleUtils';
 import { useSchedules } from '../contexts/SchedulesContext';
+import { getAccessToken } from '../api/client';
+import { createManualSchedule, updateSchedule, deleteSchedule } from '../api/schedule';
+import type { CreateManualScheduleBody, UpdateManualScheduleBody } from '../api/types';
+
+function scheduleToBody(schedule: ScheduleItem, workplaces: Workplace[]): CreateManualScheduleBody {
+  const wp = workplaces.find((w) => w.id === schedule.workplaceId);
+  const workTime = `${schedule.startTime}-${schedule.endTime}`;
+  const body: CreateManualScheduleBody = {
+    workplace: wp?.name ?? undefined,
+    work_date: schedule.date,
+    work_time: workTime,
+    hourly_wage: schedule.hourlyWage,
+    memo: schedule.memo,
+  };
+  if (schedule.repeatType && schedule.repeatType !== 'none') {
+    body.repeat_type = schedule.repeatType;
+    body.repeat_days = schedule.repeatDays?.join(',') ?? '';
+  }
+  return body;
+}
+
+function scheduleToUpdateBody(schedule: ScheduleItem, workplaces: Workplace[]): UpdateManualScheduleBody {
+  const wp = workplaces.find((w) => w.id === schedule.workplaceId);
+  const workTime = `${schedule.startTime}-${schedule.endTime}`;
+  const body: UpdateManualScheduleBody = {
+    workplace: wp?.name,
+    work_date: schedule.date,
+    work_time: workTime,
+    hourly_wage: schedule.hourlyWage,
+    memo: schedule.memo,
+  };
+  if (schedule.repeatType && schedule.repeatType !== 'none') {
+    body.repeat_type = schedule.repeatType;
+    body.repeat_days = schedule.repeatDays?.join(',') ?? '';
+  }
+  return body;
+}
 
 const Schedule = () => {
   const { schedules, workplaces, setSchedules, setWorkplaces } = useSchedules();
@@ -136,20 +173,17 @@ const Schedule = () => {
     }
   };
 
-  // 일정 추가 (반복 설정 적용)
-  const handleAddSchedule = (schedule: ScheduleItem) => {
-    const newSchedules: ScheduleItem[] = [schedule];
+  // 일정 추가 (반복 설정 적용) + API 연동
+  const handleAddSchedule = async (schedule: ScheduleItem) => {
+    const newSchedules: ScheduleItem[] = [{ ...schedule }];
 
-    // 반복 설정이 있는 경우 추가 일정 생성
     if (schedule.repeatType && schedule.repeatType !== 'none') {
       const baseDate = new Date(schedule.date);
       const endDate = new Date(baseDate);
-      endDate.setMonth(endDate.getMonth() + 3); // 3개월치 일정 생성
-
+      endDate.setMonth(endDate.getMonth() + 3);
       let currentDate = new Date(baseDate);
 
       if (schedule.repeatType === 'daily') {
-        // 매일 반복
         currentDate.setDate(currentDate.getDate() + 1);
         while (currentDate <= endDate) {
           newSchedules.push({
@@ -160,7 +194,6 @@ const Schedule = () => {
           currentDate.setDate(currentDate.getDate() + 1);
         }
       } else if (schedule.repeatType === 'weekly') {
-        // 매주 반복
         currentDate.setDate(currentDate.getDate() + 7);
         while (currentDate <= endDate) {
           newSchedules.push({
@@ -171,7 +204,6 @@ const Schedule = () => {
           currentDate.setDate(currentDate.getDate() + 7);
         }
       } else if (schedule.repeatType === 'biweekly') {
-        // 격주 반복
         currentDate.setDate(currentDate.getDate() + 14);
         while (currentDate <= endDate) {
           newSchedules.push({
@@ -184,19 +216,55 @@ const Schedule = () => {
       }
     }
 
-    setSchedules([...schedules, ...newSchedules]);
+    const token = getAccessToken();
+    if (token) {
+      try {
+        const body = scheduleToBody(schedule, workplaces);
+        const res = await createManualSchedule(body);
+        if (res?.user_alba_schedule_id) {
+          newSchedules[0] = { ...newSchedules[0], id: res.user_alba_schedule_id };
+        }
+      } catch {
+        // API 실패 시 로컬만 반영
+      }
+    } else if (import.meta.env.DEV) {
+      console.warn("[스케줄] accessToken이 없어 API를 호출하지 않았습니다. 로그인 후 Session Storage에 accessToken이 있어야 백엔드에 저장됩니다.");
+    }
+
+    setSchedules((prev) => [...prev, ...newSchedules]);
     setShowAddModal(false);
   };
 
-  // 일정 수정
-  const handleEditSchedule = (updatedSchedule: ScheduleItem) => {
-    setSchedules(schedules.map(s => s.id === updatedSchedule.id ? updatedSchedule : s));
+  // 일정 수정 + API 연동
+  const handleEditSchedule = async (updatedSchedule: ScheduleItem) => {
+    const token = getAccessToken();
+    if (token) {
+      try {
+        const body = scheduleToUpdateBody(updatedSchedule, workplaces);
+        await updateSchedule(updatedSchedule.id, body);
+      } catch {
+        // API 실패 시에도 로컬은 반영
+      }
+    } else if (import.meta.env.DEV) {
+      console.warn("[스케줄] accessToken이 없어 수정 API를 호출하지 않았습니다.");
+    }
+    setSchedules((prev) => prev.map((s) => (s.id === updatedSchedule.id ? updatedSchedule : s)));
     setEditingSchedule(null);
   };
 
-  // 일정 삭제
-  const handleDeleteSchedule = (scheduleId: string) => {
-    setSchedules(schedules.filter(s => s.id !== scheduleId));
+  // 일정 삭제 + API 연동
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    const token = getAccessToken();
+    if (token) {
+      try {
+        await deleteSchedule(scheduleId);
+      } catch {
+        // API 실패 시에도 로컬에서는 제거
+      }
+    } else if (import.meta.env.DEV) {
+      console.warn("[스케줄] accessToken이 없어 삭제 API를 호출하지 않았습니다.");
+    }
+    setSchedules((prev) => prev.filter((s) => s.id !== scheduleId));
     setEditingSchedule(null);
   };
 

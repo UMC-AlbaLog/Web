@@ -26,6 +26,8 @@ const SettlementTable = ({ completedWorks, titleSuffix }: SettlementTableProps) 
         return "정산 완료";
       case "pending":
         return "정산 대기";
+      case "unpaid":
+        return "미정산";
       default:
         return "미정산";
     }
@@ -34,7 +36,7 @@ const SettlementTable = ({ completedWorks, titleSuffix }: SettlementTableProps) 
   const filteredWorks = completedWorks
     .filter((work) => {
       if (filter === "all") return true;
-      if (filter === "unsettled") return !work.settlementStatus;
+      if (filter === "unsettled") return !work.settlementStatus || work.settlementStatus === "unpaid";
       return work.settlementStatus === filter;
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

@@ -20,8 +20,8 @@ const IncomeChart = ({ incomeByStore }: IncomeChartProps) => {
         수입 분류 차트
       </h3>
 
-      <div className="w-full min-h-[256px] flex-1" style={{ height: 256 }}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full flex-1" style={{ minHeight: 256 }}>
+        <ResponsiveContainer width="100%" height={256}>
           <PieChart>
             <Pie
               data={data}
