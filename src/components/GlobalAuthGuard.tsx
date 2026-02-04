@@ -1,3 +1,4 @@
+// components/GlobalAuthGuard.tsx
 import type { JSX } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
@@ -9,14 +10,13 @@ const GlobalAuthGuard = ({ children }: Props) => {
   const location = useLocation();
   const user = sessionStorage.getItem("googleUser");
 
-  // 로그인 안 됨 → 오직 "/" 만 허용
-  if (!user) {
-    return location.pathname === "/"
-      ? children
-      : <Navigate to="/" replace />;
+  // 로그인 전 허용 경로
+  const publicPaths = ["/", "/login", "/signup", "/onboarding"];
+
+  if (!user && !publicPaths.includes(location.pathname)) {
+    return <Navigate to="/" replace />;
   }
 
-  // 로그인 돼 있으면 전부 허용 (세부 흐름은 각 페이지에서)
   return children;
 };
 
