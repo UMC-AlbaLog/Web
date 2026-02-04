@@ -1,7 +1,11 @@
+// App.tsx
 import { Routes, Route } from "react-router-dom";
+
+import Landing from "./pages/Landing";
 import LoginLanding from "./pages/LoginLanding";
 import Signup from "./pages/Signup";
 import OnboardingRegion from "./pages/OnboardingRegion";
+
 import HomeLayout from "./layouts/HomeLayout";
 import GlobalAuthGuard from "./components/GlobalAuthGuard";
 
@@ -9,25 +13,26 @@ import Home from "./pages/Home";
 import Schedule from "./pages/Schedule";
 import Income from "./pages/Income";
 import Jobs from "./pages/Jobs";
+import JobDetail from "./pages/JobDetail";
+import ApplicationStatusPage from "./pages/ApplicationStatus";
+import ApplicationManagement from "./pages/ApplicationManagement";
+import ReviewPage from "./pages/ReviewPage";
 import Profile from "./pages/Profile";
 import ProfileReviews from "./pages/ProfileReviews";
 import ProfileEdit from "./pages/ProfileEdit";
 import Settings from "./pages/Settings";
-import ApplicationStatusPage from "./pages/ApplicationStatus";
-import ApplicationManagement from "./pages/ApplicationManagement";
-import JobDetail from "./pages/JobDetail";
-import ReviewPage from "./pages/ReviewPage";
 
 const App = () => {
   return (
     <GlobalAuthGuard>
       <Routes>
-        {/* 1. 로그인 전/외부 페이지 */}
-        <Route path="/" element={<LoginLanding />} />
+        {/* 🌈 로그인 전 */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<LoginLanding />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/onboarding" element={<OnboardingRegion />} />
 
-        {/* 2. 로그인 후 서비스 페이지 */}
+        {/* 🔒 로그인 후 */}
         <Route element={<HomeLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/schedule" element={<Schedule />} />

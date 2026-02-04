@@ -21,31 +21,46 @@ const Signup = () => {
   const [birth, setBirth] = useState<Date | null>(null);
   const [gender, setGender] = useState<"M" | "F" | "">("");
 
-  // 로그인 안 했으면 강제 이동
+  const [nicknameError, setNicknameError] = useState("");
+  const [birthError, setBirthError] = useState("");
+
   useEffect(() => {
-    if (!user) {
-      navigate("/", { replace: true });
-    }
+    if (!user) navigate("/", { replace: true });
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (!nickname) {
+      setNicknameError("닉네임을 설정해주세요.");
+    } else if (nickname.length < 2 || nickname.length > 10) {
+      setNicknameError("닉네임은 2글자 이상, 10자 이하로 설정해주세요.");
+    } else {
+      setNicknameError("");
+    }
+  }, [nickname]);
+
+  useEffect(() => {
+    if (!birth) {
+      setBirthError("");
+      return;
+    }
+    setBirthError("");
+  }, [birth]);
 
   if (!user) return null;
 
-  const handleSubmit = () => {
-    if (!nickname || !birth || !gender) {
-      alert("모든 정보를 입력해주세요.");
-      return;
-    }
+  const isFormValid =
+    nicknameError === "" &&
+    birth !== null &&
+    gender !== "";
 
-    const formattedBirth = birth
-      .toISOString()
-      .slice(0, 10)
-      .replace(/-/g, ".");
+  const handleSubmit = () => {
+    if (!isFormValid) return;
 
     sessionStorage.setItem(
       "signupInfo",
       JSON.stringify({
         nickname,
-        birth: formattedBirth,
+        birth: birth?.toISOString().slice(0, 10),
         gender,
       })
     );
@@ -54,48 +69,57 @@ const Signup = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-gray-300 flex items-center justify-center">
-      <div className="w-[420px] bg-white rounded-xl shadow px-10 py-10">
-        <h2 className="text-2xl font-bold text-center mb-8">알바로그</h2>
+    /* 🔥 전체 배경 그라데이션 */
+    <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-indigo-100 via-blue-50 to-cyan-100">
+      
+      {/* 🔥 흰색 카드 */}
+      <div className="w-[520px] bg-white rounded-3xl shadow-xl px-12 py-12">
 
-        <div className="flex justify-center mb-8">
+        {/* 프로필 */}
+        <div className="flex justify-center mb-10">
           <img
             src={user.picture}
             alt="profile"
-            className="w-36 h-36 rounded-full bg-gray-300"
+            className="w-32 h-32 rounded-full bg-gray-200"
           />
         </div>
 
+        {/* 아이디 */}
         <label className="block text-sm mb-1">아이디</label>
         <input
           value={user.email}
           disabled
-          className="w-full mb-4 px-3 py-2 border rounded bg-gray-200 text-sm"
+          className="w-full h-12 px-4 mb-5 rounded-xl border bg-white"
         />
 
+        {/* 닉네임 */}
         <label className="block text-sm mb-1">닉네임</label>
         <input
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          className="w-full mb-4 px-3 py-2 border rounded text-sm"
+          className={`w-full h-12 px-4 rounded-xl border bg-white ${
+            nicknameError ? "border-red-400" : "border-gray-300"
+          }`}
         />
+        {nicknameError && (
+          <p className="text-red-500 text-xs mt-1">{nicknameError}</p>
+        )}
 
-        <label className="block text-sm mb-1">생년월일</label>
+        {/* 생년월일 */}
+        <label className="block text-sm mt-6 mb-1">생년월일</label>
         <DatePicker
           selected={birth}
-          onChange={(date: Date | null) => setBirth(date)}
+          onChange={(date) => setBirth(date)}
           dateFormat="yyyy.MM.dd"
+          placeholderText="YYYY.MM.DD"
           maxDate={new Date()}
-          showYearDropdown
-          showMonthDropdown
-          dropdownMode="select"
-          placeholderText="생년월일 선택"
-          className="w-full mb-4 px-3 py-2 border rounded text-sm"
+          className="w-full h-12 px-4 rounded-xl border bg-white"
         />
 
-        <label className="block text-sm mb-2">성별</label>
-        <div className="flex gap-6 mb-6 text-sm">
-          <label className="flex items-center gap-1">
+        {/* 성별 */}
+        <label className="block text-sm mt-6 mb-2">성별</label>
+        <div className="flex gap-8 mb-10">
+          <label className="flex items-center gap-2">
             <input
               type="radio"
               checked={gender === "M"}
@@ -103,7 +127,7 @@ const Signup = () => {
             />
             남성
           </label>
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-2">
             <input
               type="radio"
               checked={gender === "F"}
@@ -112,11 +136,19 @@ const Signup = () => {
             여성
           </label>
         </div>
+
+        {/* 버튼 */}
         <button
           onClick={handleSubmit}
-          className="w-full py-3 border rounded font-semibold hover:bg-gray-100"
+          disabled={!isFormValid}
+          className={`w-full h-14 rounded-xl text-lg font-semibold transition
+            ${
+              isFormValid
+                ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
         >
-          회원가입
+          회원가입 →
         </button>
       </div>
     </div>
