@@ -7,7 +7,7 @@ interface RecommendProps {
 const Recommend: React.FC<RecommendProps> = ({ onDetailClick }) => {
   return (
     <section className="space-y-6">
-      <h2 className="text-xl font-extrabold text-gray-900">추천 아르바이트 요약</h2>
+      <h2 className="font-pretendard font-semibold text-[36px] leading-[100%] text-gray-900">추천 아르바이트 요약</h2>
       
       <div className="bg-white p-6 rounded-[25px] flex justify-between items-center shadow-sm border border-white">
         <p className="text-gray-700 font-bold ml-4">

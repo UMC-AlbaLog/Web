@@ -1,4 +1,3 @@
-// src/components/home/WorkList.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MapModal from "./MapModal";
@@ -42,10 +41,9 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction, onDelete }) => {
           {isDone ? "근무 완료" : isWorking ? "근무 중" : "출근 예정"}
         </span>
 
-        {/* 📍 정보 우측 배치 레이아웃 */}
         <div className="flex justify-between items-end w-full mb-8">
           <div className="space-y-1">
-            <p className="text-xs font-bold text-gray-400">{category || "아르바이트"}</p>
+            <p className="text-xs font-bold text-gray-400">{category || "기타"}</p>
             <h3 className="text-2xl font-black text-gray-800 leading-tight">{name}</h3>
           </div>
 

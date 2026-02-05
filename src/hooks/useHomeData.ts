@@ -1,81 +1,73 @@
-import { useState, useMemo } from "react";
-import type { Work, WorkStatus } from "../types/work";
-import { useSchedules } from "../contexts/SchedulesContext";
-import { calculateDuration } from "../utils/scheduleUtils";
+import { useState, useEffect } from "react";
+import { workService } from "../api/workService";
+import type { Work } from "../types/work";
+import type { AddWorkRequest } from "../components/home/AddWorkModal";
 
 export const useHomeData = () => {
-  const { schedules, workplaces, setSchedules, setWorkplaces } = useSchedules();
+  const [workList, setWorkList] = useState<Work[]>([]);
+  const [summary, setSummary] = useState({ totalCount: 0, totalHours: 0, totalIncome: 0 });
+  const [notifSummary, setNotifSummary] = useState({ completed: 0, scheduled: 0, pending: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const today = new Date().toLocaleDateString("en-CA");
 
-  const workList = useMemo<Work[]>(() => {
-    return schedules
-      .filter((s) => s.date === today)
-      .map((s) => {
-        const workplace = workplaces.find((w) => w.id === s.workplaceId);
-        const actualDuration = calculateDuration(s.startTime, s.endTime);
-        return {
-          id: s.id,
-          name: workplace?.name || "알바",
-          category: (s as any).category || "기타",
-          address: (s as any).address || "",
-          time: `${s.startTime} ~ ${s.endTime}`,
-          duration: actualDuration,
-          pay: s.hourlyWage || 0,
-          expectedPay: Math.floor(actualDuration * (s.hourlyWage || 0)),
-          date: s.date,
-          memo: s.memo || "",
-          status: (s.status as WorkStatus) || ("upcoming" as WorkStatus),
-          description: "",
-          requirements: "",
-          notice: "",
-        };
+  const fetchData = async () => {
+    try {
+      const s = await workService.getTodaySummary();
+      const schedules = await workService.getTodayWorkLogs();
+
+      setSummary({
+        totalCount: s.workCount || 0,
+        totalHours: Math.floor((s.totalWorkMinutes || 0) / 60), 
+        totalIncome: s.expectedIncome || 0
       });
-  }, [schedules, workplaces, today]);
 
-  const handleAddWork = (newWork: Omit<Work, "id" | "status"> & { category?: string }) => {
-    const newId = Date.now().toString();
-    const newWpId = `wp-${newId}`;
-    const [startTime, endTime] = newWork.time.split(" ~ ");
+      // 알림 요약 자동 계산
+      setNotifSummary({
+        scheduled: schedules.filter((item: any) => item.status === 'scheduled').length,
+        completed: schedules.filter((item: any) => item.status === 'completed').length,
+        pending: schedules.filter((item: any) => item.status === 'pending').length,
+      });
 
-    let targetWorkplaceId: string;
-    const existing = workplaces.find((w) => w.name === newWork.name);
-    if (existing) {
-      targetWorkplaceId = existing.id;
-    } else {
-      targetWorkplaceId = newWpId;
-      setWorkplaces((prev) => [...prev, { id: newWpId, name: newWork.name, color: "#5D5FEF" }]);
+      const mappedList = schedules.map((item: any) => ({
+        id: item.workLogId,
+        name: item.workplace,
+        category: "아르바이트",
+        time: `${item.startTime} ~ ${item.endTime}`,
+        duration: item.workHours,
+        pay: item.hourlyWage,
+        expectedPay: item.totalWage,
+        status: item.status,
+        statusLabel: item.statusLabel,
+        address: item.address || "",
+      }));
+      setWorkList(mappedList);
+    } catch (error) {
+      console.error("데이터 로드 실패:", error);
     }
+  };
 
-    const scheduleEntry = {
-      id: newId,
-      workplaceId: targetWorkplaceId,
-      date: newWork.date,
-      startTime,
-      endTime,
-      hourlyWage: newWork.pay,
-      memo: newWork.memo,
-      status: "upcoming" as const,
-      category: newWork.category,
-      address: newWork.address,
-    };
+  useEffect(() => { fetchData(); }, []);
 
-    setSchedules((prev) => [...prev, scheduleEntry]);
-    setIsModalOpen(false);
+  const handleAddWork = async (data: AddWorkRequest): Promise<boolean> => {
+    try {
+      await workService.addSchedule(data);
+      await fetchData();
+      return true;
+    } catch (error) {
+      alert("일정 추가 실패!");
+      return false;
+    }
   };
 
   return {
-    workList,
-    isModalOpen,
-    setIsModalOpen,
+    workList, summary, notifSummary, isModalOpen, setIsModalOpen,
     actions: { 
       handleAddWork, 
-      handleAction: (id: string, currentStatus: string) => {
-        const nextStatus: WorkStatus = currentStatus === "upcoming" ? "working" : "done";
-        setSchedules((prev) => prev.map((s) => (s.id === id ? { ...s, status: nextStatus } : s)));
-      }, 
-      handleDeleteWork: (id: string) => {
-        if (window.confirm("이 알바 일정을 삭제할까요?")) setSchedules((prev) => prev.filter((s) => s.id !== id));
+      handleAction: async (_id: string, _status: string) => { await fetchData(); },
+      handleDeleteWork: async (id: string) => { 
+        if(window.confirm("삭제할까요?")) {
+          await workService.deleteSchedule(id);
+          await fetchData();
+        }
       } 
     }
   };
