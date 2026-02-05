@@ -117,12 +117,6 @@ export const useHomeData = () => {
           alert("처리에 실패했습니다. 다시 시도해주세요.");
         }
        },
-      handleDeleteWork: async (id: string) => { 
-        if(window.confirm("삭제할까요?")) {
-          await workService.deleteSchedule(id);
-          await fetchData();
-        }
-      } 
     }
   };
 };

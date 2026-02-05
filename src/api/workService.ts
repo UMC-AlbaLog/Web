@@ -20,11 +20,6 @@ export const workService = {
     return res.data;
   },
 
-  // 일정 삭제
-  deleteSchedule: async (id: string) => {
-    return await api.delete(`/api/schedules/${id}`);
-  },
-
   // 출근하기
   checkIn: async (workLogId: string) => {
     const res = await api.patch(`/api/work-logs/work-logs/${workLogId}/check-in`);

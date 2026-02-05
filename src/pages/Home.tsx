@@ -54,7 +54,6 @@ const Home: React.FC = () => {
                     key={work.id} 
                     work={work}
                     onAction={() => actions.handleAction(work.id, work.status)}
-                    onDelete={() => actions.handleDeleteWork(work.id)}
                   />
                 ))
               )}
