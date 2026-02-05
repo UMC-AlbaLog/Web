@@ -51,7 +51,8 @@ const Home: React.FC = () => {
               ) : (
                 workList.map((work) => (
                   <WorkList 
-                    key={work.id} work={work}
+                    key={work.id} 
+                    work={work}
                     onAction={() => actions.handleAction(work.id, work.status)}
                     onDelete={() => actions.handleDeleteWork(work.id)}
                   />

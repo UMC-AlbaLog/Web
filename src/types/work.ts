@@ -1,4 +1,4 @@
-export type WorkStatus = "scheduled" | "completed" | "pending";
+export type WorkStatus = "scheduled" | "completed" | "pending" | "upcoming" | "working" | "done";
 
 export type ApplicationStatus = "pending" | "approved" | "rejected";
 export type SettlementStatus = "pending" | "completed";

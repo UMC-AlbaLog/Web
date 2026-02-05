@@ -30,7 +30,7 @@ export const useHomeData = () => {
 
       setNotifSummary({
         scheduled: schedules.filter((item: any) => item.status === 'scheduled').length,
-        completed: schedules.filter((item: any) => item.status === 'completed').length,
+        completed: schedules.filter((item: any) => item.status === 'completed' || item.status === 'done').length,
         pending: schedules.filter((item: any) => item.status === 'pending').length,
       });
 
@@ -102,7 +102,21 @@ export const useHomeData = () => {
         await fetchData();
         return true;
       },
-      handleAction: async (_id: string, _status: string) => { await fetchData(); },
+      handleAction: async (id: string, currentStatus: string) => { 
+        try {
+          if (currentStatus === 'scheduled') {
+            await workService.checkIn(id);
+            alert("출근 처리가 완료되었습니다.");
+          } else if (currentStatus === 'working') {
+            await workService.checkOut(id); 
+            alert("퇴근 처리가 완료되었습니다.");
+          }
+          await fetchData();
+        } catch (error) {
+          console.error("액션 처리 실패:", error);
+          alert("처리에 실패했습니다. 다시 시도해주세요.");
+        }
+       },
       handleDeleteWork: async (id: string) => { 
         if(window.confirm("삭제할까요?")) {
           await workService.deleteSchedule(id);

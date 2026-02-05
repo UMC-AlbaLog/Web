@@ -14,12 +14,13 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction, onDelete }) => {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const { status, name, category, time, duration, pay, expectedPay, address, id } = work;
 
-  const isDone = status === "completed" || status === "pending";
+  const isDone = status === "done" || status === "completed" || status === "pending";
+  const isWorking = status === "working";
   const isScheduled = status === "scheduled";
 
   const badgeStyle = isDone 
     ? "bg-gray-100 text-gray-500" 
-    : "bg-[#F2F3FF] text-[#5D5FEF]";
+    : isWorking ? "bg-blue-100 text-blue-600" : "bg-[#F2F3FF] text-[#5D5FEF]";
 
   return (
     <div 
@@ -39,7 +40,7 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction, onDelete }) => {
 
       <div className="flex flex-col items-start text-left w-full">
         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black mb-6 ${badgeStyle}`}>
-          {isDone ? "근무 완료" : "출근 예정"}
+          {isDone ? "근무 완료" : isWorking ? "근무 중" : "출근 예정"}
         </span>
 
         <div className="flex justify-between items-end w-full mb-8">
@@ -54,14 +55,17 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction, onDelete }) => {
           </div>
         </div>
 
-        {isScheduled && (
+        {!isDone && (
           <div className="flex gap-3 w-full">
-            <button 
-              onClick={(e) => { e.stopPropagation(); onAction(); }}
-              className="flex-1 py-4.5 rounded-[22px] text-sm font-black text-white shadow-lg shadow-indigo-100 transition-all active:scale-95 bg-[#5D5FEF]"
-            >
-              출근하기
-            </button>
+            {(isScheduled || isWorking) && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onAction(); }}
+                className={`flex-1 py-4.5 rounded-[22px] text-sm font-black text-white shadow-lg transition-all active:scale-95 
+                  ${isWorking ? "bg-red-400" : "bg-[#5D5FEF]"}`}
+              >
+                {isWorking ? "퇴근하기" : "출근하기"}
+              </button>
+            )}
             <button
               onClick={(e) => { e.stopPropagation(); setIsMapOpen(true); }}
               className="bg-[#F5F6FA] text-gray-600 px-10 py-4.5 rounded-[22px] text-sm font-black hover:bg-gray-200 transition-colors"
