@@ -4,7 +4,7 @@ import { findDynamicFreeSlot } from "../utils/scheduleUtils";
 
 export const useJobsData = () => {
   const { schedules } = useSchedules();
-  const [userName, setUserName] = useState("혜니");
+  const [userName, setUserName] = useState("회원");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {

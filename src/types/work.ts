@@ -1,4 +1,5 @@
-export type WorkStatus = "upcoming" | "working" | "done";
+export type WorkStatus = "scheduled" | "completed" | "pending";
+
 export type ApplicationStatus = "pending" | "approved" | "rejected";
 export type SettlementStatus = "pending" | "completed";
 
@@ -24,4 +25,6 @@ export interface Work {
   settlementStatus?: SettlementStatus;
   /** 실제 수입 (수입 화면용) */
   actualPay?: number;
+  startTime: string;
+  endTime: string;
 }

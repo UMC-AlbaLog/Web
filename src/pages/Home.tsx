@@ -9,12 +9,21 @@ import QuickAction from "../components/home/QuickAction";
 import Recommend from "../components/home/Recommend";
 import TodayWork from "../components/home/TodayWork";
 import WorkList from "../components/home/WorkList";
+import { useUser } from "../hooks/useUser";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   
-  const { workList, summary, notifSummary, isModalOpen, setIsModalOpen, actions } = useHomeData();
+  const { workList, summary, notifSummary, freeSlot, recommendCount, isLoading, isModalOpen, setIsModalOpen, actions } = useHomeData();
+
+  const { profile, displayName } = useUser();
+  const name = displayName || profile?.name || "회원";
+  
   const timeRemainingMessage = useWorkTimeMessage(workList);
+
+  if (isLoading) {
+    return <div className="p-8 text-center font-bold">데이터를 불러오는 중입니다...</div>;
+  }
 
   return (
     <main className="p-8 flex-1 overflow-y-auto bg-[#F5F6FA] font-['Pretendard']">
@@ -55,7 +64,14 @@ const Home: React.FC = () => {
             </div>
           </div>
         </section>
-        <Recommend onDetailClick={() => navigate('/jobs')} />
+        
+        <Recommend 
+          nickname={name}
+          freeSlot={freeSlot}
+          recommendCount={recommendCount}
+          hasWork={workList.length > 0} 
+          onDetailClick={() => navigate('/jobs')} 
+        />
       </div>
       {isModalOpen && <AddWorkModal onAdd={actions.handleAddWork} onClose={() => setIsModalOpen(false)} />}
     </main>

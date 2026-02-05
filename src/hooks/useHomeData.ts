@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { workService } from "../api/workService";
+import { albaService } from "../api/albaService"; 
+import { findDynamicFreeSlot } from "../utils/scheduleUtils";
 import type { Work } from "../types/work";
 import type { AddWorkRequest } from "../components/home/AddWorkModal";
 
@@ -8,11 +10,17 @@ export const useHomeData = () => {
   const [summary, setSummary] = useState({ totalCount: 0, totalHours: 0, totalIncome: 0 });
   const [notifSummary, setNotifSummary] = useState({ completed: 0, scheduled: 0, pending: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [recommendCount, setRecommendCount] = useState(0);
 
   const fetchData = async () => {
     try {
-      const s = await workService.getTodaySummary();
-      const schedules = await workService.getTodayWorkLogs();
+      setIsLoading(true);
+
+      const [s, schedules] = await Promise.all([
+        workService.getTodaySummary(),
+        workService.getTodayWorkLogs()
+      ]);
 
       setSummary({
         totalCount: s.workCount || 0,
@@ -20,14 +28,13 @@ export const useHomeData = () => {
         totalIncome: s.expectedIncome || 0
       });
 
-      // 알림 요약 자동 계산
       setNotifSummary({
         scheduled: schedules.filter((item: any) => item.status === 'scheduled').length,
         completed: schedules.filter((item: any) => item.status === 'completed').length,
         pending: schedules.filter((item: any) => item.status === 'pending').length,
       });
 
-      const mappedList = schedules.map((item: any) => ({
+      const mappedList: Work[] = schedules.map((item: any) => ({
         id: item.workLogId,
         name: item.workplace,
         category: "아르바이트",
@@ -40,28 +47,61 @@ export const useHomeData = () => {
         address: item.address || "",
       }));
       setWorkList(mappedList);
+
+      const scheduleItemsForCalc = mappedList.map((w: Work) => {
+        const [start, end] = w.time.split(" ~ ");
+        return { workplaceId: w.id, startTime: start, endTime: end };
+      });
+
+      const currentFreeSlot = findDynamicFreeSlot(scheduleItemsForCalc as any);
+
+      if (currentFreeSlot && currentFreeSlot.includes("~")) {
+        const [start, end] = currentFreeSlot.replace("시", "").split("~");
+        const albaList = await albaService.getAlbaList({ 
+          startTime: start.padStart(2, '0') + ":00", 
+          endTime: end.padStart(2, '0') + ":00" 
+        });
+        setRecommendCount(albaList.length || 0);
+      } else {
+        setRecommendCount(0);
+      }
+
     } catch (error) {
       console.error("데이터 로드 실패:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => { fetchData(); }, []);
 
-  const handleAddWork = async (data: AddWorkRequest): Promise<boolean> => {
-    try {
-      await workService.addSchedule(data);
-      await fetchData();
-      return true;
-    } catch (error) {
-      alert("일정 추가 실패!");
-      return false;
-    }
-  };
+  const freeSlot = useMemo(() => {
+    if (isLoading || !workList.length) return "알바를 등록하고 빈 시간을 확인해보세요!";
+    
+    const scheduleItems = workList.map((w: Work) => {
+      const [start, end] = w.time.split(" ~ ");
+      return { workplaceId: w.id, startTime: start, endTime: end };
+    });
+    
+    return findDynamicFreeSlot(scheduleItems as any);
+  }, [workList, isLoading]);
 
   return {
-    workList, summary, notifSummary, isModalOpen, setIsModalOpen,
+    workList, 
+    summary, 
+    notifSummary, 
+    freeSlot, 
+    recommendCount, 
+    isLoading, 
+    isModalOpen, 
+    setIsModalOpen,
     actions: { 
-      handleAddWork, 
+      fetchData,
+      handleAddWork: async (data: AddWorkRequest) => {
+        await workService.addSchedule(data);
+        await fetchData();
+        return true;
+      },
       handleAction: async (_id: string, _status: string) => { await fetchData(); },
       handleDeleteWork: async (id: string) => { 
         if(window.confirm("삭제할까요?")) {

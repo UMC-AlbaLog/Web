@@ -5,16 +5,18 @@ export const useWorkTimeMessage = (workList: Work[]) => {
   return useMemo(() => {
     const now = new Date();
     
-    // 미래의 근무만 필터링하여 정렬
     const futureShifts = workList
       .filter((w) => {
-        if (w.status !== "upcoming") return false;
+        if (w.status !== "scheduled") return false; 
+        
         const [startH, startM] = w.time.split(" ~ ")[0].split(":").map(Number);
         const target = new Date();
         target.setHours(startH, startM, 0, 0);
+        
         return target.getTime() > now.getTime();
       })
       .sort((a, b) => a.time.split(" ~ ")[0].localeCompare(b.time.split(" ~ ")[0]));
+
 
     if (futureShifts.length === 0) return null;
 
