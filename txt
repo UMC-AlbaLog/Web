@@ -1,0 +1,10 @@
+{
+  "workplace": "1770286630134",
+  "work_date": "2026-02-19",
+  "work_time": "07:00-19:00",
+  "day_of_week": "THU",
+  "repeat_type": "weekly",
+  "repeat_days": "1",
+  "hourly_wage": 10500,
+  "memo": "hi"
+}
