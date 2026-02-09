@@ -1,4 +1,5 @@
 import type { Work } from "../../types/work";
+import { formatTimeString, getUse24HourSetting } from "../../utils/timeFormat";
 
 interface JobCardProps {
   job: Work;
@@ -8,12 +9,16 @@ interface JobCardProps {
   hasApplied?: boolean;
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, distanceStr, onNavigate, onApply, hasApplied }) => (
+const JobCard: React.FC<JobCardProps> = ({ job, distanceStr, onNavigate, onApply, hasApplied }) => {
+  const use24Hour = getUse24HourSetting();
+  const formattedTime = formatTimeString(job.time, use24Hour);
+  
+  return (
   <div className="bg-white p-8 rounded-[35px] shadow-sm border border-white flex justify-between items-center group hover:shadow-md transition-all">
     <div className="space-y-2">
       <span className="text-[10px] font-black text-blue-500 uppercase">[{job.status}] 시급 {job.pay.toLocaleString()}원</span>
       <h3 className="text-2xl font-black text-gray-800">{job.name}</h3>
-      <p className="text-sm font-bold text-gray-400">{job.date} | {job.time}</p>
+      <p className="text-sm font-bold text-gray-400">{job.date} | {formattedTime}</p>
       <div className="flex items-center gap-2 text-[#5D5FEF] font-black text-xs">
         <span>시급 {job.pay.toLocaleString()}원</span>
         <span className="text-gray-300">|</span>
@@ -48,6 +53,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, distanceStr, onNavigate, onApply
       )}
     </div>
   </div>
-);
+  );
+};
 
 export default JobCard;

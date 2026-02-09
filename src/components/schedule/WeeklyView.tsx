@@ -1,4 +1,8 @@
 import type { ScheduleItem, Workplace, DaySummary } from '../../types/schedule';
+import { formatTime, formatTimeRange, getUse24HourSetting } from '../../utils/timeFormat';
+
+const DAY_NAMES_SUNDAY = ['일', '월', '화', '수', '목', '금', '토'];
+const DAY_NAMES_MONDAY = ['월', '화', '수', '목', '금', '토', '일'];
 
 interface WeeklyViewProps {
   weekDays: Date[];
@@ -13,6 +17,7 @@ interface WeeklyViewProps {
   onDayLeave: () => void;
   hoveredDay: string | null;
   hoverPosition: { x: number; y: number } | null;
+  weekStartDay?: '일요일' | '월요일';
 }
 
 const WeeklyView = ({
@@ -28,7 +33,10 @@ const WeeklyView = ({
   onDayLeave,
   hoveredDay,
   hoverPosition,
+  weekStartDay = '일요일',
 }: WeeklyViewProps) => {
+  const DAY_NAMES = weekStartDay === '월요일' ? DAY_NAMES_MONDAY : DAY_NAMES_SUNDAY;
+  const use24Hour = getUse24HourSetting();
   return (
     <>
       <div className="flex-1 overflow-auto border border-gray-300 rounded-xl">
@@ -43,7 +51,7 @@ const WeeklyView = ({
                 key={index}
                 className="p-4 border-b border-r border-gray-300 text-center text-base font-semibold"
               >
-                <div>{['일', '월', '화', '수', '목', '금', '토'][day.getDay()]}</div>
+                <div>{DAY_NAMES_SUNDAY[day.getDay()]}</div>
                 <div className="text-sm text-gray-600">{day.getDate()}</div>
               </div>
             ))}
@@ -53,7 +61,7 @@ const WeeklyView = ({
           {timeSlots.map((time, timeIndex) => (
             <div key={timeIndex} className="grid grid-cols-8 relative">
               <div className="p-3 border-b border-r border-gray-300 text-center text-sm text-gray-600">
-                {time}
+                {formatTime(time, use24Hour)}
               </div>
               {weekDays.map((day, dayIndex) => {
                 const dateStr = formatDate(day);
@@ -126,7 +134,7 @@ const WeeklyView = ({
                             }}
                           >
                             <div className="font-semibold">{workplace?.name}</div>
-                            <div>{schedule.startTime} - {schedule.endTime}</div>
+                            <div>{formatTimeRange(schedule.startTime, schedule.endTime, use24Hour)}</div>
                           </div>
                         );
                       }
