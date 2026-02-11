@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { getTestAccessToken } from "../api/auth";
+import { setAccessToken } from "../api/client";
 
 interface GooglePayload {
   email: string;
@@ -10,6 +13,28 @@ interface GooglePayload {
 
 const LoginLanding = () => {
   const navigate = useNavigate();
+  const [testLoading, setTestLoading] = useState(false);
+
+  const handleTestLogin = async () => {
+    setTestLoading(true);
+    try {
+      const token = await getTestAccessToken();
+      if (token) {
+        setAccessToken(token);
+        sessionStorage.setItem(
+          "googleUser",
+          JSON.stringify({ email: "test@test.com", name: "테스트 유저", picture: "" })
+        );
+        navigate("/home");
+      } else {
+        alert("테스트 토큰을 받지 못했습니다. 백엔드 /api/test 가 동작하는지 확인해주세요.");
+      }
+    } catch (e) {
+      alert("테스트 로그인 실패: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setTestLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-blue-50 to-sky-50">
@@ -50,6 +75,18 @@ const LoginLanding = () => {
               alert("구글 로그인에 실패했습니다.");
             }}
           />
+        </div>
+
+        {/* 테스트 API 로그인 (개발/테스트용) */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={handleTestLogin}
+            disabled={testLoading}
+            className="text-sm text-gray-500 hover:text-indigo-600 underline disabled:opacity-50"
+          >
+            {testLoading ? "토큰 요청 중..." : "테스트 API로 로그인"}
+          </button>
         </div>
 
         {/* 하단 안내 */}
