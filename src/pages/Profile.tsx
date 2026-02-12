@@ -402,7 +402,7 @@ const Profile: React.FC = () => {
         {/* 왼쪽 열 - 프로필 헤더, 경험 이력, 리뷰 */}
         <div className="col-span-2 space-y-6">
           <ProfileHeader
-            profileImage={profileImage || user?.picture || apiProfile?.profileImage || null}
+            profileImage={apiProfile?.profileImage || profileImage || user?.picture || null}
             profileName={profileName}
             profileAge={profileAge}
             profileAddress={profileAddress}

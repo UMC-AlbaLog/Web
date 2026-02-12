@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getSettlement, updateSettlement } from "../api/settlement";
 import { getUserIdFromToken } from "../utils/userId";
-import { getTestToken } from "../api/user";
 import { type Place } from "../api/places";
 import SettingsSidebar from "../components/settings/SettingsSidebar";
 import NotificationSettings from "../components/settings/NotificationSettings";
@@ -242,34 +241,10 @@ const Settings: React.FC = () => {
       // 저장 로직
       let userId = getUserIdFromToken();
       
-      // 토큰이 없으면 테스트 토큰 발급 시도
+      // 토큰이 없으면 실제 로그인 필요
       if (!userId) {
-        const token = sessionStorage.getItem("accessToken");
-        if (!token) {
-          const useTestToken = confirm(
-            "로그인이 필요합니다. accessToken이 없습니다.\n\n" +
-            "테스트용 토큰을 발급받으시겠습니까? (테스트용)"
-          );
-          
-          if (useTestToken) {
-            try {
-              await getTestToken();
-              userId = getUserIdFromToken();
-              if (!userId) {
-                alert("테스트 토큰 발급 후에도 사용자 ID를 추출할 수 없습니다.");
-                return;
-              }
-            } catch (error) {
-              alert("테스트 토큰 발급에 실패했습니다: " + (error instanceof Error ? error.message : "알 수 없는 오류"));
-              return;
-            }
-          } else {
-            return;
-          }
-        } else {
-          alert("토큰에서 사용자 ID를 추출할 수 없습니다. 토큰 형식을 확인해주세요.");
-          return;
-        }
+        alert("로그인이 필요합니다. 다시 로그인해주세요.");
+        return;
       }
 
       try {
