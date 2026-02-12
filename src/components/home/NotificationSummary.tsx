@@ -1,34 +1,33 @@
 import React from "react";
-import type { Work } from "../../types/work";
 
 interface NotificationSummaryProps {
-  workList: Work[];
+  summary: {
+    completed: number;
+    scheduled: number;
+    pending: number;
+  };
 }
 
-const NotificationSummary: React.FC<NotificationSummaryProps> = ({ workList }) => {
-  const workingCount = workList.filter(w => w.status === 'working').length;
-  const upcomingCount = workList.filter(w => w.status === 'upcoming').length;
-
+const NotificationSummary: React.FC<NotificationSummaryProps> = ({ summary }) => {
   return (
-    <div className="bg-white p-8 rounded-[35px] shadow-sm border border-white">
-      <h3 className="font-bold mb-4">
-        알림 요약
-      </h3>
-      
-      <div className="space-y-6 text-left">
-        <p className="text-sm font-bold text-gray-800">
-          출근 한 알바 
-          <span className="ml-4 text-[#5D5FEF]">{workingCount}건</span>
-        </p>
+    <div className="bg-white p-8 rounded-[35px] shadow-sm border border-white text-left font-['Pretendard']">
+      <h3 className="font-black text-gray-800 mb-6">알림 요약</h3>
+      <div className="space-y-4">
 
-        <p className="text-sm font-bold text-gray-800">
-          출근 예정 
-          <span className="ml-4 text-yellow-500">{upcomingCount}건</span>
-        </p>
-
-        <p className="text-sm font-bold text-gray-700 opacity-50">
-          정산 대기 2건입니다
-        </p>
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-bold text-gray-600">근무 완료</span>
+          <span className="text-sm font-black text-gray-400">{summary.completed}건</span>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-bold text-gray-600">출근 예정</span>
+          <span className="text-sm font-black text-[#5D5FEF]">{summary.scheduled}건</span>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-bold text-gray-600">정산 대기</span>
+          <span className="text-sm font-black text-gray-400">{summary.pending}건</span>
+        </div>
       </div>
     </div>
   );

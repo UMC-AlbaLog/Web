@@ -8,7 +8,7 @@ const baseWork = (
   duration: number,
   pay: number,
   date: string,
-  status: Work["status"] = "upcoming",
+  status: Work["status"] = "scheduled",
   applicationStatus?: Work["applicationStatus"],
   settlementStatus?: Work["settlementStatus"],
   actualPay?: number

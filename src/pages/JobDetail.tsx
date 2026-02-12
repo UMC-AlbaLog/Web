@@ -54,7 +54,7 @@ const JobDetail: React.FC = () => {
             <div className="flex justify-between items-end border-b border-gray-100 pb-4">
               <h3 className="text-xl font-bold text-gray-900">근무지 정보</h3>
               <button 
-                onClick={() => navigate(`/workplace/${id}`)}
+                onClick={() => navigate(`/review/view/${job.storeId}`)}
                 className="text-[15px] font-bold text-gray-500 hover:text-[#5D5FEF] transition-all flex items-center gap-1"
               >
                 신뢰 지표 ⭐ {job.trustScore} <span className="text-[#5D5FEF] ml-1">→</span>
@@ -62,8 +62,8 @@ const JobDetail: React.FC = () => {
             </div>
             <p className="text-gray-700 text-[15px] font-bold">{job.storeAddress || "주소 정보 없음"}</p>
             <div className="w-full h-80 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative">
-              <div className="absolute inset-0 flex items-center justify-center font-bold text-gray-300 text-center px-4">
-                {job.storeAddress ? "지도 정보를 불러오는 중입니다" : "주소가 등록되지 않아 지도를 표시할 수 없습니다."}
+              <div className="absolute inset-0 flex items-center justify-center font-bold text-gray-300">
+                지도를 불러오는 중입니다
               </div>
             </div>
           </section>
@@ -73,47 +73,38 @@ const JobDetail: React.FC = () => {
             <div className="space-y-12 text-gray-700 leading-relaxed text-[16px]">
               <div><p className="font-black text-gray-900 mb-3">[담당업무]</p><p className="font-medium whitespace-pre-wrap">{job.mainTask}</p></div>
               <div><p className="font-black text-gray-900 mb-3">[자격요건]</p><p className="font-medium whitespace-pre-wrap">{job.requirement}</p></div>
-              <div><p className="font-black text-gray-900 mb-3">[근무환경/공지]</p><p className="font-medium whitespace-pre-wrap">{job.notification}</p></div>
             </div>
           </section>
 
           <div className="flex justify-end gap-4 pt-12 border-t border-gray-100">
-            <button onClick={() => navigate(-1)} className="px-12 py-4 border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition-colors text-lg">취소</button>
+            <button onClick={() => navigate(-1)} className="px-12 py-4 border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 text-lg">취소</button>
             <button 
-              disabled={job.isApplied}
               onClick={() => setIsModalOpen(true)} 
-              className={`px-12 py-4 font-bold rounded-xl text-lg transition-colors shadow-lg ${
-                job.isApplied 
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
-                  : "bg-[#5D5FEF] text-white hover:bg-[#4A4BCF] shadow-indigo-100"
-              }`}
+              className="px-12 py-4 bg-[#5D5FEF] text-white font-bold rounded-xl text-lg hover:bg-[#4A4BCF] shadow-lg shadow-indigo-100"
             >
-              {job.isApplied ? `지원 완료 (${job.applicationStatus})` : "지원하기"}
+              지원하기
             </button>
           </div>
         </main>
 
-        <aside className="sticky top-12 bg-white rounded-xl p-10 shadow-sm border border-gray-100 space-y-10">
+        <aside className="sticky top-12 bg-white rounded-xl p-10 shadow-sm border border-gray-100 space-y-10 text-left">
           <div>
             <p className="text-gray-400 text-[13px] font-black mb-3 uppercase tracking-wide">예상 월 급여</p>
             <h3 className="text-[36px] font-black text-gray-900 leading-none">{job.totalWage?.toLocaleString()}<span className="text-2xl ml-1">원</span></h3>
           </div>
+          
           <div className="space-y-5 pt-8 border-t border-gray-100 text-[15px]">
             <div className="flex justify-between items-center"><span className="text-gray-400 font-bold">시급</span><span className="font-black text-gray-900">{job.hourlyRate?.toLocaleString()}원</span></div>
             <div className="flex justify-between items-center"><span className="text-gray-400 font-bold">근무 시간</span><span className="font-bold text-gray-900">일 {job.workTime}시간 ({job.dayOfWeek})</span></div>
             <div className="flex justify-between items-center"><span className="text-gray-400 font-bold">주휴 수당</span><span className="font-black text-[#5D5FEF]">포함</span></div>
           </div>
-          <div className="space-y-4 pt-4">
-            <button 
-              disabled={job.isApplied}
-              onClick={() => setIsModalOpen(true)} 
-              className={`w-full py-5 rounded-xl font-bold text-[19px] transition-transform active:scale-[0.98] ${
-                job.isApplied ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#5D5FEF] text-white hover:bg-[#4A4BCF]"
-              }`}
-            >
-              {job.isApplied ? "이미 지원한 공고" : "지금 지원하기"}
-            </button>
-          </div>
+
+          <button 
+            onClick={() => setIsModalOpen(true)} 
+            className="w-full py-5 rounded-xl bg-[#5D5FEF] text-white font-bold text-[19px] hover:bg-[#4A4BCF] transition-transform active:scale-[0.98]"
+          >
+            지금 지원하기
+          </button>
         </aside>
       </div>
 
@@ -124,10 +115,10 @@ const JobDetail: React.FC = () => {
           onConfirm={async () => {
             try {
               await albaService.applyAlba(id!); 
-              alert("지원이 성공적으로 완료되었습니다! 🎉");
+              alert("지원이 완료되었습니다.");
               navigate("/alba/status");
             } catch (e) { 
-              alert("이미 지원했거나 서버 오류가 발생했습니다."); 
+              alert("이미 지원했거나 오류가 발생했습니다."); 
             }
           }} 
         />

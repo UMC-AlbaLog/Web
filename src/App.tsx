@@ -1,4 +1,3 @@
-// App.tsx
 import { Routes, Route } from "react-router-dom";
 
 import Landing from "./pages/Landing";
@@ -42,8 +41,8 @@ const App = () => {
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/jobs/status" element={<ApplicationStatusPage />} />
           <Route path="/applications/manage" element={<ApplicationManagement />} />
-          <Route path="/review/:jobId" element={<ReviewPage mode="write" />} />
-          <Route path="/workplace/:workplaceId" element={<ReviewPage mode="view" />} />
+          <Route path="/review/write/:storeId" element={<ReviewPage mode="write" />} />
+          <Route path="/review/view/:storeId" element={<ReviewPage mode="view" />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/reviews" element={<ProfileReviews />} />
           <Route path="/profile/edit" element={<ProfileEdit />} />
