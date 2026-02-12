@@ -135,7 +135,7 @@ const Signup = () => {
         <label className="block text-sm mt-6 mb-1">생년월일</label>
         <DatePicker
           selected={birth}
-          onChange={(date) => setBirth(date)}
+          onChange={(date: Date | null) => setBirth(date)}
           dateFormat="yyyy.MM.dd"
           placeholderText="YYYY.MM.DD"
           maxDate={new Date()}

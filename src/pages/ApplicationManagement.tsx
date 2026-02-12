@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useJobs } from "../hooks/useJobs";
-import type { ApplicationStatus } from "../types/work";
+import type { ApplicationStatus, Work } from "../types/work";
 import { formatTimeString, getUse24HourSetting } from "../utils/timeFormat";
 
 type TabType = "all" | "inProgress" | "completed";
@@ -233,7 +233,7 @@ const ApplicationManagement: React.FC = () => {
 
       {/* 지원서 목록 */}
       <div className="space-y-4">
-        {filteredApplications.map((job) => {
+        {filteredApplications.map((job: Work) => {
           const statusInfo = getStatusLabel(job.applicationStatus);
           const expectedPay = job.pay * job.duration;
 

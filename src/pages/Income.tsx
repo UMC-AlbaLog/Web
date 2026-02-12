@@ -111,7 +111,7 @@ const Income = () => {
       .then((res) => {
         const rows = res.data.items
           .filter((item) => item.work_date.startsWith(monthParam))
-          .map((item, idx) => ({
+          .map((item, idx): SettlementRow => ({
             id: `${item.work_date}-${idx}`,
             date: item.work_date,
             name: item.store_name,
@@ -120,9 +120,9 @@ const Income = () => {
             actualPay: item.amount,
             settlementStatus:
               item.settlement_status === "waiting"
-                ? "pending"
+                ? ("pending" as const)
                 : item.settlement_status === "paid"
-                ? "completed"
+                ? ("completed" as const)
                 : undefined,
           }));
         setSettlementRows(rows);
