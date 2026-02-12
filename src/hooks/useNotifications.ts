@@ -64,7 +64,7 @@ const INITIAL_NOTIFICATIONS: Notification[] = [
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, _setIsLoading] = useState(false);
 
   // 초기 데이터 로드
   useEffect(() => {

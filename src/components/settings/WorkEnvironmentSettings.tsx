@@ -1,5 +1,4 @@
 import React from "react";
-import type { Place } from "../../api/places";
 
 interface WorkEnvironmentSettingsProps {
   selectedAreas: string[];
