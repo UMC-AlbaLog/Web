@@ -21,6 +21,11 @@ const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
       expectedPay: states.totalPay,
       date: states.date,
       memo: states.memo,
+      startTime: "",
+      endTime: "",
+      description: "",
+      requirements: "",
+      notice: ""
     });
     onClose();
   };
