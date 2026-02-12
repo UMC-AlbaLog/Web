@@ -1,3 +1,16 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build
+dist
+dist-ssr
+*.local
+
+# TypeScript
+*.tsbuildinfo
+node_modules/.tmp
+
 # Logs
 logs
 *.log
@@ -7,21 +20,35 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Environment
+.env
+.env.local
+.env.*.local
 
-# Editor directories and files
+# Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-.env
-.env.local
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache
+.parcel-cache
+.vite
+.eslintcache
+
+# Test / Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Optional: keep one lockfile (uncomment if you use only pnpm)
+# package-lock.json
