@@ -1,4 +1,8 @@
 import type { ScheduleItem, Workplace, DaySummary } from '../../types/schedule';
+import { formatTime, formatTimeRange, getUse24HourSetting } from '../../utils/timeFormat';
+
+const DAY_NAMES_SUNDAY = ['일', '월', '화', '수', '목', '금', '토'];
+const DAY_NAMES_MONDAY = ['월', '화', '수', '목', '금', '토', '일'];
 
 interface WeeklyViewProps {
   weekDays: Date[];
@@ -13,6 +17,7 @@ interface WeeklyViewProps {
   onDayLeave: () => void;
   hoveredDay: string | null;
   hoverPosition: { x: number; y: number } | null;
+  weekStartDay?: '일요일' | '월요일';
 }
 
 const WeeklyView = ({
@@ -28,7 +33,11 @@ const WeeklyView = ({
   onDayLeave,
   hoveredDay,
   hoverPosition,
+  weekStartDay = '일요일',
 }: WeeklyViewProps) => {
+  const DAY_NAMES = weekStartDay === '월요일' ? DAY_NAMES_MONDAY : DAY_NAMES_SUNDAY;
+  const use24Hour = getUse24HourSetting();
+
   return (
     <>
       <div className="flex-1 overflow-auto border border-gray-300 rounded-xl">
@@ -43,7 +52,7 @@ const WeeklyView = ({
                 key={index}
                 className="p-4 border-b border-r border-gray-300 text-center text-base font-semibold"
               >
-                <div>{['일', '월', '화', '수', '목', '금', '토'][day.getDay()]}</div>
+                <div>{DAY_NAMES[day.getDay()]}</div>
                 <div className="text-sm text-gray-600">{day.getDate()}</div>
               </div>
             ))}
@@ -53,7 +62,7 @@ const WeeklyView = ({
           {timeSlots.map((time, timeIndex) => (
             <div key={timeIndex} className="grid grid-cols-8 relative">
               <div className="p-3 border-b border-r border-gray-300 text-center text-sm text-gray-600">
-                {time}
+                {formatTime(time, use24Hour)}
               </div>
               {weekDays.map((day, dayIndex) => {
                 const dateStr = formatDate(day);
@@ -61,15 +70,15 @@ const WeeklyView = ({
                 const hasSummary = getDaySummary(dateStr);
 
                 // 현재 시간대에 일정이 있는지 확인하고 색상 가져오기
-                const currentHour = parseInt(time.split(':')[0]);
-                const currentSchedule = daySchedules.find(schedule => {
-                  const startHour = parseInt(schedule.startTime.split(':')[0]);
-                  const endHour = parseInt(schedule.endTime.split(':')[0]);
+                const currentHour = parseInt(time.split(':')[0], 10);
+                const currentSchedule = daySchedules.find((schedule) => {
+                  const startHour = parseInt(schedule.startTime.split(':')[0], 10);
+                  const endHour = parseInt(schedule.endTime.split(':')[0], 10);
                   return currentHour >= startHour && currentHour < endHour;
                 });
-                
-                const cellColor = currentSchedule 
-                  ? workplaces.find(w => w.id === currentSchedule.workplaceId)?.color 
+
+                const cellColor = currentSchedule
+                  ? workplaces.find((w) => w.id === currentSchedule.workplaceId)?.color
                   : null;
 
                 return (
@@ -95,9 +104,9 @@ const WeeklyView = ({
                         !
                       </div>
                     )}
-                    
-                    {/* 일정 항목 표시: 이 시간대 셀에서 시작하는 일정만 표시 (시작 분 포함) */}
-                    {daySchedules.map(schedule => {
+
+                    {/* 일정 항목 표시: 이 시간대 셀에서 시작하는 일정만 표시 */}
+                    {daySchedules.map((schedule) => {
                       const startHour = parseInt(schedule.startTime.split(':')[0], 10);
                       const startMin = parseInt(schedule.startTime.split(':')[1] || '0', 10);
                       const endHour = parseInt(schedule.endTime.split(':')[0], 10);
@@ -107,10 +116,14 @@ const WeeklyView = ({
                       // 이 셀(현재 시간대)에서 일정이 시작할 때만 블록 렌더 (startMin 무관)
                       if (currentHour !== startHour) return null;
 
-                      const durationMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+                      const durationMinutes =
+                        endHour * 60 + endMin - (startHour * 60 + startMin);
                       const durationHours = Math.max(0.25, durationMinutes / 60);
-                      const workplace = workplaces.find(w => w.id === schedule.workplaceId);
-                      const displayName = workplace?.name ?? schedule.scheduleName ?? '일정';
+                      const workplace = workplaces.find(
+                        (w) => w.id === schedule.workplaceId
+                      );
+                      const displayName =
+                        workplace?.name ?? schedule.scheduleName ?? '일정';
                       const pxPerHour = 60;
                       const topOffset = Math.round((startMin / 60) * pxPerHour);
 
@@ -129,8 +142,19 @@ const WeeklyView = ({
                             onScheduleClick(schedule);
                           }}
                         >
-                          <div className="font-semibold truncate" title={displayName}>{displayName}</div>
-                          <div className="truncate">{schedule.startTime} - {schedule.endTime}</div>
+                          <div
+                            className="font-semibold truncate"
+                            title={displayName}
+                          >
+                            {displayName}
+                          </div>
+                          <div className="truncate">
+                            {formatTimeRange(
+                              schedule.startTime,
+                              schedule.endTime,
+                              use24Hour
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -154,7 +178,11 @@ const WeeklyView = ({
         >
           <div className="font-bold text-lg mb-2">알바 현황</div>
           {getDaySummary(hoveredDay)?.map((summary, index) => (
-            <div key={index} className="mb-2 p-2 rounded" style={{ backgroundColor: summary.color + '20' }}>
+            <div
+              key={index}
+              className="mb-2 p-2 rounded"
+              style={{ backgroundColor: summary.color + '20' }}
+            >
               <div className="font-semibold" style={{ color: summary.color }}>
                 {summary.workplaceName}
               </div>
@@ -168,5 +196,3 @@ const WeeklyView = ({
 };
 
 export default WeeklyView;
-
-

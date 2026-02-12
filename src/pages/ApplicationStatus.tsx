@@ -48,6 +48,7 @@ const ApplicationStatusPage: React.FC = () => {
 
   const filteredApiItems = useMemo((): AlbaStatusItem[] => {
     let list = apiItemsAll;
+
     if (activeTab === "inProgress") {
       list = list.filter((item) =>
         IN_PROGRESS_STATUS.includes(item.processStatus?.toLowerCase() ?? "")
@@ -57,16 +58,19 @@ const ApplicationStatusPage: React.FC = () => {
         COMPLETED_STATUS.includes(item.processStatus?.toLowerCase() ?? "")
       );
     }
+
     if (searchQuery.trim()) {
       list = list.filter((item) =>
         item.storeName.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
+
     return list;
   }, [apiItemsAll, activeTab, searchQuery]);
 
   const filteredLocalJobs = useMemo((): Work[] => {
     let filtered = appliedJobs;
+
     if (activeTab === "inProgress") {
       filtered = filtered.filter((job) => job.applicationStatus === "pending");
     } else if (activeTab === "completed") {
@@ -74,6 +78,7 @@ const ApplicationStatusPage: React.FC = () => {
         (job) => job.applicationStatus === "approved" || job.applicationStatus === "rejected"
       );
     }
+
     if (searchQuery.trim()) {
       filtered = filtered.filter(
         (job) =>
@@ -81,6 +86,7 @@ const ApplicationStatusPage: React.FC = () => {
           job.address.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
+
     return filtered;
   }, [activeTab, searchQuery, appliedJobs]);
 
@@ -180,6 +186,7 @@ const ApplicationStatusPage: React.FC = () => {
           지원 현황을 불러오는 중…
         </div>
       )}
+
       <div className="space-y-4">
         {useApi
           ? filteredApiItems.map((item, index) => {
@@ -222,6 +229,7 @@ const ApplicationStatusPage: React.FC = () => {
           : filteredLocalJobs.map((job) => {
               const statusInfo = getStatusLabel(job.applicationStatus);
               const expectedPay = job.pay * job.duration;
+
               return (
                 <div
                   key={job.id}
@@ -245,6 +253,7 @@ const ApplicationStatusPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
+
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-4">
                       <div>
@@ -268,6 +277,7 @@ const ApplicationStatusPage: React.FC = () => {
                         </p>
                       </div>
                     </div>
+
                     {job.applicationStatus === "approved" && (
                       <button
                         type="button"
