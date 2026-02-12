@@ -1,28 +1,25 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useJobs } from "../hooks/useJobs";
-import type { ApplicationStatus } from "../types/work";
 import { formatTimeString, getUse24HourSetting } from "../utils/timeFormat";
 
 type TabType = "all" | "inProgress" | "completed";
 
 const ApplicationManagement: React.FC = () => {
-  const { getAppliedJobs, updateApplicationStatus } = useJobs();
+  const { jobs: appliedJobs = [], loading, updateApplicationStatus } = useJobs({}); 
+  
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  const appliedJobs = useMemo(() => getAppliedJobs(), [getAppliedJobs]);
-
-  // 고유한 매장명 목록 추출
   const storeNames = useMemo(() => {
     const stores = new Set<string>();
     appliedJobs.forEach((job) => stores.add(job.name));
     return Array.from(stores).sort();
   }, [appliedJobs]);
 
-  const getStatusLabel = (status?: ApplicationStatus) => {
+  const getStatusLabel = (status?: string) => {
     switch (status) {
       case "pending":
         return { text: "대기 중", color: "text-yellow-600 bg-yellow-50" };
@@ -37,8 +34,6 @@ const ApplicationManagement: React.FC = () => {
 
   const filteredApplications = useMemo(() => {
     let filtered = appliedJobs;
-
-    // 탭 필터링
     if (activeTab === "inProgress") {
       filtered = filtered.filter((job) => job.applicationStatus === "pending");
     } else if (activeTab === "completed") {
@@ -46,8 +41,6 @@ const ApplicationManagement: React.FC = () => {
         (job) => job.applicationStatus === "approved" || job.applicationStatus === "rejected"
       );
     }
-
-    // 검색 필터링
     if (searchQuery.trim()) {
       filtered = filtered.filter(
         (job) =>
@@ -55,175 +48,84 @@ const ApplicationManagement: React.FC = () => {
           job.address.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // 매장 필터링
     if (selectedStore) {
       filtered = filtered.filter((job) => job.name === selectedStore);
     }
-
     return filtered;
   }, [activeTab, searchQuery, selectedStore, appliedJobs]);
 
   const handleApprove = (jobId: string) => {
     if (window.confirm("이 지원을 승인하시겠습니까?")) {
-      updateApplicationStatus(jobId, "approved");
+      updateApplicationStatus?.(jobId, "approved");
     }
   };
 
   const handleReject = (jobId: string) => {
     if (window.confirm("이 지원을 거절하시겠습니까?")) {
-      updateApplicationStatus(jobId, "rejected");
+      updateApplicationStatus?.(jobId, "rejected");
     }
   };
 
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return dateString;
-      }
+      if (isNaN(date.getTime())) return dateString;
       const days = ["일", "월", "화", "수", "목", "금", "토"];
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      const dayName = days[date.getDay()];
-      return `${date.getFullYear()}.${month.toString().padStart(2, "0")}.${day.toString().padStart(2, "0")} (${dayName})`;
-    } catch {
-      return dateString;
-    }
+      return `${date.getFullYear()}.${(date.getMonth() + 1).toString().padStart(2, "0")}.${date.getDate().toString().padStart(2, "0")} (${days[date.getDay()]})`;
+    } catch { return dateString; }
   };
 
-  // 필터 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
         setShowFilter(false);
       }
     };
-
-    if (showFilter) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    if (showFilter) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showFilter]);
 
   return (
-    <main className="p-10 bg-[#F3F4F6] flex-1 overflow-y-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-black text-gray-800">대타 지원 현황</h1>
-        <p className="text-gray-500 text-sm mt-2">지원 현황을 확인하고 승인/거절할 수 있습니다</p>
+    <main className="p-10 bg-[#F8F9FA] flex-1 overflow-y-auto font-['Pretendard']">
+      <div className="mb-8 text-left">
+        <h1 className="text-[32px] font-black text-gray-900">대타 지원 관리</h1>
+        <p className="text-gray-400 font-bold mt-2">사장님, 도착한 지원 현황을 확인하고 승인/거절을 결정하세요</p>
       </div>
 
-      {/* 탭 */}
-      <div className="mb-6 flex">
-        <button
-          onClick={() => setActiveTab("all")}
-          className={`px-6 py-3 text-sm font-black transition-all rounded-l-xl ${
-            activeTab === "all"
-              ? "bg-gray-800 text-white"
-              : "bg-white text-gray-800 border border-gray-200"
-          }`}
-        >
-          전체
-        </button>
-        <button
-          onClick={() => setActiveTab("inProgress")}
-          className={`px-6 py-3 text-sm font-black transition-all border-y border-gray-200 ${
-            activeTab === "inProgress"
-              ? "bg-gray-800 text-white border-gray-800"
-              : "bg-white text-gray-800 border-l-0"
-          }`}
-        >
-          진행 중
-        </button>
-        <button
-          onClick={() => setActiveTab("completed")}
-          className={`px-6 py-3 text-sm font-black transition-all rounded-r-xl border border-gray-200 ${
-            activeTab === "completed"
-              ? "bg-gray-800 text-white border-gray-800"
-              : "bg-white text-gray-800 border-l-0"
-          }`}
-        >
-          모집 완료
-        </button>
+      <div className="mb-8 flex">
+        <button onClick={() => setActiveTab("all")} className={`px-8 py-4 text-sm font-black transition-all rounded-l-xl ${activeTab === "all" ? "bg-gray-900 text-white" : "bg-white text-gray-400 border border-gray-100"}`}>전체</button>
+        <button onClick={() => setActiveTab("inProgress")} className={`px-8 py-4 text-sm font-black transition-all border-y border-gray-100 ${activeTab === "inProgress" ? "bg-gray-900 text-white" : "bg-white text-gray-400"}`}>진행 중</button>
+        <button onClick={() => setActiveTab("completed")} className={`px-8 py-4 text-sm font-black transition-all rounded-r-xl border border-gray-100 ${activeTab === "completed" ? "bg-gray-900 text-white" : "bg-white text-gray-400"}`}>관리 완료</button>
       </div>
 
-      {/* 검색창과 필터 */}
-      <div className="mb-6 flex gap-3 relative">
+      <div className="mb-8 flex gap-4">
         <div className="flex-1 relative">
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-800">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M9 17C13.4183 17 17 13.4183 17 9C17 4.58172 13.4183 1 9 1C4.58172 1 1 4.58172 1 9C1 13.4183 4.58172 17 9 17Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M19 19L14.65 14.65"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           </div>
           <input
             type="text"
             placeholder="매장명 또는 주소로 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white rounded-xl pl-12 pr-4 py-4 text-sm font-bold text-gray-800 border border-gray-200 outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full bg-white rounded-xl pl-14 pr-6 py-4.5 text-[15px] font-bold text-gray-900 border border-gray-100 outline-none focus:ring-2 focus:ring-[#5D5FEF] shadow-sm"
           />
         </div>
         <div className="relative" ref={filterRef}>
           <button
             onClick={() => setShowFilter(!showFilter)}
-            className="bg-white px-6 py-4 rounded-xl text-sm font-black text-gray-800 border border-gray-200 hover:bg-gray-50 transition-all"
+            className="bg-white px-8 py-4.5 rounded-xl text-[15px] font-black text-gray-700 border border-gray-100 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm"
           >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
             필터
           </button>
           {showFilter && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 p-4">
-              <p className="text-xs text-gray-500 font-medium mb-3">매장명 필터</p>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                <button
-                  onClick={() => {
-                    setSelectedStore(null);
-                    setShowFilter(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    selectedStore === null
-                      ? "bg-gray-800 text-white"
-                      : "bg-gray-50 text-gray-800 hover:bg-gray-100"
-                  }`}
-                >
-                  전체
-                </button>
+            <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-50 p-5">
+              <p className="text-xs text-gray-400 font-black mb-4 uppercase tracking-wider">매장별 보기</p>
+              <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                <button onClick={() => { setSelectedStore(null); setShowFilter(false); }} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${selectedStore === null ? "bg-[#5D5FEF] text-white" : "hover:bg-gray-50 text-gray-600"}`}>전체 매장</button>
                 {storeNames.map((store) => (
-                  <button
-                    key={store}
-                    onClick={() => {
-                      setSelectedStore(store);
-                      setShowFilter(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      selectedStore === store
-                        ? "bg-gray-800 text-white"
-                        : "bg-gray-50 text-gray-800 hover:bg-gray-100"
-                    }`}
-                  >
-                    {store}
-                  </button>
+                  <button key={store} onClick={() => { setSelectedStore(store); setShowFilter(false); }} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${selectedStore === store ? "bg-[#5D5FEF] text-white" : "hover:bg-gray-50 text-gray-600"}`}>{store}</button>
                 ))}
               </div>
             </div>
@@ -231,94 +133,55 @@ const ApplicationManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* 지원서 목록 */}
-      <div className="space-y-4">
-        {filteredApplications.map((job) => {
+      <div className="space-y-5">
+        {loading ? (
+          <div className="bg-white rounded-xl p-20 text-center text-gray-400 font-bold">지원 내역을 불러오는 중입니다...</div>
+        ) : filteredApplications.map((job) => {
           const statusInfo = getStatusLabel(job.applicationStatus);
           const expectedPay = job.pay * job.duration;
 
           return (
-            <div
-              key={job.id}
-              className="bg-white rounded-[35px] p-8 shadow-sm border border-white hover:shadow-md transition-all"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+            <div key={job.id} className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col gap-6">
+              <div className="flex justify-between items-start">
+                <div className="text-left space-y-2">
+                  <div className="flex items-center gap-3">
                     <h3 className="text-2xl font-black text-gray-800">{job.name}</h3>
-                    {job.applicationStatus && (
-                      <span
-                        className={`px-4 py-1.5 rounded-full text-xs font-black ${statusInfo.color}`}
-                      >
-                        {statusInfo.text}
-                      </span>
-                    )}
+                    <span className={`px-3 py-1 rounded-full text-[11px] font-black ${statusInfo.color}`}>{statusInfo.text}</span>
                   </div>
-                  <p className="text-sm font-bold text-gray-400 mb-1">{job.address}</p>
-                  <p className="text-sm font-bold text-gray-400 mb-1">
+                  <p className="text-sm font-bold text-gray-400 leading-relaxed">{job.address}</p>
+                  <p className="text-sm font-black text-[#5D5FEF] bg-indigo-50 inline-block px-3 py-1 rounded-lg">
                     {formatDate(job.date)} | {formatTimeString(job.time, getUse24HourSetting())}
                   </p>
                 </div>
+                
+                {job.applicationStatus === "pending" ? (
+                  <div className="flex gap-3">
+                    <button onClick={() => handleReject(job.id)} className="bg-white border-2 border-red-100 text-red-500 hover:bg-red-50 px-7 py-3 rounded-xl font-black text-sm transition-all">거절하기</button>
+                    <button onClick={() => handleApprove(job.id)} className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-7 py-3 rounded-xl font-black text-sm shadow-lg shadow-indigo-100 transition-all">지원 승인</button>
+                  </div>
+                ) : (
+                  <div className={`px-5 py-3 rounded-xl font-black text-sm border ${job.applicationStatus === 'approved' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>
+                    {job.applicationStatus === "approved" ? "승인 완료" : "거절됨"}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">시급</p>
-                    <p className="text-lg font-black text-gray-800">
-                      {job.pay.toLocaleString()}원
-                    </p>
-                  </div>
-                  <div className="w-px h-8 bg-gray-200" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">예상 급여</p>
-                    <p className="text-lg font-black text-[#5D5FEF]">
-                      {expectedPay.toLocaleString()}원
-                    </p>
-                  </div>
-                  <div className="w-px h-8 bg-gray-200" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">지원일</p>
-                    <p className="text-sm font-bold text-gray-600">
-                      {job.appliedDate || "N/A"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 승인/거절 버튼 (대기 중일 때만) */}
-                {job.applicationStatus === "pending" && (
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleReject(job.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-                    >
-                      거절
-                    </button>
-                    <button
-                      onClick={() => handleApprove(job.id)}
-                      className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-                    >
-                      승인
-                    </button>
-                  </div>
-                )}
-
-                {/* 완료된 상태 표시 */}
-                {(job.applicationStatus === "approved" || job.applicationStatus === "rejected") && (
-                  <div className="text-sm font-bold text-gray-500">
-                    {job.applicationStatus === "approved" ? "승인 완료" : "거절 완료"}
-                  </div>
-                )}
+              <div className="flex items-center gap-8 pt-6 border-t border-gray-50 text-left">
+                <div><p className="text-[11px] text-gray-400 font-bold mb-1">시급</p><p className="text-lg font-black text-gray-800">{job.pay.toLocaleString()}원</p></div>
+                <div className="w-px h-8 bg-gray-100" />
+                <div><p className="text-[11px] text-gray-400 font-bold mb-1">예상 급여</p><p className="text-lg font-black text-[#5D5FEF]">{expectedPay.toLocaleString()}원</p></div>
+                <div className="w-px h-8 bg-gray-100" />
+                <div><p className="text-[11px] text-gray-400 font-bold mb-1">지원일</p><p className="text-sm font-bold text-gray-500">{job.appliedDate || "방금 전"}</p></div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {filteredApplications.length === 0 && (
-        <div className="bg-white rounded-[35px] p-16 text-center">
-          <p className="text-gray-400 text-lg font-medium mb-4">
-            {searchQuery || selectedStore ? "검색 결과가 없습니다" : "아직 지원이 없습니다"}
+      {!loading && filteredApplications.length === 0 && (
+        <div className="bg-white rounded-xl p-24 text-center border border-dashed border-gray-200">
+          <p className="text-gray-300 text-lg font-bold">
+            {searchQuery || selectedStore ? "검색 결과와 일치하는 지원서가 없습니다." : "아직 도착한 지원서가 없네요."}
           </p>
         </div>
       )}
@@ -327,4 +190,3 @@ const ApplicationManagement: React.FC = () => {
 };
 
 export default ApplicationManagement;
-

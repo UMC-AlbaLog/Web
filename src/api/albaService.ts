@@ -53,7 +53,29 @@ export const albaService = {
       method: "POST",
       body: { albaId } 
     });
-  }
+  },
 
+  updateApplicationStatus: async (albaId: string, status: "approved" | "rejected") => {
+    return await apiRequest(`/api/alba/application/status`, {
+      method: "PUT",
+      body: { albaId, status }
+    });
+  },
+
+  // 리뷰 등록
+  createReview: async (reviewData: {
+    userId: string;
+    storeId: string;
+    kindness: number;
+    communication: number;
+    settlement: number;
+    rest: number;
+    review: string;
+  }) => {
+    return await apiRequest(`/api/store/review`, {
+      method: "POST",
+      body: reviewData
+    });
+  }
   
 };

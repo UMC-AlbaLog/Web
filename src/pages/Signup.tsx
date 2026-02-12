@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -109,7 +109,7 @@ const Signup = () => {
         <label className="block text-sm mt-6 mb-1">생년월일</label>
         <DatePicker
           selected={birth}
-          onChange={(date) => setBirth(date)}
+          onChange={(date: SetStateAction<Date | null>) => setBirth(date)}
           dateFormat="yyyy.MM.dd"
           placeholderText="YYYY.MM.DD"
           maxDate={new Date()}

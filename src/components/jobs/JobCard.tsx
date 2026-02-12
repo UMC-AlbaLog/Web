@@ -11,13 +11,34 @@ interface Props {
 const JobCard: React.FC<Props> = ({ job, distanceStr, onNavigate }) => {
   const isHighPay = job.pay >= 11500;
   
+  const getFormattedTime = (timeStr: string) => {
+    if (!timeStr) return "";
+    
+    if (timeStr.includes('~')) {
+      try {
+        const [startStr, endStr] = timeStr.split('~');
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        
+        const pad = (n: number) => String(n).padStart(2, '0');
+        
+        return `${pad(start.getUTCHours())}:${pad(start.getUTCMinutes())} ~ ${pad(end.getUTCHours())}:${pad(end.getUTCMinutes())}`;
+      } catch (e) {
+        return timeStr;
+      }
+    }
+    
+    return formatTimeString(timeStr, getUse24HourSetting());
+  };
+
+  const formattedTime = getFormattedTime(job.time);
+  
   return (
     <div 
       onClick={() => onNavigate(job.id)}
       className="bg-white p-6 rounded-xl border border-gray-100 flex justify-between items-start cursor-pointer hover:shadow-md transition-shadow"
     >
       <div className="space-y-2">
-
         <div className="flex items-center gap-2">
           <span className={`px-2 py-0.5 rounded text-[11px] font-bold text-white ${isHighPay ? 'bg-[#5D5FEF]' : 'bg-[#4A7DFF]'}`}>
             {isHighPay ? "급구" : "당일정산"}
@@ -28,7 +49,7 @@ const JobCard: React.FC<Props> = ({ job, distanceStr, onNavigate }) => {
         <h3 className="text-[15px] font-bold text-gray-800">{job.name}</h3>
 
         <div className="text-[13px] text-gray-400 font-medium">
-          <p>{job.time}</p>
+          <p>{formattedTime}</p>
         </div>
       </div>
 

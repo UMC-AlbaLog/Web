@@ -1,54 +1,75 @@
 import React from "react";
 
 interface Props {
-  title: string; avgRating: string; mode: "view" | "write"; isOpen: boolean;
-  onToggle: () => void; children: React.ReactNode; reviews: any[];
-  expandedReviews: Set<string>; onReadMore: (id: string) => void;
+  title: string;
+  avgRating: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  keywords?: string[];
+  reviewText?: string;
+  children?: React.ReactNode; 
 }
 
-const ReviewAccordion: React.FC<Props> = ({ title, avgRating, mode, isOpen, onToggle, children, reviews, expandedReviews, onReadMore }) => (
-  <section className="bg-white rounded-[40px] shadow-sm border border-white overflow-hidden transition-all">
-    <div 
-      className={`p-10 cursor-pointer ${isOpen && mode === 'view' ? 'bg-gray-50' : ''}`} 
-      onClick={() => mode === 'view' && onToggle()}
-    >
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h3 className="text-xl font-black text-gray-800">{title}</h3>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-3xl font-black text-gray-800">{avgRating}</span>
-            <span className="text-lg text-gray-400 font-bold">/ 5.0</span>
+const ReviewAccordion: React.FC<Props> = ({ 
+  title, 
+  avgRating, 
+  isOpen, 
+  onToggle, 
+  keywords = [], 
+  reviewText,
+  children 
+}) => {
+  const keywordMap: Record<string, string> = {
+    settlement: "💰 급여 칼지급",
+    kindness: "😊 사장님이 친절해요",
+    clean: "🧹 매장이 청결해요",
+    rest: "☕ 휴게시간 준수",
+    colleague: "🙌 동료가 좋아요",
+  };
+
+  return (
+    <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 space-y-6 text-left transition-all">
+      <div className="flex justify-between items-start">
+        <h3 className="text-xl font-black text-gray-800">{title}</h3>
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex text-yellow-400 text-sm">★★★★★</div>
+          <div className="text-sm font-bold text-gray-800">
+            {avgRating} <span className="text-gray-300">/ 5.0</span>
           </div>
         </div>
-        <div className={`text-6xl text-yellow-400 transition-all ${isOpen && mode === 'view' ? 'scale-110' : 'opacity-20'}`}>★</div>
       </div>
-      {children}
-      {mode === 'view' && (
-        <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center text-xs font-black text-gray-400">
-          {isOpen ? '리뷰 접기 ▲' : '리뷰 전체 보기 ▼'}
+
+      {keywords.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {keywords.map((k) => (
+            <span key={k} className="px-4 py-1.5 bg-indigo-50 text-[#5D5FEF] text-[11px] font-bold rounded-full border border-indigo-100">
+              {keywordMap[k] || k}
+            </span>
+          ))}
         </div>
       )}
-    </div>
-    {mode === 'view' && isOpen && (
-      <div className="bg-gray-50 p-8 space-y-4 border-t border-gray-100">
-        {reviews.map((r: any) => (
-          <div key={r.id} className="bg-white p-6 rounded-3xl shadow-sm space-y-2">
-            <div className="flex justify-between text-sm font-black text-gray-800">
-              <span>{r.author}</span><span className="text-[10px] text-gray-400">{r.date}</span>
-            </div>
-            <p className="text-xs font-bold text-gray-500 text-left">
-              {expandedReviews.has(r.id) || r.content.length <= 60 ? r.content : `${r.content.slice(0, 60)}...`}
-            </p>
-            {r.content.length > 60 && (
-              <button onClick={(e) => { e.stopPropagation(); onReadMore(r.id); }} className="text-[10px] font-black text-blue-500">
-                {expandedReviews.has(r.id) ? '접기' : '더보기'}
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-    )}
-  </section>
-);
+
+      {children && <div className="border-t border-gray-50 pt-4">{children}</div>}
+
+      {reviewText && (
+        <div 
+          onClick={onToggle}
+          className="bg-gray-100 rounded-xl p-5 flex justify-between items-center cursor-pointer hover:bg-gray-200 transition-colors"
+        >
+          <p className="text-sm font-bold text-gray-600 truncate mr-4">{reviewText}</p>
+          <svg className={`w-5 h-5 text-indigo-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      )}
+
+      {isOpen && reviewText && (
+        <div className="pt-2 px-1 text-sm font-medium text-gray-500 leading-relaxed whitespace-pre-wrap animate-fadeIn">
+          {reviewText}
+        </div>
+      )}
+    </section>
+  );
+};
 
 export default ReviewAccordion;

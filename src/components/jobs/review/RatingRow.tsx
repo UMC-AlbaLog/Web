@@ -8,9 +8,9 @@ interface RatingRowProps {
 }
 
 const RatingRow: React.FC<RatingRowProps> = ({ label, value, onChange, disabled }) => (
-  <div className="flex justify-between items-center">
-    <span className="text-xs font-bold text-gray-500">{label}</span>
-    <div className="flex gap-1">
+  <div className="flex justify-between items-center py-2">
+    <span className="text-sm font-bold text-gray-600">{label}</span>
+    <div className="flex gap-1.5">
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
@@ -18,7 +18,7 @@ const RatingRow: React.FC<RatingRowProps> = ({ label, value, onChange, disabled 
           onClick={() => !disabled && onChange?.(star)}
           className={`text-2xl transition-all ${
             star <= Math.round(value) ? 'text-yellow-400' : 'text-gray-200'
-          } ${!disabled && 'hover:scale-125'}`}
+          } ${!disabled ? 'hover:scale-125 cursor-pointer' : 'cursor-default'}`}
         >
           ★
         </button>
