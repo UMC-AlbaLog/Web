@@ -32,7 +32,12 @@ const JobCard: React.FC<Props> = ({ job, distanceStr, onNavigate }) => {
       </div>
 
       <div className="flex flex-col items-end gap-2 shrink-0">
-        <button className="px-5 py-2 bg-[#E5E7EB] text-gray-700 rounded-lg text-[13px] font-bold">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate(job.id);
+          }}
+          className="px-5 py-2 bg-[#E5E7EB] text-gray-700 rounded-lg text-[13px] font-bold">
           지원하기
         </button>
         <span className="text-[12px] text-gray-400 font-medium">{distanceStr}</span>
