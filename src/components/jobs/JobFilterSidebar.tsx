@@ -1,76 +1,90 @@
+import React, { useState } from "react";
+import CalendarModal from "../CalendarModal";
+
 interface Props {
   states: any; setters: any; actions: any;
-  filterDistance: string; setFilterDistance: (d: string) => void;
 }
 
-const JobFilterSidebar = ({ states, setters, actions, filterDistance, setFilterDistance }: Props) => (
-  <aside className="w-85 bg-white p-8 rounded-[35px] shadow-sm space-y-6 border border-white relative">
-    <div className="relative">
-      <input 
-        type="text" placeholder="가게명 검색" 
-        className="w-full bg-gray-50 rounded-xl p-4 text-sm font-bold border-none outline-none focus:ring-2 focus:ring-yellow-400"
-        value={states.searchKeyword}
-        onChange={(e) => { setters.setSearchKeyword(e.target.value); actions.handleSearch(e.target.value); }}
-      />
-      {states.isSearching && (
-        <div className="absolute z-50 w-full bg-white border border-gray-100 rounded-xl mt-2 shadow-2xl max-h-48 overflow-y-auto">
-          {states.searchResults.map((res: any, i: number) => (
-            <div key={i} onClick={() => actions.handleSelectPlace(res)} className="p-4 text-xs font-bold hover:bg-yellow-50 cursor-pointer border-b last:border-0">
-              <p className="text-gray-800">{res.place_name}</p>
-              <p className="text-gray-400 text-[10px]">{res.address_name}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+const JobFilterSidebar: React.FC<Props> = ({ states, setters, actions }) => {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-black text-gray-700 w-12 text-left">거리</span>
-        <div className="flex gap-2 flex-1">
-          {["1km", "5km"].map(d => (
-            <button key={d} onClick={() => setFilterDistance(d)} className={`flex-1 py-3 rounded-xl text-xs font-bold border-2 transition-all ${filterDistance === d ? "bg-white border-yellow-400 shadow-sm" : "bg-gray-50 border-transparent text-gray-400"}`}>{d}</button>
-          ))}
-        </div>
+  const rowStyle = "flex items-center justify-between relative";
+  const labelStyle = "text-[#8E97A4] text-[15px] font-bold shrink-0";
+  const inputStyle = "w-[210px] ml-auto h-11 px-4 bg-white border border-[#E5E7EB] rounded-lg text-[15px] font-bold text-gray-800 outline-none focus:border-[#5D5FEF] transition-all text-center";
+
+  const newLocal = "w-[340px] bg-white p-7 rounded-xl border border-gray-100 shadow-sm space-y-6 text-left relative z-50";
+  return (
+    <aside className={newLocal}>
+
+      <div className="flex items-center gap-3 border-b border-gray-100 pb-3 mb-2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input 
+          type="text" placeholder="검색창" 
+          className="text-[17px] font-black outline-none w-full text-gray-800"
+          value={states.searchKeyword}
+          onChange={(e) => { setters.setSearchKeyword(e.target.value); actions.handleSearch(e.target.value); }}
+        />
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-black text-gray-700 w-12 text-left">날짜</span>
-        <input type="date" value={states.date} onChange={(e) => setters.setDate(e.target.value)} className="flex-1 bg-gray-50 p-3 rounded-xl text-xs font-bold text-center border-none" />
-      </div>
+      <div className="space-y-5">
+        <div className={rowStyle}>
+          <span className={labelStyle}>거리</span>
+          <div className="flex bg-[#F3F4F6] p-1 rounded-lg ml-auto">
+            {[1, 5].map(d => (
+              <button key={d} onClick={() => setters.setDistance(d)} className={`px-5 py-1.5 rounded-md text-[13px] font-bold transition-all ${states.distance === d ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>{d}km</button>
+            ))}
+          </div>
+        </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-black text-gray-700 w-12 text-left">업종</span>
-        <div className="flex-1 bg-gray-50 p-3 rounded-xl text-xs font-bold text-center text-gray-800 min-h-10">
-          {states.category || "선택 전"}
+        <div className={rowStyle}>
+          <span className={labelStyle}>날짜</span>
+          <button onClick={() => setIsCalendarOpen(!isCalendarOpen)} className={inputStyle}>{states.date}</button>
+          <CalendarModal 
+            isOpen={isCalendarOpen} 
+            onClose={() => setIsCalendarOpen(false)} 
+            selectedDate={states.date} 
+            onSelectDate={(date) => { setters.setDate(date); setIsCalendarOpen(false); }} 
+          />
+        </div>
+
+        {["업종", "가게명"].map((label) => (
+          <div key={label} className={rowStyle}>
+            <span className={labelStyle}>{label}</span>
+            <input 
+              type="text" className={`${inputStyle} ${label === "업종" ? "bg-gray-50" : ""}`}
+              value={label === "업종" ? states.category : states.name}
+              readOnly={label === "업종"}
+              onChange={(e) => label === "가게명" && setters.setName(e.target.value)}
+            />
+          </div>
+        ))}
+
+        <div className={rowStyle}>
+          <span className={labelStyle}>시간</span>
+          <div className={`${inputStyle} flex items-center justify-center gap-1`}>
+            <input type="text" className="w-12 text-center bg-transparent outline-none" value={states.startTime} onChange={(e) => setters.setStartTime(e.target.value)} />
+            <span className="text-gray-300">-</span>
+            <input type="text" className="w-12 text-center bg-transparent outline-none" value={states.endTime} onChange={(e) => setters.setEndTime(e.target.value)} />
+          </div>
+        </div>
+
+        <div className={rowStyle}>
+          <span className={labelStyle}>시급</span>
+          <div className="relative ml-auto">
+            <input 
+              type="text" className={`${inputStyle} text-right pr-10`}
+              value={states.pay.toLocaleString()}
+              onChange={(e) => setters.setPay(Number(e.target.value.replace(/[^0-9]/g, "")))}
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] font-bold text-gray-800">원</span>
+          </div>
         </div>
       </div>
-
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-black text-gray-700 w-12 text-left">가게명</span>
-        <div className="flex-1 bg-gray-50 p-3 rounded-xl text-xs font-bold text-center text-gray-800 min-h-10">
-          {states.name || "선택 전"}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-black text-gray-700 w-12 text-left">시간</span>
-        <div className="flex gap-1 flex-1">
-          <input type="time" value={states.startTime} onChange={(e) => setters.setStartTime(e.target.value)} className="w-full bg-gray-50 p-3 rounded-xl text-[10px] font-bold text-center border-none" />
-          <span className="text-gray-300 self-center">-</span>
-          <input type="time" value={states.endTime} onChange={(e) => setters.setEndTime(e.target.value)} className="w-full bg-gray-50 p-3 rounded-xl text-[10px] font-bold text-center border-none" />
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-black text-gray-700 w-12 text-left">시급</span>
-        <div className="relative flex-1 flex items-center">
-          <input type="number" value={states.pay} onChange={(e) => setters.setPay(Number(e.target.value))} className="w-full bg-gray-50 p-3 rounded-xl text-xs font-bold text-center border-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-          <span className="absolute right-4 text-[10px] font-black text-gray-400">원</span>
-        </div>
-      </div>
-    </div>
-  </aside>
-);
+    </aside>
+  );
+};
 
 export default JobFilterSidebar;
