@@ -28,6 +28,7 @@ export const useJobDetail = (id: string | undefined) => {
         if (detailRes) {
           setJob({
             ...detailRes,
+            storeId: detailRes.storeId,
             status: "채용중", 
             category: detailRes.storeCategory || "기타", 
             timeTag: parseInt(detailRes.startTime?.split(':')[0]) >= 18 || parseInt(detailRes.startTime?.split(':')[0]) < 6 ? "야간" : "주간",

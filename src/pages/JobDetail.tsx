@@ -54,7 +54,7 @@ const JobDetail: React.FC = () => {
             <div className="flex justify-between items-end border-b border-gray-100 pb-4">
               <h3 className="text-xl font-bold text-gray-900">근무지 정보</h3>
               <button 
-                onClick={() => navigate(`/workplace/${id}`)}
+                onClick={() => navigate(`/workplace/${job.storeId}`)}
                 className="text-[15px] font-bold text-gray-500 hover:text-[#5D5FEF] transition-all flex items-center gap-1"
               >
                 신뢰 지표 ⭐ {job.trustScore} <span className="text-[#5D5FEF] ml-1">→</span>
