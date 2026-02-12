@@ -2,95 +2,121 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
-interface GoogleUser {
-  email: string;
-  name: string;
-  picture: string;
-}
+import api from "../api/client";
 
 const Signup = () => {
   const navigate = useNavigate();
 
-  const [user] = useState<GoogleUser | null>(() => {
-    const data = sessionStorage.getItem("googleUser");
-    return data ? JSON.parse(data) : null;
-  });
-
   const [nickname, setNickname] = useState("");
   const [birth, setBirth] = useState<Date | null>(null);
-  const [gender, setGender] = useState<"M" | "F" | "">("");
+  const [gender, setGender] = useState<"male" | "female" | "">("");
 
   const [nicknameError, setNicknameError] = useState("");
-  const [birthError, setBirthError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
+  /* =========================
+   * URL에서 토큰 저장
+   * ========================= */
   useEffect(() => {
-    if (!user) navigate("/", { replace: true });
-  }, [user, navigate]);
+    const params = new URLSearchParams(window.location.search);
 
+    const accessToken = params.get("accessToken");
+    const refreshToken = params.get("refreshToken");
+
+    if (accessToken) {
+      sessionStorage.setItem("accessToken", accessToken);
+    }
+
+    if (refreshToken) {
+      sessionStorage.setItem("refreshToken", refreshToken);
+    }
+
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
+
+  /* =========================
+   * 🔥 프로필 이미지 호출
+   * ========================= */
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      try {
+        const res = await api.get("/api/user/profile");
+
+        if (res.data.resultType === "SUCCESS") {
+          setProfileImage(res.data.success);
+        }
+      } catch (error) {
+        console.error("프로필 이미지 불러오기 실패:", error);
+      }
+    };
+
+    fetchProfileImage();
+  }, []);
+
+  /* =========================
+   * 닉네임 검증
+   * ========================= */
   useEffect(() => {
     if (!nickname) {
       setNicknameError("닉네임을 설정해주세요.");
     } else if (nickname.length < 2 || nickname.length > 10) {
-      setNicknameError("닉네임은 2글자 이상, 10자 이하로 설정해주세요.");
+      setNicknameError("닉네임은 2~10자 사이로 설정해주세요.");
     } else {
       setNicknameError("");
     }
   }, [nickname]);
-
-  useEffect(() => {
-    if (!birth) {
-      setBirthError("");
-      return;
-    }
-    setBirthError("");
-  }, [birth]);
-
-  if (!user) return null;
 
   const isFormValid =
     nicknameError === "" &&
     birth !== null &&
     gender !== "";
 
-  const handleSubmit = () => {
+  /* =========================
+   * 회원가입 요청
+   * ========================= */
+  const handleSubmit = async () => {
     if (!isFormValid) return;
 
-    sessionStorage.setItem(
-      "signupInfo",
-      JSON.stringify({
-        nickname,
-        birth: birth?.toISOString().slice(0, 10),
-        gender,
-      })
-    );
+    try {
+      setLoading(true);
 
-    navigate("/onboarding");
+      await api.post("/api/user/auth/register", {
+        email: "",
+        nickname: nickname,
+        birthdate: birth?.toISOString(),
+        gender: gender,
+      });
+
+      navigate("/onboarding", { replace: true });
+
+    } catch (error) {
+      console.error("회원가입 실패:", error);
+      alert("회원가입에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    /* 🔥 전체 배경 그라데이션 */
     <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-indigo-100 via-blue-50 to-cyan-100">
-      
-      {/* 🔥 흰색 카드 */}
       <div className="w-[520px] bg-white rounded-3xl shadow-xl px-12 py-12">
 
-        {/* 프로필 */}
-        <div className="flex justify-center mb-10">
+        <h2 className="text-2xl font-bold text-center mb-8">
+          회원가입 정보 입력
+        </h2>
+
+        {/* 🔥 프로필 이미지 */}
+        <div className="flex justify-center mb-8">
           <img
-            src={user.picture}
+            src={profileImage ?? "/default-profile.png"}
             alt="profile"
-            className="w-32 h-32 rounded-full bg-gray-200"
+            className="w-28 h-28 rounded-full bg-gray-200 object-cover"
           />
         </div>
-
-        {/* 아이디 */}
-        <label className="block text-sm mb-1">아이디</label>
-        <input
-          value={user.email}
-          disabled
-          className="w-full h-12 px-4 mb-5 rounded-xl border bg-white"
-        />
 
         {/* 닉네임 */}
         <label className="block text-sm mb-1">닉네임</label>
@@ -122,25 +148,24 @@ const Signup = () => {
           <label className="flex items-center gap-2">
             <input
               type="radio"
-              checked={gender === "M"}
-              onChange={() => setGender("M")}
+              checked={gender === "male"}
+              onChange={() => setGender("male")}
             />
             남성
           </label>
           <label className="flex items-center gap-2">
             <input
               type="radio"
-              checked={gender === "F"}
-              onChange={() => setGender("F")}
+              checked={gender === "female"}
+              onChange={() => setGender("female")}
             />
             여성
           </label>
         </div>
 
-        {/* 버튼 */}
         <button
           onClick={handleSubmit}
-          disabled={!isFormValid}
+          disabled={!isFormValid || loading}
           className={`w-full h-14 rounded-xl text-lg font-semibold transition
             ${
               isFormValid
@@ -148,7 +173,7 @@ const Signup = () => {
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
         >
-          회원가입 →
+          {loading ? "처리 중..." : "회원가입 →"}
         </button>
       </div>
     </div>

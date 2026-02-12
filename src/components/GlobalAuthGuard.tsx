@@ -8,13 +8,14 @@ interface Props {
 
 const GlobalAuthGuard = ({ children }: Props) => {
   const location = useLocation();
-  const user = sessionStorage.getItem("googleUser");
+  const token = sessionStorage.getItem("accessToken");
 
-  // 로그인 전 허용 경로
+  // 🔥 로그인 없이 접근 허용 경로
   const publicPaths = ["/", "/login", "/signup", "/onboarding"];
 
-  if (!user && !publicPaths.includes(location.pathname)) {
-    return <Navigate to="/" replace />;
+  if (!token && !publicPaths.includes(location.pathname)) {
+    console.log("로그인 안 되어 있음 → /login 이동");
+    return <Navigate to="/login" replace />;
   }
 
   return children;

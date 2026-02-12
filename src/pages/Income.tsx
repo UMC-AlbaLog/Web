@@ -88,7 +88,9 @@ const Income = () => {
             name: b.key,
             value: b.income,
           }))
+          
         );
+        console.log("Dashboard API 성공", data);
       })
       .catch((err) => {
         console.error("Dashboard API 실패", err);
@@ -124,6 +126,7 @@ const Income = () => {
                 : undefined,
           }));
         setSettlementRows(rows);
+        console.log("Settlement API 성공", res.data);
       })
       .catch(() => setSettlementRows([]));
   }, [monthParam]);

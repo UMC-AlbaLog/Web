@@ -2,18 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NotificationModal from "./NotificationModal";
 import { useUser } from "../hooks/useUser";
-import { getTestToken } from "../api/auth";
-const handleGetTestToken = async () => {
-  try {
-    const token = await getTestToken();
-    localStorage.setItem("token", token);
-    alert("테스트 토큰 저장 완료");
-    console.log("저장된 토큰:", token);
-  } catch (e) {
-    console.error(e);
-    alert("토큰 발급 실패");
-  }
-};
+
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -94,12 +83,7 @@ const Header: React.FC = () => {
           </div>
         </button>
       </div>
-<button
-          onClick={handleGetTestToken}
-          className="px-4 py-2 bg-red-500 text-white rounded mb-4"
-        >
-          테스트 토큰 받기
-        </button>
+
       {open && (
         <div className="absolute right-4 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-50">
           <p className="text-sm font-semibold text-gray-800">{name}</p>
