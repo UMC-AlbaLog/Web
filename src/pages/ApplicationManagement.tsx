@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useJobs } from "../hooks/useJobs";
 import type { ApplicationStatus } from "../types/work";
+import { formatTimeString, getUse24HourSetting } from "../utils/timeFormat";
 
 type TabType = "all" | "inProgress" | "completed";
 
@@ -255,7 +256,7 @@ const ApplicationManagement: React.FC = () => {
                   </div>
                   <p className="text-sm font-bold text-gray-400 mb-1">{job.address}</p>
                   <p className="text-sm font-bold text-gray-400 mb-1">
-                    {formatDate(job.date)} | {job.time}
+                    {formatDate(job.date)} | {formatTimeString(job.time, getUse24HourSetting())}
                   </p>
                 </div>
               </div>

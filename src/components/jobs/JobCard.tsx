@@ -1,5 +1,6 @@
 import React from "react";
 import type { Work } from "../../types/work";
+import { formatTimeString, getUse24HourSetting } from "../../utils/timeFormat";
 
 interface Props {
   job: Work;

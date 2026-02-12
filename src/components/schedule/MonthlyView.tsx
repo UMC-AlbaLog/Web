@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ScheduleItem, Workplace } from '../../types/schedule';
 import { getEstimatedPayForSchedule } from '../../utils/scheduleUtils';
+import { formatTimeRange, getUse24HourSetting } from '../../utils/timeFormat';
 
-const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+const DAY_NAMES_SUNDAY = ['일', '월', '화', '수', '목', '금', '토'];
+const DAY_NAMES_MONDAY = ['월', '화', '수', '목', '금', '토', '일'];
 
 interface MonthlyViewProps {
   monthInfo: {
@@ -16,6 +18,7 @@ interface MonthlyViewProps {
   onDayClick: (day: Date, e: React.MouseEvent) => void;
   onScheduleClick: (schedule: ScheduleItem) => void;
   onDatePopupEdit?: (schedule: ScheduleItem) => void;
+  weekStartDay?: '일요일' | '월요일';
 }
 
 const getDisplayName = (s: ScheduleItem, workplaces: Workplace[]) => {
@@ -37,7 +40,10 @@ const MonthlyView = ({
   onDayClick,
   onScheduleClick,
   onDatePopupEdit,
+  weekStartDay = '일요일',
 }: MonthlyViewProps) => {
+  const DAY_NAMES = weekStartDay === '월요일' ? DAY_NAMES_MONDAY : DAY_NAMES_SUNDAY;
+  const use24Hour = getUse24HourSetting();
   const [popupDate, setPopupDate] = useState<string | null>(null);
   const [popupAnchor, setPopupAnchor] = useState<{ x: number; y: number } | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -121,7 +127,7 @@ const MonthlyView = ({
                         ) : (
                           <>
                             <div className="text-gray-800 truncate">
-                              {schedule.startTime}-{schedule.endTime} {getDisplayName(schedule, workplaces)}
+                              {formatTimeRange(schedule.startTime, schedule.endTime, use24Hour)} {getDisplayName(schedule, workplaces)}
                             </div>
                             <div className="text-indigo-600 font-medium">
                               {pay > 0 ? `${pay.toLocaleString()}원` : ''}
@@ -152,7 +158,7 @@ const MonthlyView = ({
           }}
         >
           <h4 className="text-sm font-semibold text-gray-800 mb-3">
-            {popupDay.getMonth() + 1}월 {popupDay.getDate()}일 ({DAY_NAMES[popupDay.getDay()]}) 알바{' '}
+            {popupDay.getMonth() + 1}월 {popupDay.getDate()}일 ({DAY_NAMES_SUNDAY[popupDay.getDay()]}) 알바{' '}
             {daySchedulesForPopup.length}건
           </h4>
           <label className="flex items-center gap-2 mb-3 cursor-pointer">
@@ -163,7 +169,7 @@ const MonthlyView = ({
             {daySchedulesForPopup.map((s) => (
               <li key={s.id} className="text-sm text-gray-700 flex items-start gap-2">
                 <span className="text-gray-500 shrink-0">
-                  {getDisplayName(s, workplaces)} | {s.startTime}~{s.endTime}
+                  {getDisplayName(s, workplaces)} | {formatTimeRange(s.startTime, s.endTime, use24Hour)}
                 </span>
                 <span className="text-xs text-gray-500 shrink-0">
                   {s.scheduleType === 'holiday' ? '휴무' : '정규 알바'}

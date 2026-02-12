@@ -6,6 +6,7 @@ import {
   getEstimatedPayForSchedule,
 } from '../../utils/scheduleUtils';
 import { useUser } from '../../hooks/useUser';
+import { formatTimeRange, getUse24HourSetting } from '../../utils/timeFormat';
 
 interface ScheduleSummarySidebarProps {
   schedules: ScheduleItem[];
@@ -23,6 +24,7 @@ const ScheduleSummarySidebar = ({
   onScheduleClick,
 }: ScheduleSummarySidebarProps) => {
   const { profile, displayName } = useUser();
+  const use24Hour = getUse24HourSetting();
   const totalHours = getTotalHoursForMonth(schedules, year, month + 1);
   const estimatedSalary = getEstimatedSalaryForMonth(schedules, year, month + 1);
   const workDays = getWorkDaysForMonth(schedules, year, month + 1);
@@ -127,7 +129,7 @@ const ScheduleSummarySidebar = ({
                     {getEstimatedPayForSchedule(s).toLocaleString()}원
                   </p>
                   <p className="text-xs text-gray-500">
-                    {s.startTime}-{s.endTime} ({formatDuration(s.startTime, s.endTime)})
+                    {formatTimeRange(s.startTime, s.endTime, use24Hour)} ({formatDuration(s.startTime, s.endTime)})
                   </p>
                 </div>
               </li>
