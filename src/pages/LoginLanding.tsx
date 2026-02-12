@@ -7,7 +7,7 @@ const LoginLanding = () => {
   const navigate = useNavigate();
 
   /* =========================
-   * 🔥 로그인 후 accessToken 처리
+   *  로그인 후 accessToken 처리
    * ========================= */
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
@@ -25,14 +25,14 @@ useEffect(() => {
   // URL 정리
   window.history.replaceState({}, document.title, "/login");
 
-  // 🔥 이게 핵심
+ 
   window.location.href = "/home";
 
 }, []);
 
 
   /* =========================
-   * 🔥 구글 로그인 이동
+   *  구글 로그인 이동
    * ========================= */
   const handleGoogleLogin = () => {
     window.location.href = `${API_BASE_URL}/api/user/auth/google`;

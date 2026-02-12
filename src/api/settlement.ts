@@ -9,7 +9,7 @@ import type { TsoaResponse } from "./types";
 export type SettlementStatus = "all" | "waiting" | "paid" | "unpaid";
 
 /* ============================= */
-/* 1️⃣ 정산 리스트 (기존 feature 브랜치 기) */
+/* 1️⃣ 정산 리스트 (cursor 기반) */
 /* ============================= */
 
 export interface SettlementItem {
@@ -40,7 +40,7 @@ export const fetchSettlementList = (params?: {
 };
 
 /* ============================= */
-/* 2️⃣ 계좌 정보 조회/수정 (main 브랜치 기능) */
+/* 2️⃣ 계좌 정보 */
 /* ============================= */
 
 export interface SettlementInfo {
@@ -55,6 +55,9 @@ export interface UpdateSettlementRequest {
   accountHolder: string;
 }
 
+/**
+ * 계좌 정보 조회
+ */
 export async function getSettlement(
   userId: string
 ): Promise<SettlementInfo> {
@@ -66,9 +69,13 @@ export async function getSettlement(
   if (data?.resultType === "SUCCESS" && data.success) {
     return data.success;
   }
-  throw new Error("계좌 정보를 가져올 수 없습니다");
+
+  throw new Error("계좌 정보를 가져올 수 없습니다.");
 }
 
+/**
+ * 계좌 정보 수정
+ */
 export async function updateSettlement(
   userId: string,
   settlementData: UpdateSettlementRequest
@@ -84,11 +91,12 @@ export async function updateSettlement(
   if (data?.resultType === "SUCCESS" && data.success) {
     return data.success;
   }
+
   throw new Error("계좌 정보 수정에 실패했습니다.");
 }
 
 /* ============================= */
-/* 3️⃣ 정산 히스토리 조회 */
+/* 3️⃣ 정산 히스토리 */
 /* ============================= */
 
 export interface SettlementHistoryItem {
@@ -106,11 +114,15 @@ export interface SettlementHistoryResponse {
   totalActualIncome: number;
 }
 
+/**
+ * 정산 내역 조회
+ */
 export async function getSettlementHistory(
   userId: string,
   status: SettlementStatus = "all"
 ): Promise<SettlementHistoryResponse> {
   const params = new URLSearchParams();
+
   if (status !== "all") {
     params.append("status", status);
   }

@@ -3,7 +3,7 @@ import axios, { type AxiosRequestConfig } from "axios";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 /* ============================= */
-/* axios 인스턴스 생성s */
+/* axios 인스턴스 생성 */
 /* ============================= */
 const api = axios.create({
   baseURL: BASE_URL,
@@ -39,7 +39,7 @@ api.interceptors.request.use((config) => {
 });
 
 /* ============================= */
-/* 공통 API 요청 함수 */
+/* 공통 요청 옵션 타입 */
 /* ============================= */
 export interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
@@ -47,6 +47,9 @@ export interface RequestOptions {
   headers?: Record<string, string>;
 }
 
+/* ============================= */
+/* 공통 API 요청 함수 */
+/* ============================= */
 export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {}

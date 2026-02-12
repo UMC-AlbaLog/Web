@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import ProfileReviews from "./pages/ProfileReviews";
 import ProfileEdit from "./pages/ProfileEdit";
 import Settings from "./pages/Settings";
+import SettlementHistory from "./pages/SettlementHistory";
 
 const App = () => {
   return (
@@ -47,6 +48,7 @@ const App = () => {
           <Route path="/profile/reviews" element={<ProfileReviews />} />
           <Route path="/profile/edit" element={<ProfileEdit />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/settings/settlement-history" element={<SettlementHistory />} />
         </Route>
       </Routes>
     </GlobalAuthGuard>
