@@ -29,6 +29,8 @@ export const useHomeData = () => {
           description: "",
           requirements: "",
           notice: "",
+          startTime: s.startTime,
+          endTime: s.endTime,
         };
       });
   }, [schedules, workplaces, today]);

@@ -15,7 +15,7 @@ importers:
         specifier: ^4.1.18
         version: 4.1.18(vite@7.3.1(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.30.2))
       axios:
-        specifier: ^1.7.9
+        specifier: ^1.13.4
         version: 1.13.5
       jwt-decode:
         specifier: ^4.0.0

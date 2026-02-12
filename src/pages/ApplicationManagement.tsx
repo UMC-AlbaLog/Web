@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useJobs } from "../hooks/useJobs";
+import type { ApplicationStatus, Work } from "../types/work";
 import { formatTimeString, getUse24HourSetting } from "../utils/timeFormat";
 
 type TabType = "all" | "inProgress" | "completed";
@@ -133,10 +134,9 @@ const ApplicationManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-5">
-        {loading ? (
-          <div className="bg-white rounded-xl p-20 text-center text-gray-400 font-bold">지원 내역을 불러오는 중입니다...</div>
-        ) : filteredApplications.map((job) => {
+      {/* 지원서 목록 */}
+      <div className="space-y-4">
+        {filteredApplications.map((job: Work) => {
           const statusInfo = getStatusLabel(job.applicationStatus);
           const expectedPay = job.pay * job.duration;
 

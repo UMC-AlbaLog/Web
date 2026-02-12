@@ -68,15 +68,15 @@ const ApplicationStatusPage: React.FC = () => {
   const filteredLocalJobs = useMemo((): Work[] => {
     let filtered = appliedJobs;
     if (activeTab === "inProgress") {
-      filtered = filtered.filter((job) => job.applicationStatus === "pending");
+      filtered = filtered.filter((job: Work) => job.applicationStatus === "pending");
     } else if (activeTab === "completed") {
       filtered = filtered.filter(
-        (job) => job.applicationStatus === "approved" || job.applicationStatus === "rejected"
+        (job: Work) => job.applicationStatus === "approved" || job.applicationStatus === "rejected"
       );
     }
     if (searchQuery.trim()) {
       filtered = filtered.filter(
-        (job) =>
+        (job: Work) =>
           job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           job.address.toLowerCase().includes(searchQuery.toLowerCase())
       );

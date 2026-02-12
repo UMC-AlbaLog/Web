@@ -1,10 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { albaService, type AlbaSearchParams } from "../api/albaService";
-import type { Work } from "../types/work";
+import type { Work, ApplicationStatus } from "../types/work";
+import { INITIAL_JOBS } from "../data/jobData";
 
 export const useJobs = (filterStates: any = {}) => {
   const [jobs, setJobs] = useState<Work[]>([]);
   const [loading, setLoading] = useState(false);
+  const [localJobs, setLocalJobs] = useState<Work[]>(INITIAL_JOBS);
+
+  const getAppliedJobs = useCallback((): Work[] => {
+    return localJobs.filter((j) => j.applicationStatus != null);
+  }, [localJobs]);
+
+  const updateApplicationStatus = useCallback((jobId: string, status: ApplicationStatus) => {
+    setLocalJobs((prev) =>
+      prev.map((j) => (j.id === jobId ? { ...j, applicationStatus: status } : j))
+    );
+  }, []);
 
   const updateApplicationStatus = async (jobId: string, status: "approved" | "rejected") => {
     try {
@@ -22,6 +34,9 @@ export const useJobs = (filterStates: any = {}) => {
   };
 
   useEffect(() => {
+    if (!filterStates?.date) {
+      return;
+    }
     const fetchJobs = async () => {
       if (!filterStates?.date) return;
       setLoading(true);
