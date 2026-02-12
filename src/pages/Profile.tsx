@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+// @ts-ignore react-router-dom 타입 정의와 실제 버전 차이로 인한 임시 무시
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../hooks/useUser";
 import { getProfile } from "../api/profile";
@@ -442,11 +443,11 @@ const Profile: React.FC = () => {
             </div>
             <div className="space-y-0">
               {workExperiences.map((exp, index) => (
-                <div key={exp.id} className={`transition-all duration-300 ${editingExperienceId === exp.id ? 'border-2 border-blue-300 bg-gradient-to-br from-blue-50 via-white to-blue-50 shadow-xl rounded-xl p-6' : 'border-b border-gray-200 bg-white'} ${index === 0 ? 'rounded-t-lg' : ''} ${index === workExperiences.length - 1 && editingExperienceId !== exp.id ? 'rounded-b-lg' : ''}`}>
+              <div key={exp.id} className={`transition-all duration-300 ${editingExperienceId === exp.id ? 'border-2 border-blue-300 bg-linear-to-br from-blue-50 via-white to-blue-50 shadow-xl rounded-xl p-6' : 'border-b border-gray-200 bg-white'} ${index === 0 ? 'rounded-t-lg' : ''} ${index === workExperiences.length - 1 && editingExperienceId !== exp.id ? 'rounded-b-lg' : ''}`}>
                   {editingExperienceId === exp.id && editingExperience ? (
                     <div className="p-6 space-y-5">
                       <div className="relative">
-                        <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
                           <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
@@ -461,7 +462,7 @@ const Profile: React.FC = () => {
                         />
                       </div>
                       <div className="relative">
-                        <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
                           <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -477,7 +478,7 @@ const Profile: React.FC = () => {
                         />
                       </div>
                       <div className="relative">
-                        <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
                           <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
@@ -492,7 +493,7 @@ const Profile: React.FC = () => {
                         />
                       </div>
                       <div className="relative">
-                        <label className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
                           <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                           </svg>
@@ -585,7 +586,7 @@ const Profile: React.FC = () => {
                     </div>
                   ) : (
                     <div className="flex items-start gap-4 p-4">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
                     {exp.icon === "coffee" ? (
                           <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232 1.232 3.228 0 4.46s-3.228 1.232-4.46 0L14.5 19.8m-9 0l-1.402 1.402c-1.232 1.232-1.232 3.228 0 4.46s3.228 1.232 4.46 0L9.5 19.8" />

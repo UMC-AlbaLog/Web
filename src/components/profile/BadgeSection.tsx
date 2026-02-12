@@ -74,3 +74,4 @@ const BadgeSection: React.FC<BadgeSectionProps> = ({ badges }) => {
 export default BadgeSection;
 
 
+
