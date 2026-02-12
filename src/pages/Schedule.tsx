@@ -9,7 +9,7 @@ import { getEstimatedSalaryForMonth } from '../utils/scheduleUtils';
 import { useSchedules } from '../contexts/SchedulesContext';
 
 const Schedule = () => {
-  const { schedules, workplaces, setSchedules, setWorkplaces } = useSchedules();
+  const { schedules, workplaces, setWorkplaces, addSchedule, updateSchedule, deleteSchedule } = useSchedules();
 
   const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
@@ -240,19 +240,19 @@ const Schedule = () => {
       }
     }
 
-    setSchedules([...schedules, ...newSchedules]);
+    newSchedules.forEach((s) => addSchedule(s));
     setShowAddModal(false);
   };
 
   // 일정 수정
   const handleEditSchedule = (updatedSchedule: ScheduleItem) => {
-    setSchedules(schedules.map(s => s.id === updatedSchedule.id ? updatedSchedule : s));
+    updateSchedule(updatedSchedule.id, updatedSchedule);
     setEditingSchedule(null);
   };
 
   // 일정 삭제
   const handleDeleteSchedule = (scheduleId: string) => {
-    setSchedules(schedules.filter(s => s.id !== scheduleId));
+    deleteSchedule(scheduleId);
     setEditingSchedule(null);
   };
 
