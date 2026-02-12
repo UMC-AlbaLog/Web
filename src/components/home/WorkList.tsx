@@ -4,7 +4,7 @@ import MapModal from "./MapModal";
 import type { Work } from "../../types/work";
 
 interface WorkListProps {
-  work: Work & { category?: string };
+  work: Work & { category?: string; storeId?: string }; 
   onAction: () => void;
 }
 
@@ -13,13 +13,26 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction }) => {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const { status, name, category, time, duration, pay, expectedPay, address, id } = work;
 
-  const isDone = status === "done" || status === "completed" || status === "pending";
+  const isDone = status === "done" || status === "settled" || status === "pending";
   const isWorking = status === "working";
   const isScheduled = status === "scheduled";
+  const isAbsent = status === "absent";
 
-  const badgeStyle = isDone 
+  const badgeStyle = isDone
     ? "bg-gray-100 text-gray-500" 
-    : isWorking ? "bg-blue-100 text-blue-600" : "bg-[#F2F3FF] text-[#5D5FEF]";
+    : isAbsent 
+      ? "bg-red-50 text-red-400" 
+      : isWorking 
+        ? "bg-blue-100 text-blue-600" 
+        : "bg-[#F2F3FF] text-[#5D5FEF]";
+
+  const getStatusLabel = () => {
+    if (status === "settled") return "정산 완료";
+    if (isDone) return "근무 완료";
+    if (isWorking) return "근무 중";
+    if (isAbsent) return "결근";
+    return "출근 예정";
+  };
 
   return (
     <div 
@@ -28,10 +41,9 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction }) => {
         isDone ? 'opacity-60 cursor-pointer hover:bg-gray-50' : 'shadow-sm hover:shadow-md'
       }`}
     >
-
-      <div className="flex flex-col items-start text-left w-full">
+      <div className="flex flex-col items-start text-left w-full font-['Pretendard']">
         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black mb-6 ${badgeStyle}`}>
-          {isDone ? "근무 완료" : isWorking ? "근무 중" : "출근 예정"}
+          {getStatusLabel()}
         </span>
 
         <div className="flex justify-between items-end w-full mb-8">
@@ -40,13 +52,13 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction }) => {
             <h3 className="text-2xl font-black text-gray-800 leading-tight">{name}</h3>
           </div>
 
-          <div className="flex gap-10 font-['Pretendard']">
+          <div className="flex gap-10">
             <InfoGroup label="근무 시간대" value={`${time} (${duration}시간)`} />
             <InfoGroup label="시급" value={`${pay.toLocaleString()}원 (총 ${expectedPay.toLocaleString()}원)`} />
           </div>
         </div>
 
-        {!isDone && (
+        {!isDone && !isAbsent && (
           <div className="flex gap-3 w-full">
             {(isScheduled || isWorking) && (
               <button 

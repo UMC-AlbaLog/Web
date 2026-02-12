@@ -1,13 +1,20 @@
-import api from './client';
+import { apiRequest } from "./client";
+import type { TsoaResponse } from "./types";
 
 export const placeService = {
+  // 장소/가게 검색 API
   searchPlaces: async (query: string) => {
     if (!query.trim()) return [];
 
-    const res = await api.get('/api/places/search', {
-      params: { query }
-    });
+    const data = await apiRequest<TsoaResponse<any>>(
+      `/api/places/search?query=${encodeURIComponent(query)}`, 
+      { method: "GET" }
+    );
 
-    return res.data.success?.places || [];
+    if (data?.resultType === "SUCCESS") {
+      return data.success?.places || [];
+    }
+    
+    return [];
   }
 };

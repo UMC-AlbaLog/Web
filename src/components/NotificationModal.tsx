@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNotifications } from "../hooks/useNotifications";
-import type { Notification } from "../types/notification";
 
 interface NotificationModalProps {
   isOpen: boolean;

@@ -1,91 +1,129 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useJobs } from "../hooks/useJobs";
-import MapModal from "../components/home/MapModal"; 
-import ApplyConfirmModal from "../components/jobs/ApplyConfirmModal"; 
+import { useJobDetail } from "../hooks/useJobDetail";
+import { albaService } from "../api/albaService";
+import ApplyConfirmModal from "../components/jobs/ApplyConfirmModal";
 
-const JobDetail = () => {
-  const { id } = useParams<{ id: string }>();
+const JobDetail: React.FC = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { getJobById, applyToJob } = useJobs();
-  
-  const [isMapOpen, setIsMapOpen] = useState(false);
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const { job, loading } = useJobDetail(id);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const job = getJobById(id || "");
+  const LocationIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 inline-block -mt-1">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+      <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+  );
 
-  useEffect(() => {
-    if (!job || !window.kakao) return;
-    const { kakao } = window;
-    kakao.maps.load(() => {
-      const container = document.getElementById("small-map");
-      if (!container) return;
-      const geocoder = new kakao.maps.services.Geocoder();
-      geocoder.addressSearch(job.address, (result: any, status: any) => {
-        if (status === kakao.maps.services.Status.OK) {
-          const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-          const map = new kakao.maps.Map(container, { center: coords, level: 4, draggable: false });
-          new kakao.maps.Marker({ map, position: coords });
-          map.setCenter(coords);
-        }
-      });
-    });
-  }, [job, id]);
-
-  if (!job) return <div className="p-20 text-center font-black text-gray-400">공고 로딩 중...</div>;
+  if (loading || !job) return (
+    <div className="min-h-screen flex items-center justify-center font-['Pretendard'] font-bold text-gray-400">
+      데이터를 불러오고 있습니다...
+    </div>
+  );
 
   return (
-    <main className="flex-1 bg-[#F3F4F6] p-10 overflow-y-auto text-left">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* 매장 정보 상단 카드 */}
-        <section className="bg-white rounded-[35px] p-10 shadow-sm border border-white">
-          <p className="text-xs font-black text-blue-500 mb-1">매장명</p>
-          <h2 className="text-3xl font-black text-gray-800 mb-6">{job.name}</h2>
-          <div className="grid grid-cols-2 gap-y-4">
-            <div><p className="text-xs text-gray-400 font-bold">근무 일시</p><p className="font-black text-gray-800">{job.date} | {job.time}</p></div>
-            <div><p className="text-xs text-gray-400 font-bold">시급</p><p className="font-black text-gray-800">{job.pay.toLocaleString()}원</p></div>
-            <div><p className="text-xs text-gray-400 font-bold">예상 급여</p><p className="font-black text-[#5D5FEF] text-xl">{job.expectedPay.toLocaleString()}원</p></div>
-          </div>
-        </section>
-
-        {/* 지도 및 신뢰 지표 섹션 */}
-        <section className="bg-white rounded-[35px] p-10 shadow-sm border border-white">
-          <h3 className="text-lg font-black text-gray-800 mb-6">매장 정보</h3>
-          <div className="flex gap-6 items-center">
-            <div id="small-map" onClick={() => setIsMapOpen(true)} className="w-32 h-32 bg-gray-100 rounded-2xl cursor-pointer overflow-hidden border border-gray-100" />
-            <div className="flex-1">
-              <p className="font-black text-gray-800">[{job.name}]</p>
-              <p className="text-sm text-gray-500 mb-4">{job.address}</p>
-              <button onClick={() => setIsMapOpen(true)} className="bg-gray-100 px-4 py-2 rounded-xl text-xs font-black text-gray-600">자세히 보기</button>
+    <div className="bg-[#F8F9FA] min-h-screen font-['Pretendard'] text-left p-12">
+      <div className="max-w-7xl mx-auto grid grid-cols-[1fr_340px] gap-10 items-start">
+        
+        <main className="bg-white rounded-xl p-12 shadow-sm border border-gray-100 space-y-12">
+          <div className="space-y-5">
+            <div className="flex gap-2">
+              <span className="px-2.5 py-1 bg-[#5D5FEF] text-white text-[11px] font-bold rounded-xl">{job.status}</span>
+              <span className="px-2.5 py-1 bg-[#F2F4F7] text-gray-400 text-[11px] font-bold rounded-xl">{job.category}</span>
+              <span className="px-2.5 py-1 bg-[#F2F4F7] text-gray-400 text-[11px] font-bold rounded-xl">{job.timeTag}</span>
             </div>
-            <div onClick={() => navigate(`/workplace/${job.id}`)} className="bg-gray-50 p-6 rounded-2xl text-center min-w-[140px] cursor-pointer hover:bg-yellow-50">
-              <p className="text-2xl font-black text-gray-800">⭐ 4.8/5.0</p>
-              <p className="text-[10px] text-gray-400 font-bold mt-1">신뢰 지표 (리뷰)</p>
-            </div>
+            <h1 className="text-[32px] font-black text-gray-900 leading-snug">{job.storeName} 대타 모집합니다</h1>
+            <p className="text-gray-400 text-[15px] font-medium flex items-center">
+              <LocationIcon /> {job.storeAddress || "등록된 주소 정보가 없습니다."}
+            </p>
           </div>
-        </section>
 
-        <div className="flex gap-4 pt-4">
-          <button onClick={() => navigate(-1)} className="flex-1 bg-white py-5 rounded-3xl font-black text-gray-400 border border-gray-200">뒤로가기</button>
+          <section className="space-y-6">
+            <h3 className="text-xl font-bold text-gray-900">근무 조건</h3>
+            <div className="grid grid-cols-2 gap-y-10 border-t border-gray-100 pt-8 text-[16px]">
+              <div><p className="text-gray-400 font-bold mb-2">급여</p><p className="font-black text-[#5D5FEF] text-lg">시급 {job.hourlyRate?.toLocaleString()}원</p></div>
+              <div><p className="text-gray-400 font-bold mb-2">근무 기간</p><p className="font-bold text-gray-900 text-lg">단기 (대타)</p></div>
+              <div><p className="text-gray-400 font-bold mb-2">근무 요일</p><p className="font-bold text-gray-900 text-lg">{job.dayOfWeek}요일</p></div>
+              <div><p className="text-gray-400 font-bold mb-2">근무 시간</p><p className="font-bold text-gray-900 text-lg">{job.displayTime} ({job.workTime}시간)</p></div>
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <div className="flex justify-between items-end border-b border-gray-100 pb-4">
+              <h3 className="text-xl font-bold text-gray-900">근무지 정보</h3>
+              <button 
+                onClick={() => navigate(`/review/view/${job.storeId}`)}
+                className="text-[15px] font-bold text-gray-500 hover:text-[#5D5FEF] transition-all flex items-center gap-1"
+              >
+                신뢰 지표 ⭐ {job.trustScore} <span className="text-[#5D5FEF] ml-1">→</span>
+              </button>
+            </div>
+            <p className="text-gray-700 text-[15px] font-bold">{job.storeAddress || "주소 정보 없음"}</p>
+            <div className="w-full h-80 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative">
+              <div className="absolute inset-0 flex items-center justify-center font-bold text-gray-300">
+                지도를 불러오는 중입니다
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-10 border-t border-gray-100 pt-12">
+            <h3 className="text-xl font-bold text-gray-900">상세 모집 내용</h3>
+            <div className="space-y-12 text-gray-700 leading-relaxed text-[16px]">
+              <div><p className="font-black text-gray-900 mb-3">[담당업무]</p><p className="font-medium whitespace-pre-wrap">{job.mainTask}</p></div>
+              <div><p className="font-black text-gray-900 mb-3">[자격요건]</p><p className="font-medium whitespace-pre-wrap">{job.requirement}</p></div>
+            </div>
+          </section>
+
+          <div className="flex justify-end gap-4 pt-12 border-t border-gray-100">
+            <button onClick={() => navigate(-1)} className="px-12 py-4 border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 text-lg">취소</button>
+            <button 
+              onClick={() => setIsModalOpen(true)} 
+              className="px-12 py-4 bg-[#5D5FEF] text-white font-bold rounded-xl text-lg hover:bg-[#4A4BCF] shadow-lg shadow-indigo-100"
+            >
+              지원하기
+            </button>
+          </div>
+        </main>
+
+        <aside className="sticky top-12 bg-white rounded-xl p-10 shadow-sm border border-gray-100 space-y-10 text-left">
+          <div>
+            <p className="text-gray-400 text-[13px] font-black mb-3 uppercase tracking-wide">예상 월 급여</p>
+            <h3 className="text-[36px] font-black text-gray-900 leading-none">{job.totalWage?.toLocaleString()}<span className="text-2xl ml-1">원</span></h3>
+          </div>
+          
+          <div className="space-y-5 pt-8 border-t border-gray-100 text-[15px]">
+            <div className="flex justify-between items-center"><span className="text-gray-400 font-bold">시급</span><span className="font-black text-gray-900">{job.hourlyRate?.toLocaleString()}원</span></div>
+            <div className="flex justify-between items-center"><span className="text-gray-400 font-bold">근무 시간</span><span className="font-bold text-gray-900">일 {job.workTime}시간 ({job.dayOfWeek})</span></div>
+            <div className="flex justify-between items-center"><span className="text-gray-400 font-bold">주휴 수당</span><span className="font-black text-[#5D5FEF]">포함</span></div>
+          </div>
+
           <button 
-            onClick={() => setIsApplyModalOpen(true)}
-            className={`flex-1 py-5 rounded-3xl font-black text-white ${job.applicationStatus ? "bg-gray-300" : "bg-[#5D5FEF]"}`}
-            disabled={!!job.applicationStatus}
+            onClick={() => setIsModalOpen(true)} 
+            className="w-full py-5 rounded-xl bg-[#5D5FEF] text-white font-bold text-[19px] hover:bg-[#4A4BCF] transition-transform active:scale-[0.98]"
           >
-            {job.applicationStatus ? "지원 완료" : "지원하기"}
+            지금 지원하기
           </button>
-        </div>
+        </aside>
       </div>
 
-      {isMapOpen && <MapModal title={job.name} address={job.address} onClose={() => setIsMapOpen(false)} />}
-      {isApplyModalOpen && (
+      {isModalOpen && (
         <ApplyConfirmModal 
           job={job} 
-          onConfirm={() => { applyToJob(job.id); setIsApplyModalOpen(false); navigate("/jobs/status"); }} 
-          onClose={() => setIsApplyModalOpen(false)} 
+          onClose={() => setIsModalOpen(false)}
+          onConfirm={async () => {
+            try {
+              await albaService.applyAlba(id!); 
+              alert("지원이 완료되었습니다.");
+              navigate("/alba/status");
+            } catch (e) { 
+              alert("이미 지원했거나 오류가 발생했습니다."); 
+            }
+          }} 
         />
       )}
-    </main>
+    </div>
   );
 };
 

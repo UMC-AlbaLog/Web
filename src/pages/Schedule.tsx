@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { ScheduleItem, DaySummary } from '../types/schedule';
 import AddScheduleModal from '../components/schedule/AddScheduleModal';
 import ScheduleEditModal from '../components/schedule/ScheduleEditModal';
@@ -9,7 +9,7 @@ import { getEstimatedSalaryForMonth } from '../utils/scheduleUtils';
 import { useSchedules } from '../contexts/SchedulesContext';
 
 const Schedule = () => {
-  const { schedules, workplaces, setSchedules, setWorkplaces } = useSchedules();
+  const { schedules, workplaces, setWorkplaces, addSchedule, updateSchedule, deleteSchedule } = useSchedules();
 
   const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
@@ -17,12 +17,49 @@ const Schedule = () => {
   const [editingSchedule, setEditingSchedule] = useState<ScheduleItem | null>(null);
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
+  const [weekStartDay, setWeekStartDay] = useState<'일요일' | '월요일'>('일요일');
 
-  // 주간 정보 가져오기
+  // 설정에서 주 시작 요일 불러오기
+  useEffect(() => {
+    const loadWorkEnvironment = () => {
+      const saved = localStorage.getItem('workEnvironment');
+      if (saved) {
+        const env = JSON.parse(saved);
+        if (env.weekStartDay === '일요일' || env.weekStartDay === '월요일') {
+          setWeekStartDay(env.weekStartDay);
+        }
+      }
+    };
+    loadWorkEnvironment();
+
+    // localStorage 변경 감지
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'workEnvironment' && e.newValue) {
+        const env = JSON.parse(e.newValue);
+        if (env.weekStartDay === '일요일' || env.weekStartDay === '월요일') {
+          setWeekStartDay(env.weekStartDay);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // 주간 정보 가져오기 (설정에 따라 주 시작일 변경)
   const getWeekInfo = (date: Date) => {
     const startOfWeek = new Date(date);
     const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day; // 일요일로 설정
+    
+    // 주 시작일 설정에 따라 조정
+    let diff: number;
+    if (weekStartDay === '월요일') {
+      // 월요일이 주 시작일인 경우
+      diff = startOfWeek.getDate() - (day === 0 ? 6 : day - 1); // 일요일이면 6일 전, 아니면 day-1일 전
+    } else {
+      // 일요일이 주 시작일인 경우 (기본값)
+      diff = startOfWeek.getDate() - day;
+    }
+    
     startOfWeek.setDate(diff);
     startOfWeek.setHours(0, 0, 0, 0);
 
@@ -36,7 +73,7 @@ const Schedule = () => {
     return { startOfWeek, weekDays };
   };
 
-  // 월간 정보 가져오기
+  // 월간 정보 가져오기 (설정에 따라 주 시작일 변경)
   const getMonthInfo = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -44,9 +81,28 @@ const Schedule = () => {
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
     const startDate = new Date(firstDayOfMonth);
-    startDate.setDate(startDate.getDate() - startDate.getDay());
+    
+    // 주 시작일 설정에 따라 조정
+    const firstDay = firstDayOfMonth.getDay();
+    if (weekStartDay === '월요일') {
+      // 월요일이 주 시작일인 경우
+      const diff = firstDay === 0 ? 6 : firstDay - 1; // 일요일이면 6일 전, 아니면 firstDay-1일 전
+      startDate.setDate(startDate.getDate() - diff);
+    } else {
+      // 일요일이 주 시작일인 경우 (기본값)
+      startDate.setDate(startDate.getDate() - firstDay);
+    }
+    
     const endDate = new Date(lastDayOfMonth);
-    endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
+    const lastDay = lastDayOfMonth.getDay();
+    if (weekStartDay === '월요일') {
+      // 월요일이 주 시작일인 경우, 일요일까지 채우기
+      const diff = lastDay === 0 ? 0 : 7 - lastDay; // 일요일이면 0일, 아니면 7-lastDay일 후
+      endDate.setDate(endDate.getDate() + diff);
+    } else {
+      // 일요일이 주 시작일인 경우 (기본값)
+      endDate.setDate(endDate.getDate() + (6 - lastDay));
+    }
     
     const weeks = [];
     const current = new Date(startDate);
@@ -63,8 +119,8 @@ const Schedule = () => {
     return { year, month, weeks, firstDayOfMonth, lastDayOfMonth };
   };
 
-  const { startOfWeek, weekDays } = useMemo(() => getWeekInfo(currentWeek), [currentWeek]);
-  const monthInfo = useMemo(() => getMonthInfo(currentWeek), [currentWeek]);
+  const { startOfWeek, weekDays } = useMemo(() => getWeekInfo(currentWeek), [currentWeek, weekStartDay]);
+  const monthInfo = useMemo(() => getMonthInfo(currentWeek), [currentWeek, weekStartDay]);
 
   // 날짜 포맷팅
   const formatDate = (date: Date) => {
@@ -184,19 +240,19 @@ const Schedule = () => {
       }
     }
 
-    setSchedules([...schedules, ...newSchedules]);
+    newSchedules.forEach((s) => addSchedule(s));
     setShowAddModal(false);
   };
 
   // 일정 수정
   const handleEditSchedule = (updatedSchedule: ScheduleItem) => {
-    setSchedules(schedules.map(s => s.id === updatedSchedule.id ? updatedSchedule : s));
+    updateSchedule(updatedSchedule.id, updatedSchedule);
     setEditingSchedule(null);
   };
 
   // 일정 삭제
   const handleDeleteSchedule = (scheduleId: string) => {
-    setSchedules(schedules.filter(s => s.id !== scheduleId));
+    deleteSchedule(scheduleId);
     setEditingSchedule(null);
   };
 
@@ -334,6 +390,7 @@ const Schedule = () => {
                 onDayLeave={handleDayLeave}
                 hoveredDay={hoveredDay}
                 hoverPosition={hoverPosition}
+                weekStartDay={weekStartDay}
               />
             </div>
             <div className="px-6 py-6 flex justify-center">
@@ -389,6 +446,7 @@ const Schedule = () => {
                 onDayClick={handleMonthDayCellClick}
                 onScheduleClick={setEditingSchedule}
                 onDatePopupEdit={setEditingSchedule}
+                weekStartDay={weekStartDay}
               />
             </div>
             <div className="px-6 py-5 border-t border-gray-100 bg-white">
@@ -417,6 +475,7 @@ const Schedule = () => {
                 onDayLeave={handleDayLeave}
                 hoveredDay={hoveredDay}
                 hoverPosition={hoverPosition}
+                weekStartDay={weekStartDay}
               />
             </div>
             <div className="px-6 py-5 border-t border-gray-100 bg-white">

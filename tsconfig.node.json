@@ -4,6 +4,7 @@
     "target": "ES2023",
     "lib": ["ES2023"],
     "module": "ESNext",
+    "typeRoots": ["./node_modules/@types"],
     "types": ["node"],
     "skipLibCheck": true,
 
@@ -22,5 +23,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "env.d.ts"]
 }

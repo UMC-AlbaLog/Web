@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://albalog.kro.kr/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

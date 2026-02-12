@@ -99,6 +99,8 @@ const Sidebar = () => {
           type="button"
           onClick={() => {
             sessionStorage.clear();
+            localStorage.removeItem("user_profile");
+
             navigate("/", { replace: true });
           }}
           className="justify-center text-slate-600 text-base font-medium font-['Pretendard'] hover:text-slate-800"

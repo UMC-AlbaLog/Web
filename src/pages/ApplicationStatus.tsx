@@ -1,9 +1,15 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useJobs } from "../hooks/useJobs";
-import type { ApplicationStatus } from "../types/work";
+import type { Work } from "../types/work";
+import { getAlbaStatus, type AlbaStatusItem } from "../api/albaStatus";
 
 type TabType = "all" | "inProgress" | "completed";
+
+/** 진행 중: 아직 승인/거절이 나지 않은 상태 (대기중, pending, active 등) */
+const IN_PROGRESS_STATUS = ["pending", "active", "대기중"];
+/** 모집 완료: 승인·거절이 완료된 상태 (지원승인, 지원거절, approved, rejected, closed 등) */
+const COMPLETED_STATUS = ["approved", "rejected", "closed", "지원승인", "지원거절"];
 
 const ApplicationStatusPage: React.FC = () => {
   const navigate = useNavigate();
@@ -11,37 +17,71 @@ const ApplicationStatusPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [apiItemsAll, setApiItemsAll] = useState<AlbaStatusItem[]>([]);
+  const [apiLoading, setApiLoading] = useState(false);
+  const hasToken = typeof window !== "undefined" ? !!sessionStorage.getItem("accessToken") : false;
+  const useApi = Boolean(hasToken);
+
+  useEffect(() => {
+    if (!useApi) return;
+    setApiLoading(true);
+    getAlbaStatus("all")
+      .then(setApiItemsAll)
+      .catch(() => setApiItemsAll([]))
+      .finally(() => setApiLoading(false));
+  }, [useApi]);
+
   const appliedJobs = useMemo(() => getAppliedJobs(), [getAppliedJobs]);
 
-  const getStatusLabel = (status?: ApplicationStatus) => {
-    switch (status) {
-      case "pending":
-        return { text: "대기중", color: "text-yellow-600 bg-yellow-50" };
-      case "approved":
-        return { text: "승인됨", color: "text-green-600 bg-green-50" };
-      case "rejected":
-        return { text: "거절됨", color: "text-red-600 bg-red-50" };
-      default:
-        return { text: "대기중", color: "text-gray-600 bg-gray-50" };
-    }
+  const getStatusLabel = (status?: string) => {
+    const s = status?.toLowerCase() ?? "";
+    const raw = status?.trim() ?? "";
+    if (raw === "대기중" || s === "pending" || s === "active")
+      return { text: "대기중", color: "text-yellow-600 bg-yellow-50" };
+    if (raw === "지원승인" || s === "approved")
+      return { text: "승인됨", color: "text-green-600 bg-green-50" };
+    if (raw === "지원거절" || s === "rejected")
+      return { text: "거절됨", color: "text-red-600 bg-red-50" };
+    if (s === "closed") return { text: "모집완료", color: "text-gray-600 bg-gray-50" };
+    return { text: status || "대기중", color: "text-gray-600 bg-gray-50" };
   };
 
-  const filteredApplications = useMemo(() => {
-    let filtered = appliedJobs;
+  const filteredApiItems = useMemo((): AlbaStatusItem[] => {
+    let list = apiItemsAll;
 
-    // 탭 필터링
     if (activeTab === "inProgress") {
-      filtered = filtered.filter((job) => job.applicationStatus === "pending");
+      list = list.filter((item) =>
+        IN_PROGRESS_STATUS.includes(item.processStatus?.toLowerCase() ?? "")
+      );
     } else if (activeTab === "completed") {
-      filtered = filtered.filter(
-        (job) => job.applicationStatus === "approved" || job.applicationStatus === "rejected"
+      list = list.filter((item) =>
+        COMPLETED_STATUS.includes(item.processStatus?.toLowerCase() ?? "")
       );
     }
 
-    // 검색 필터링
+    if (searchQuery.trim()) {
+      list = list.filter((item) =>
+        item.storeName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return list;
+  }, [apiItemsAll, activeTab, searchQuery]);
+
+  const filteredLocalJobs = useMemo((): Work[] => {
+    let filtered = appliedJobs;
+
+    if (activeTab === "inProgress") {
+      filtered = filtered.filter((job: Work) => job.applicationStatus === "pending");
+    } else if (activeTab === "completed") {
+      filtered = filtered.filter(
+        (job: Work) => job.applicationStatus === "approved" || job.applicationStatus === "rejected"
+      );
+    }
+
     if (searchQuery.trim()) {
       filtered = filtered.filter(
-        (job) =>
+        (job: Work) =>
           job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           job.address.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -49,6 +89,9 @@ const ApplicationStatusPage: React.FC = () => {
 
     return filtered;
   }, [activeTab, searchQuery, appliedJobs]);
+
+  const listToShow = useApi ? filteredApiItems : filteredLocalJobs;
+  const isEmpty = listToShow.length === 0;
 
   return (
     <main className="p-10 bg-[#F3F4F6] flex-1 overflow-y-auto">
@@ -138,90 +181,137 @@ const ApplicationStatusPage: React.FC = () => {
       </div>
 
       {/* 지원서 목록 */}
-      <div className="space-y-4">
-        {filteredApplications.map((job) => {
-          const statusInfo = getStatusLabel(job.applicationStatus);
-          const expectedPay = job.pay * job.duration;
+      {apiLoading && (
+        <div className="bg-white rounded-[35px] p-8 text-center text-gray-500">
+          지원 현황을 불러오는 중…
+        </div>
+      )}
 
-          return (
-            <div
-              key={job.id}
-              className="bg-white rounded-[35px] p-8 shadow-sm border border-white hover:shadow-md transition-all"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-black text-gray-800">{job.name}</h3>
-                    {job.applicationStatus && (
-                      <span
-                        className={`px-4 py-1.5 rounded-full text-xs font-black ${statusInfo.color}`}
+      <div className="space-y-4">
+        {useApi
+          ? filteredApiItems.map((item, index) => {
+              const statusInfo = getStatusLabel(item.processStatus);
+              return (
+                <div
+                  key={`${item.storeName}-${item.workDate}-${item.startTime}-${index}`}
+                  className="bg-white rounded-[35px] p-8 shadow-sm border border-white hover:shadow-md transition-all"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-2xl font-black text-gray-800">{item.storeName}</h3>
+                        <span
+                          className={`px-4 py-1.5 rounded-full text-xs font-black ${statusInfo.color}`}
+                        >
+                          {statusInfo.text}
+                        </span>
+                      </div>
+                      <p className="text-sm font-bold text-gray-400 mb-1">
+                        {item.workDate} ({item.dayOfWeek})
+                      </p>
+                      <p className="text-sm font-bold text-gray-400">
+                        {item.startTime} ~ {item.endTime}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end pt-4 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/jobs")}
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
+                    >
+                      상세보기
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          : filteredLocalJobs.map((job) => {
+              const statusInfo = getStatusLabel(job.applicationStatus);
+              const expectedPay = job.pay * job.duration;
+
+              return (
+                <div
+                  key={job.id}
+                  className="bg-white rounded-[35px] p-8 shadow-sm border border-white hover:shadow-md transition-all"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-2xl font-black text-gray-800">{job.name}</h3>
+                        {job.applicationStatus && (
+                          <span
+                            className={`px-4 py-1.5 rounded-full text-xs font-black ${statusInfo.color}`}
+                          >
+                            {statusInfo.text}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-bold text-gray-400 mb-1">{job.address}</p>
+                      <p className="text-sm font-bold text-gray-400">
+                        {job.date} | {job.time}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">시급</p>
+                        <p className="text-lg font-black text-gray-800">
+                          {job.pay.toLocaleString()}원
+                        </p>
+                      </div>
+                      <div className="w-px h-8 bg-gray-200" />
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">예상 급여</p>
+                        <p className="text-lg font-black text-[#5D5FEF]">
+                          {expectedPay.toLocaleString()}원
+                        </p>
+                      </div>
+                      <div className="w-px h-8 bg-gray-200" />
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">지원일</p>
+                        <p className="text-sm font-bold text-gray-600">
+                          {job.appliedDate || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {job.applicationStatus === "approved" && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/jobs/${job.id}`)}
+                        className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
                       >
-                        {statusInfo.text}
-                      </span>
+                        상세보기
+                      </button>
+                    )}
+                    {job.applicationStatus === "rejected" && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/jobs/${job.id}`)}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
+                      >
+                        다시 지원하기
+                      </button>
+                    )}
+                    {job.applicationStatus === "pending" && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/jobs/${job.id}`)}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
+                      >
+                        상세보기
+                      </button>
                     )}
                   </div>
-                  <p className="text-sm font-bold text-gray-400 mb-1">{job.address}</p>
-                  <p className="text-sm font-bold text-gray-400">
-                    {job.date} | {job.time}
-                  </p>
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">시급</p>
-                    <p className="text-lg font-black text-gray-800">
-                      {job.pay.toLocaleString()}원
-                    </p>
-                  </div>
-                  <div className="w-px h-8 bg-gray-200" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">예상 급여</p>
-                    <p className="text-lg font-black text-[#5D5FEF]">
-                      {expectedPay.toLocaleString()}원
-                    </p>
-                  </div>
-                  <div className="w-px h-8 bg-gray-200" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">지원일</p>
-                    <p className="text-sm font-bold text-gray-600">
-                      {job.appliedDate || "N/A"}
-                    </p>
-                  </div>
-                </div>
-
-                {job.applicationStatus === "approved" && (
-                  <button 
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-                  >
-                    상세보기
-                  </button>
-                )}
-                {job.applicationStatus === "rejected" && (
-                  <button 
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-                  >
-                    다시 지원하기
-                  </button>
-                )}
-                {job.applicationStatus === "pending" && (
-                  <button 
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
-                  >
-                    상세보기
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
       </div>
 
-      {filteredApplications.length === 0 && (
+      {!apiLoading && isEmpty && (
         <div className="bg-white rounded-[35px] p-16 text-center">
           <p className="text-gray-400 text-lg font-medium mb-4">
             {searchQuery ? "검색 결과가 없습니다" : "아직 지원한 일자리가 없습니다"}
