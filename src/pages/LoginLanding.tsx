@@ -42,6 +42,7 @@ const LoginLanding = () => {
                 "googleUser",
                 JSON.stringify(decoded)
               );
+              console.log("구글 로그인 성공:", decoded);
 
               // 회원가입으로 이동
               navigate("/signup");
