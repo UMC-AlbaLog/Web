@@ -45,23 +45,27 @@ export const useHomeData = () => {
 
       // 근무 리스트 매핑
       const mappedList: Work[] = schedules.map((item: any) => {
-        const formatTime = (iso: string) => {
-          if (!iso) return "00:00";
-          const d = new Date(iso);
-          return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+        const safeFormatTime = (timeStr: string) => {
+          if (!timeStr) return "00:00";
+          if (timeStr.includes(':')) {
+            const parts = timeStr.split(':');
+            const timePart = parts[0].includes('T') ? parts[0].split('T')[1] : parts[0];
+            return `${timePart.padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+          }
+          return "00:00";
         };
 
         return {
           id: item.workLogId || item.id,
-          name: item.workplace || item.storeName || "알바 매장",
-          category: "아르바이트",
-          time: `${formatTime(item.startTime)} ~ ${formatTime(item.endTime)}`,
+          name: item.storeName || item.workplace || "알바 매장",
+          category: item.storeCategory || "기타",
+          time: `${safeFormatTime(item.startTime)} ~ ${safeFormatTime(item.endTime)}`,
           duration: item.workHours || 0,
           pay: item.hourlyWage || 0,
           expectedPay: item.totalWage || 0,
           status: item.status,
           statusLabel: item.statusLabel,
-          address: item.address || "",
+          address: item.storeAddress || item.address || "",
           date: item.workDate || new Date().toISOString().split('T')[0],
         };
       });
@@ -75,12 +79,15 @@ export const useHomeData = () => {
 
       const currentFreeSlot = findDynamicFreeSlot(scheduleItemsForCalc as any);
 
-      if (currentFreeSlot && currentFreeSlot.includes("~")) {
-        const [start, end] = currentFreeSlot.replace(/시/g, "").split("~");
-        const albaList = await albaService.getAlbaList({ 
-          workTime: `${start.trim().padStart(2, '0')}:00~${end.trim().padStart(2, '0')}:00` 
-        });
-        setRecommendCount(albaList.length || 0);
+      if (currentFreeSlot && currentFreeSlot.includes("-")) {
+        const timePart = currentFreeSlot.split("요일")[1]?.trim();
+        if (timePart) {
+          const [start, end] = timePart.split("-").map(t => t.trim());
+          const albaList = await albaService.getAlbaList({ 
+            workTime: `${start}~${end}` 
+          });
+          setRecommendCount(albaList.length || 0);
+        }
       } else {
         setRecommendCount(0);
       }
@@ -121,7 +128,10 @@ export const useHomeData = () => {
             alert("퇴근 처리가 완료되었습니다.");
           }
           await fetchData();
-        } catch (error) { alert("처리에 실패했습니다."); }
+        } catch (error) { 
+          console.error("출퇴근 처리 실패:", error);
+          alert("처리에 실패했습니다. (유효한 근무 기록이 아닐 수 있습니다.)"); 
+        }
       },
     }
   };
