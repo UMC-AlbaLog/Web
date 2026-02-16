@@ -1,29 +1,35 @@
 import { apiRequest } from "./client";
 import type { ScheduleItem, Workplace } from "../types/schedule";
 
-const DAY_OF_WEEK = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
+/**
+ * repeat_days: MON~SUN 순서 7자리 0/1 문자열.
+ * repeatDays는 JS getDay() (0=일, 1=월, ..., 6=토) → 위치 0=MON, 1=TUE, ..., 6=SUN.
+ */
+const MON_TO_SUN_JS_DAY = [1, 2, 3, 4, 5, 6, 0]; // MON=1, TUE=2, ..., SUN=0
+
+function toRepeatDaysString(repeatDays: number[]): string {
+  return MON_TO_SUN_JS_DAY.map((jsDay) => (repeatDays.includes(jsDay) ? "1" : "0")).join("");
+}
 
 /**
  * POST /user/alba/schedule/manual 요청 body
- * - repeat_type/repeat_days: 반복할 때만 포함 (백엔드: "repeat_type이 있으면 repeat_days가 필요")
- * - repeat_type이 "none"이면 두 필드 모두 생략
+ * - day_of_week: 보내지 않음 (백엔드 변경)
+ * - repeat_days: weekly/biweekly일 때만, MON~SUN 7자리 0/1 문자열. daily/none이면 미포함.
  */
 export interface CreateManualScheduleBody {
   workplace: string;
   work_date: string;
   work_time: string;
-  day_of_week: "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
   hourly_wage: number;
   memo: string;
-  /** 반복할 때만 포함 (none이면 생략) */
+  /** weekly/biweekly일 때만 포함. daily/none이면 생략 */
   repeat_type?: "daily" | "weekly" | "biweekly";
   repeat_days?: string;
 }
 
-/** ScheduleItem → API 요청 body 변환. repeat_type이 none이면 repeat_* 필드 미포함 */
+/** ScheduleItem → API 요청 body 변환 */
 function toCreateManualBody(item: Partial<ScheduleItem>): CreateManualScheduleBody & Record<string, unknown> {
   const date = item.date ?? new Date().toISOString().slice(0, 10);
-  const dayIndex = new Date(date + "T12:00:00").getDay();
   const repeatType = item.repeatType ?? "none";
   const workTime =
     item.startTime && item.endTime ? `${item.startTime}-${item.endTime}` : "09:00-18:00";
@@ -31,39 +37,36 @@ function toCreateManualBody(item: Partial<ScheduleItem>): CreateManualScheduleBo
     workplace: String(item.workplaceId ?? ""),
     work_date: date,
     work_time: workTime,
-    day_of_week: DAY_OF_WEEK[dayIndex],
     hourly_wage: Number(item.hourlyWage ?? 0),
     memo: String(item.memo ?? ""),
   };
   if (repeatType !== "none") {
     body.repeat_type = repeatType;
-    body.repeat_days = Array.isArray(item.repeatDays) && item.repeatDays.length > 0
-      ? item.repeatDays.join(",")
-      : "";
+    if (repeatType === "weekly" || repeatType === "biweekly") {
+      const days = Array.isArray(item.repeatDays) && item.repeatDays.length > 0 ? item.repeatDays : [];
+      body.repeat_days = toRepeatDaysString(days);
+    }
   }
   return body;
 }
 
-/** PATCH /user/alba/schedule/{id} - 변경 필드만 snake_case로 전송. repeat_type/repeat_days는 쌍으로 */
+/** PATCH /user/alba/schedule/{id} - 변경 필드만 snake_case. day_of_week 미전송. repeat_days는 weekly/biweekly일 때만 MON~SUN 7자리 0/1 */
 function toUpdateManualBody(updates: Partial<ScheduleItem>): Record<string, unknown> {
   const body: Record<string, unknown> = {};
   if (updates.workplaceId !== undefined) body.workplace = String(updates.workplaceId);
-  if (updates.date !== undefined) {
-    body.work_date = updates.date;
-    const dayIndex = new Date(updates.date + "T12:00:00").getDay();
-    body.day_of_week = DAY_OF_WEEK[dayIndex];
-  }
+  if (updates.date !== undefined) body.work_date = updates.date;
   if (updates.startTime !== undefined && updates.endTime !== undefined) {
     body.work_time = `${updates.startTime}-${updates.endTime}`;
   }
   if (updates.hourlyWage !== undefined) body.hourly_wage = Number(updates.hourlyWage);
   if (updates.memo !== undefined) body.memo = String(updates.memo);
   if (updates.repeatType !== undefined || updates.repeatDays !== undefined) {
-    body.repeat_type = updates.repeatType ?? "none";
-    body.repeat_days =
-      updates.repeatType !== "none" && Array.isArray(updates.repeatDays)
-        ? updates.repeatDays.join(",")
-        : "";
+    const repeatType = updates.repeatType ?? "none";
+    body.repeat_type = repeatType;
+    if (repeatType === "weekly" || repeatType === "biweekly") {
+      const days = Array.isArray(updates.repeatDays) ? updates.repeatDays : [];
+      body.repeat_days = toRepeatDaysString(days);
+    }
   }
   return body;
 }
