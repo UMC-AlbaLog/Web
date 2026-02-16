@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SettlementInfo, SettlementHistoryItem } from "../../api/settlement";
 import { getSettlementHistory } from "../../api/settlement";
-import { getUserIdFromToken } from "../../utils/userId";
 
 interface SettlementSettingsProps {
   settlementData: SettlementInfo;
@@ -86,15 +85,9 @@ const SettlementSettings: React.FC<SettlementSettingsProps> = ({
         return;
       }
 
-      const userId = getUserIdFromToken();
-      if (!userId) {
-        console.warn("정산 내역 조회: userId를 찾을 수 없습니다.");
-        return;
-      }
-
       try {
         setIsLoadingHistory(true);
-        const data = await getSettlementHistory(userId, "all");
+        const data = await getSettlementHistory("all");
         
         // 최근 3개만 표시 (최신순)
         const sorted = [...data.settlements].sort((a, b) => 

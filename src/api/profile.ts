@@ -38,9 +38,9 @@ export interface UpdateProfileRequest {
 /**
  * 프로필 조회
  */
-export async function getProfile(userId: string): Promise<ProfileData> {
+export async function getProfile(): Promise<ProfileData> {
   const data = await apiRequest<TsoaResponse<ProfileData>>(
-    `/api/profile/${userId}`,
+    `/api/profile/me`,
     {
       method: "GET",
     }
@@ -56,11 +56,10 @@ export async function getProfile(userId: string): Promise<ProfileData> {
  * 프로필 수정
  */
 export async function updateProfile(
-  userId: string,
   profileData: UpdateProfileRequest
 ): Promise<ProfileData> {
   const data = await apiRequest<TsoaResponse<ProfileData>>(
-    `/api/profile/${userId}`,
+    `/api/profile/me`,
     {
       method: "PUT",
       body: profileData,

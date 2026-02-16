@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import api from "../api/client";
+import { getUserInfo } from "../api/user";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Signup = () => {
   const [nickname, setNickname] = useState("");
   const [birth, setBirth] = useState<Date | null>(null);
   const [gender, setGender] = useState<"male" | "female" | "">("");
+  const [email, setEmail] = useState<string>("");
 
   const [nicknameError, setNicknameError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,23 +21,37 @@ const Signup = () => {
    * URL에서 토큰 저장
    * ========================= */
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const init = async () => {
+      const params = new URLSearchParams(window.location.search);
 
-    const accessToken = params.get("accessToken");
-    const refreshToken = params.get("refreshToken");
+      const accessToken = params.get("accessToken");
+      const refreshToken = params.get("refreshToken");
 
-    if (accessToken) {
-      sessionStorage.setItem("accessToken", accessToken);
-    }
+      if (accessToken) {
+        sessionStorage.setItem("accessToken", accessToken);
+      }
 
-    if (refreshToken) {
-      sessionStorage.setItem("refreshToken", refreshToken);
-    }
+      if (refreshToken) {
+        sessionStorage.setItem("refreshToken", refreshToken);
+      }
 
-    const token = sessionStorage.getItem("accessToken");
-    if (!token) {
-      navigate("/login", { replace: true });
-    }
+      const token = sessionStorage.getItem("accessToken");
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      // 실제 사용자 이메일 조회 (백엔드 /api/user/info)
+      try {
+        const userEmail = await getUserInfo();
+        setEmail(userEmail);
+      } catch (error) {
+        console.error("사용자 정보 조회 실패:", error);
+        // 이메일이 없으면 회원가입 API에서 에러가 날 수 있음
+      }
+    };
+
+    void init();
   }, [navigate]);
 
   /* =========================
@@ -85,7 +101,7 @@ const Signup = () => {
       setLoading(true);
 
       await api.post("/api/user/auth/register", {
-        email: "",
+        email,
         nickname: nickname,
         birthdate: birth?.toISOString(),
         gender: gender,

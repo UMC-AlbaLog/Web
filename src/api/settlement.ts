@@ -58,11 +58,9 @@ export interface UpdateSettlementRequest {
 /**
  * 계좌 정보 조회
  */
-export async function getSettlement(
-  userId: string
-): Promise<SettlementInfo> {
+export async function getSettlement(): Promise<SettlementInfo> {
   const data = await apiRequest<TsoaResponse<SettlementInfo>>(
-    `/api/users/${userId}/settlement`,
+    `/api/users/me/settlement`,
     { method: "GET" }
   );
 
@@ -77,11 +75,10 @@ export async function getSettlement(
  * 계좌 정보 수정
  */
 export async function updateSettlement(
-  userId: string,
   settlementData: UpdateSettlementRequest
 ): Promise<SettlementInfo> {
   const data = await apiRequest<TsoaResponse<SettlementInfo>>(
-    `/api/users/${userId}/settlement`,
+    `/api/users/me/settlement`,
     {
       method: "PUT",
       body: settlementData,
@@ -118,7 +115,6 @@ export interface SettlementHistoryResponse {
  * 정산 내역 조회
  */
 export async function getSettlementHistory(
-  userId: string,
   status: SettlementStatus = "all"
 ): Promise<SettlementHistoryResponse> {
   const params = new URLSearchParams();
@@ -129,7 +125,7 @@ export async function getSettlementHistory(
 
   const queryString = params.toString();
   const path =
-    `/api/settlement-history/${userId}` +
+    `/api/users/me/settlement-history` +
     (queryString ? `?${queryString}` : "");
 
   const data = await apiRequest<TsoaResponse<SettlementHistoryResponse>>(

@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { workService } from "../api/workService";
 import { albaService } from "../api/albaService"; 
 import { getSettlementHistory } from "../api/settlement";
-import { getUserIdFromToken } from "../utils/userId";
 import { findDynamicFreeSlot } from "../utils/scheduleUtils";
 import type { Work } from "../types/work";
 import type { AddWorkRequest } from "../components/home/AddWorkModal";
@@ -18,13 +17,11 @@ export const useHomeData = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const userId = getUserIdFromToken();
-
       // 근무 정보와 정산 내역
       const [s, schedules, settlementData] = await Promise.all([
         workService.getTodaySummary(),
         workService.getTodayWorkLogs(),
-        userId ? getSettlementHistory(userId, "all") : Promise.resolve({ settlements: [] }) 
+        getSettlementHistory("all").catch(() => ({ settlements: [] })) 
       ]);
 
       // 대시보드 요약 세팅

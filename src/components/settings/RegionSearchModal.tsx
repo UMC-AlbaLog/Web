@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { searchPlaces, type Place } from "../../api/places";
-import { getTestToken } from "../../api/user";
 
 interface RegionSearchModalProps {
   isOpen: boolean;
@@ -33,22 +32,8 @@ const RegionSearchModal: React.FC<RegionSearchModalProps> = ({
 
     const token = sessionStorage.getItem("accessToken");
     if (!token) {
-      const useTestToken = confirm(
-        "로그인이 필요합니다. accessToken이 없습니다.\n\n" +
-        "테스트용 토큰을 발급받으시겠습니까? (테스트용)"
-      );
-      
-      if (useTestToken) {
-        try {
-          await getTestToken();
-        } catch (error) {
-          setSearchError("테스트 토큰 발급에 실패했습니다: " + (error instanceof Error ? error.message : "알 수 없는 오류"));
-          return;
-        }
-      } else {
-        setSearchError("로그인이 필요합니다.");
-        return;
-      }
+      setSearchError("로그인이 필요합니다.");
+      return;
     }
 
     try {
