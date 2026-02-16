@@ -61,10 +61,14 @@ const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
               onChange={(e) => setters.setSearchKeyword(e.target.value)} 
               className={inputStyle}
             />
-            {states.isSearching && (
+            {states.searchResults.length > 0 && (
               <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-lg max-h-40 overflow-y-auto">
                 {states.searchResults.map((place: any, i: number) => (
-                  <div key={i} onClick={() => actions.handleSelectPlace(place)} className="p-3 hover:bg-[#F2F3FF] cursor-pointer border-b border-gray-50 last:border-0 text-left transition-colors">
+                  <div 
+                    key={i} 
+                    onClick={() => actions.handleSelectPlace(place)} 
+                    className="p-3 hover:bg-[#F2F3FF] cursor-pointer border-b border-gray-50 last:border-0 text-left transition-colors"
+                  >
                     <p className="text-sm font-bold text-gray-800">{place.placeName}</p>
                     <p className="text-[10px] text-gray-400">{place.addressName}</p>
                   </div>
