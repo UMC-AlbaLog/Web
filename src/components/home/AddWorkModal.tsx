@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useWorkForm } from "../../hooks/useWorkForm";
 
 export interface AddWorkRequest {
@@ -17,6 +17,16 @@ interface AddWorkModalProps {
 
 const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
   const { states, setters, actions } = useWorkForm();
+
+  useEffect(() => {
+    if (!states.searchKeyword.trim()) return;
+
+    const timer = setTimeout(() => {
+      actions.handleSearch(states.searchKeyword);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [states.searchKeyword]);
 
   const handleSubmit = async () => {
     if (!states.name) return alert("근무지를 선택해주세요!");
@@ -44,12 +54,13 @@ const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
         <div className="space-y-5">
           <div className="relative">
             <label className={labelStyle}>근무지</label>
-            <input type="text" 
-                   placeholder="가게 이름을 입력하세요"
-                   value={states.searchKeyword} 
-                   onChange={(e) => { setters.setSearchKeyword(e.target.value); 
-                   actions.handleSearch(e.target.value); }} className={inputStyle}
-             />
+            <input 
+              type="text" 
+              placeholder="가게 이름을 입력하세요"
+              value={states.searchKeyword} 
+              onChange={(e) => setters.setSearchKeyword(e.target.value)} 
+              className={inputStyle}
+            />
             {states.isSearching && (
               <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-lg max-h-40 overflow-y-auto">
                 {states.searchResults.map((place: any, i: number) => (
