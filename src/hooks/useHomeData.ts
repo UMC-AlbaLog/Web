@@ -126,7 +126,7 @@ export const useHomeData = () => {
             setWorkList(prev => prev.map(w => w.id === id ? { ...w, status: 'done' } : w));
             alert("퇴근 처리가 완료되었습니다.");
           }
-          setTimeout(() => fetchData(), 500);
+          setTimeout(() => fetchData(), 1500);
         } catch (error) { 
           console.error("출퇴근 처리 실패:", error);
           alert("처리에 실패했습니다. (유효한 근무 기록이 아닐 수 있습니다.)"); 
