@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { getSettlement, updateSettlement } from "../api/settlement";
-import { getUserIdFromToken } from "../utils/userId";
 import { type Place } from "../api/places";
 import SettingsSidebar from "../components/settings/SettingsSidebar";
 import NotificationSettings from "../components/settings/NotificationSettings";
@@ -63,16 +62,9 @@ const Settings: React.FC = () => {
 
   // 정산 정보 로드 함수
   const loadSettlementData = async () => {
-    const userId = getUserIdFromToken();
-    if (!userId) {
-      console.warn("accessToken이 없거나 userId를 추출할 수 없습니다. sessionStorage를 확인해주세요.");
-      // 토큰이 없어도 UI는 표시하되, API 호출은 하지 않음
-      return;
-    }
-
     try {
       setIsLoadingSettlement(true);
-      const data = await getSettlement(userId);
+      const data = await getSettlement();
       setSettlementData({
         bankName: data.bankName || "",
         accountNumber: data.accountNumber || "",
@@ -239,17 +231,9 @@ const Settings: React.FC = () => {
   const handleSettlementEdit = async () => {
     if (isEditingSettlement) {
       // 저장 로직
-      let userId = getUserIdFromToken();
-      
-      // 토큰이 없으면 실제 로그인 필요
-      if (!userId) {
-        alert("로그인이 필요합니다. 다시 로그인해주세요.");
-        return;
-      }
-
       try {
         setIsLoadingSettlement(true);
-        await updateSettlement(userId, {
+        await updateSettlement({
           bankName: settlementData.bankName,
           accountNumber: settlementData.accountNumber,
           accountHolder: settlementData.accountHolder,

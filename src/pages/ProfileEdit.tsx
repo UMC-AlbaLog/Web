@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../hooks/useUser";
 import { getProfile, updateProfile as updateProfileApi } from "../api/profile";
-import { getUserIdFromToken } from "../utils/userId";
 
 interface GoogleUser {
   email: string;
@@ -48,12 +47,9 @@ const ProfileEdit: React.FC = () => {
   // 초기 데이터 로드 (API에서 프로필 정보 가져오기)
   useEffect(() => {
     const loadProfile = async () => {
-      const userId = getUserIdFromToken();
-      if (!userId) return;
-
       try {
         setIsLoading(true);
-        const data = await getProfile(userId);
+        const data = await getProfile();
         setApiProfile(data);
 
         // 프로필 이미지 설정
@@ -149,12 +145,6 @@ const ProfileEdit: React.FC = () => {
 
   // 저장하기
   const handleSave = async () => {
-    const userId = getUserIdFromToken();
-    if (!userId) {
-      alert("사용자 정보를 찾을 수 없습니다.");
-      return;
-    }
-
     try {
       setIsLoading(true);
       const fullName = `${formData.lastName} ${formData.firstName}`.trim();
@@ -168,7 +158,7 @@ const ProfileEdit: React.FC = () => {
       // 생년월일 가져오기 (기존 프로필 또는 API 프로필에서)
       const userBirth = apiProfile?.userBirth || profile?.birth || "";
 
-      await updateProfileApi(userId, {
+      await updateProfileApi({
         userName: fullName,
         userBirth: userBirth,
         gender: genderMap[formData.gender] || "male",

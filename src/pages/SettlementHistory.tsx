@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSettlementHistory, type SettlementHistoryItem } from "../api/settlement";
-import { getUserIdFromToken } from "../utils/userId";
 
 interface Settlement {
   date: string;
@@ -21,15 +20,9 @@ const SettlementHistory: React.FC = () => {
   // 정산 내역 조회
   useEffect(() => {
     const loadSettlementHistory = async () => {
-      const userId = getUserIdFromToken();
-      if (!userId) {
-        console.warn("accessToken이 없거나 userId를 추출할 수 없습니다.");
-        return;
-      }
-
       try {
         setIsLoading(true);
-        const data = await getSettlementHistory(userId, "all");
+        const data = await getSettlementHistory("all");
         
         // 데이터 변환
         const settlements: Settlement[] = data.settlements.map((item: SettlementHistoryItem) => {

@@ -22,12 +22,12 @@ export interface UpdateReviewRequest {
 }
 
 /**
- * 사용자 리뷰 목록 조회
- * @param userId 사용자 ID
+ * 내 리뷰 목록 조회
+ * - 인증된 사용자 기준 `/api/users/me/reviews` 엔드포인트 사용
  */
-export async function getUserReviews(userId: string): Promise<ReviewItem[]> {
+export async function getUserReviews(): Promise<ReviewItem[]> {
   const data = await apiRequest<TsoaResponse<ReviewItem[]>>(
-    `/api/users/${userId}/reviews`,
+    `/api/users/me/reviews`,
     {
       method: "GET",
     }
@@ -41,17 +41,15 @@ export async function getUserReviews(userId: string): Promise<ReviewItem[]> {
 
 /**
  * 리뷰 수정
- * @param userId 사용자 ID
  * @param reviewId 리뷰 ID
  * @param reviewData 수정할 리뷰 데이터
  */
 export async function updateReview(
-  userId: string,
   reviewId: string,
   reviewData: UpdateReviewRequest
 ): Promise<ReviewItem> {
   const data = await apiRequest<TsoaResponse<ReviewItem>>(
-    `/api/users/${userId}/reviews/${reviewId}`,
+    `/api/users/me/reviews/${reviewId}`,
     {
       method: "PUT",
       body: reviewData,
@@ -66,15 +64,13 @@ export async function updateReview(
 
 /**
  * 리뷰 삭제
- * @param userId 사용자 ID
  * @param reviewId 리뷰 ID
  */
 export async function deleteReview(
-  userId: string,
   reviewId: string
 ): Promise<void> {
   const data = await apiRequest<TsoaResponse<void>>(
-    `/api/users/${userId}/reviews/${reviewId}`,
+    `/api/users/me/reviews/${reviewId}`,
     {
       method: "DELETE",
     }

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { getUserReviews, updateReview, deleteReview } from "../api/reviews";
-import { getUserIdFromToken } from "../utils/userId";
 
 interface Review {
   id: string;
@@ -29,15 +28,8 @@ const ProfileReviews: React.FC = () => {
   useEffect(() => {
     const loadReviews = async () => {
       try {
-        const userId = getUserIdFromToken();
-        if (!userId) {
-          console.warn("userId를 찾을 수 없습니다. 리뷰를 불러올 수 없습니다.");
-          setIsLoadingInitial(false);
-          return;
-        }
-
         setIsLoadingInitial(true);
-        const reviewData = await getUserReviews(userId);
+        const reviewData = await getUserReviews();
         
         // API 응답을 UI에서 사용하는 Review 형식으로 변환
         const mappedReviews: Review[] = reviewData.map((item) => ({
@@ -80,13 +72,7 @@ const ProfileReviews: React.FC = () => {
     }
 
     try {
-      const userId = getUserIdFromToken();
-      if (!userId) {
-        alert("사용자 정보를 찾을 수 없습니다.");
-        return;
-      }
-
-      await deleteReview(userId, id);
+      await deleteReview(id);
       setReviews(reviews.filter((review) => review.id !== id));
       alert("리뷰가 삭제되었습니다.");
     } catch (error) {
@@ -111,13 +97,7 @@ const ProfileReviews: React.FC = () => {
     if (!editingReviewId) return;
 
     try {
-      const userId = getUserIdFromToken();
-      if (!userId) {
-        alert("사용자 정보를 찾을 수 없습니다.");
-        return;
-      }
-
-      await updateReview(userId, editingReviewId, {
+      await updateReview(editingReviewId, {
         content: editingContent,
         rating: editingRating,
       });

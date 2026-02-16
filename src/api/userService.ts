@@ -12,10 +12,10 @@ export const userService = {
     return data?.resultType === "SUCCESS" ? data.success : null;
   },
 
-  // 특정 유저의 프로필 조회
-  getUserProfile: async (userId: string) => {
+  // 내 프로필 조회 (현재 사용되지 않음 - profile.ts의 getProfile 사용 권장)
+  getUserProfile: async () => {
     const data = await apiRequest<TsoaResponse<any>>(
-      `/api/profile/${userId}`, 
+      `/api/profile/me`, 
       { method: "GET" }
     );
     
