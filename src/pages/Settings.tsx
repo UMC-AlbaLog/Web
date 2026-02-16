@@ -278,7 +278,7 @@ const Settings: React.FC = () => {
   const handleRemoveRegion = (area: string) => {
     const updated = {
       ...workEnvironment,
-      selectedAreas: workEnvironment.selectedAreas.filter((a) => a !== area),
+      selectedAreas: workEnvironment.selectedAreas.filter((a: string) => a !== area),
     };
     setWorkEnvironment(updated);
     localStorage.setItem("workEnvironment", JSON.stringify(updated));

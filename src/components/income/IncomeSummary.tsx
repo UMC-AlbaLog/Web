@@ -7,12 +7,9 @@ interface IncomeSummaryProps {
 
 const IncomeSummary = ({
   expectedIncome,
-  currentMonthIncome,
-  monthOverMonthGrowth,
+  currentMonthIncome: _currentMonthIncome,
+  monthOverMonthGrowth: _monthOverMonthGrowth,
 }: IncomeSummaryProps) => {
-  const percentage =
-    expectedIncome === 0 ? 0 : Math.min((currentMonthIncome / expectedIncome) * 100, 100);
-
   return (
     <div className="bg-blue-950/25 rounded-[35px] overflow-hidden p-6 h-96 flex flex-col">
       <h2 className="text-white text-2xl font-semibold font-['Pretendard'] mb-4">

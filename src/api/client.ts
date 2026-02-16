@@ -2,7 +2,7 @@ import axios, { type AxiosRequestConfig } from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
-/* ============================= */
+/* ============================= */ 
 /* axios 인스턴스 생성 */
 /* ============================= */
 const api = axios.create({

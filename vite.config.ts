@@ -6,8 +6,22 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'html-transform',
+        transformIndexHtml(html) {
+          return html.replace(
+            /%VITE_KAKAO_MAP_KEY%/g,
+            env.VITE_KAKAO_MAP_KEY ?? ''
+          );
+        },
+      },
+    ],
     server: {
+      port: 5173,
+      strictPort: true,
       proxy: {
         '/api': {
           target: env.VITE_API_BASE_URL,

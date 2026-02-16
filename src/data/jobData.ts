@@ -8,28 +8,33 @@ const baseWork = (
   duration: number,
   pay: number,
   date: string,
-  status: Work["status"] = "upcoming",
+  status: Work["status"] = "scheduled",
   applicationStatus?: Work["applicationStatus"],
   settlementStatus?: Work["settlementStatus"],
   actualPay?: number
-): Work => ({
-  id,
-  name,
-  address,
-  time,
-  duration,
-  pay,
-  expectedPay: Math.round(duration * pay),
-  status,
-  date,
-  memo: "",
-  description: `${name} 근무입니다.`,
-  requirements: "성실하신 분 환영합니다.",
-  notice: "근무 완료 후 정산됩니다.",
-  ...(applicationStatus && { applicationStatus, appliedDate: date }),
-  ...(settlementStatus && { settlementStatus }),
-  ...(actualPay !== undefined && { actualPay }),
-});
+): Work => {
+  const [startTime = "", endTime = ""] = time.includes("~") ? time.split("~").map((s) => s.trim()) : [time, ""];
+  return {
+    id,
+    name,
+    address,
+    time,
+    duration,
+    pay,
+    expectedPay: Math.round(duration * pay),
+    status,
+    date,
+    memo: "",
+    description: `${name} 근무입니다.`,
+    requirements: "성실하신 분 환영합니다.",
+    notice: "근무 완료 후 정산됩니다.",
+    startTime,
+    endTime,
+    ...(applicationStatus && { applicationStatus, appliedDate: date }),
+    ...(settlementStatus && { settlementStatus }),
+    ...(actualPay !== undefined && { actualPay }),
+  };
+};
 
 // 2026-01 완료·승인 작업 (수입/정산 테이블/수입 분류 차트용)
 const completedJanuary: Work[] = [

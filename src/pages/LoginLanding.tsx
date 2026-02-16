@@ -1,10 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 const API_BASE_URL = "http://albalog.kro.kr";
 
 const LoginLanding = () => {
-  const navigate = useNavigate();
 
   /* =========================
    *  로그인 후 accessToken 처리

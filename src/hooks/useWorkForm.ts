@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { placeService } from "../api/placeService";
 
 export const useWorkForm = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -16,7 +17,6 @@ export const useWorkForm = () => {
   const [memo, setMemo] = useState("");
   const [distance, setDistance] = useState(5);
 
-  // 근무 시간 및 총 급여 계산 로직
   const duration = useMemo(() => {
     if (!startTime || !endTime || startTime === endTime) return 0;
     const [startH, startM] = startTime.split(":").map(Number);
@@ -27,48 +27,33 @@ export const useWorkForm = () => {
 
   const totalPay = useMemo(() => Math.floor(duration * pay), [duration, pay]);
 
-  // 미사용 변수들을 활용한 검색 액션
-  const handleSearch = (keyword: string) => {
+  const handleSearch = async (keyword: string) => {
     if (!keyword.trim()) return;
-    
-    // 카카오 장소 검색 API 호출
-    const ps = new (window as any).kakao.maps.services.Places();
     setIsSearching(true);
     setHasSearched(true);
-    
-    ps.keywordSearch(keyword, (data: any, status: any) => {
-      if (status === (window as any).kakao.maps.services.Status.OK) {
-        setSearchResults(data);
-      } else {
-        setSearchResults([]);
-      }
-    });
+    try {
+      const places = await placeService.searchPlaces(keyword);
+      setSearchResults(places);
+    } catch (error) {
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleSelectPlace = (place: any) => {
-    setName(place.place_name);
-    setAddress(place.address_name);
-    setCategory(place.category_group_name || "기타");
+    setName(place.placeName || place.place_name);
+    setAddress(place.addressName || place.address_name);
+    setCategory(place.categoryName || place.category_group_name || "기타");
     setIsSearching(false);
+    setHasSearched(false);
     setSearchResults([]); 
     setSearchKeyword(""); 
   };
 
-  const setters = { 
-    setSearchKeyword, setDate, setStartTime, setEndTime, 
-    setPay, setMemo, setName, setCategory, setDistance,
-    setAddress, setSearchResults, setIsSearching, setHasSearched
-  };
-
+  const states = { searchKeyword, name, address, category, searchResults, isSearching, hasSearched, date, startTime, endTime, pay, memo, duration, totalPay, distance };
+  const setters = { setSearchKeyword, setDate, setStartTime, setEndTime, setPay, setMemo, setName, setCategory, setDistance, setAddress, setSearchResults, setIsSearching, setHasSearched };
   const actions = { handleSearch, handleSelectPlace };
 
-  return {
-    states: { 
-      searchKeyword, name, address, category, searchResults, 
-      isSearching, hasSearched, date, startTime, endTime, 
-      pay, memo, duration, totalPay, distance 
-    },
-    setters, 
-    actions 
-  };
+  return { states, setters, actions };
 };

@@ -15,6 +15,7 @@ interface IncomeDashboardApiResponse {
   success: {
     actualIncome: number;
     expectedIncome: number;
+    incomeGoal: number;
     breakdown: {
       key: string;
       income: number;
@@ -63,6 +64,7 @@ const Income = () => {
    * ========================= */
   const [actualIncome, setActualIncome] = useState(0);
   const [expectedIncome, setExpectedIncome] = useState(0);
+  const [incomeGoal, setIncomeGoal] = useState(0);
   const [incomeByStore, setIncomeByStore] = useState<
     { name: string; value: number }[]
   >([]);
@@ -83,19 +85,21 @@ const Income = () => {
 
         setActualIncome(success.actualIncome);
         setExpectedIncome(success.expectedIncome);
+        setIncomeGoal(success.incomeGoal);
         setIncomeByStore(
           success.breakdown.map((b) => ({
             name: b.key,
             value: b.income,
           }))
-          
         );
+
         console.log("Dashboard API 성공", data);
       })
       .catch((err) => {
         console.error("Dashboard API 실패", err);
         setActualIncome(0);
         setExpectedIncome(0);
+        setIncomeGoal(0);
         setIncomeByStore([]);
       });
   }, [monthParam]);
@@ -111,7 +115,7 @@ const Income = () => {
       .then((res) => {
         const rows = res.data.items
           .filter((item) => item.work_date.startsWith(monthParam))
-          .map((item, idx) => ({
+          .map((item, idx): SettlementRow => ({
             id: `${item.work_date}-${idx}`,
             date: item.work_date,
             name: item.store_name,
@@ -167,7 +171,11 @@ const Income = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <IncomeGoal currentMonthIncome={actualIncome} />
+          <IncomeGoal
+            currentMonthIncome={actualIncome}
+            incomeGoal={incomeGoal}
+            onGoalChange={setIncomeGoal}
+          />
           <IncomeSummary
             expectedIncome={expectedIncome}
             currentMonthIncome={actualIncome}
