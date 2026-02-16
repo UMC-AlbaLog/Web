@@ -5,7 +5,7 @@ interface RecommendProps {
   freeSlot: string;
   recommendCount: number;
   hasWork: boolean;
-  onDetailClick: () => void;
+  onDetailClick: () => void | Promise<void>;
 }
 
 const Recommend: React.FC<RecommendProps> = ({ nickname, freeSlot, recommendCount, hasWork, onDetailClick }) => {

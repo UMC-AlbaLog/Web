@@ -53,6 +53,19 @@ export const albaService = {
       method: "POST",
       body: { albaId } 
     });
+  },
+
+  // 추천 아르바이트 공고 조회
+  getRecommendations: async () => {
+    const data = await apiRequest<TsoaResponse<any>>(
+      "/api/alba/recommend", 
+      { method: "GET" }
+    );
+
+    if (data?.resultType === "SUCCESS") {
+      return data.success || [];
+    }
+    return [];
   }
 
   

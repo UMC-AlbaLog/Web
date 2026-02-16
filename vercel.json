@@ -2,7 +2,19 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://albalog.kro.kr/:path*"
+      "destination": "https://albalog.kro.kr/api/:path*"
+    },
+    {
+      "source": "/user/:path*",
+      "destination": "https://albalog.kro.kr/user/:path*"
+    },
+    {
+      "source": "/income/:path*",
+      "destination": "https://albalog.kro.kr/income/:path*"
+    },
+    {
+      "source": "/works/:path*",
+      "destination": "https://albalog.kro.kr/works/:path*"
     },
     {
       "source": "/(.*)",

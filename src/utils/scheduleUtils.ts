@@ -5,7 +5,7 @@ export const findDynamicFreeSlot = (schedules: ScheduleItem[]) => {
 
   const now = new Date();
   const dayStart = 10 * 60;
-  const dayEnd = 22 * 60;
+  const dayEnd = 24 * 60;
 
   // 당일부터 일주일 간의 데이터를 탐색
   for (let i = 0; i < 7; i++) {
@@ -35,7 +35,7 @@ export const findDynamicFreeSlot = (schedules: ScheduleItem[]) => {
     // 마지막 일정 이후 체크
     if (dayEnd - lastEnd > maxGap) {
       maxGap = dayEnd - lastEnd;
-      bestSlot = `${dayName}요일 ${Math.floor(lastEnd / 60)}:00 - 22:00`;
+      bestSlot = `${dayName}요일 ${Math.floor(lastEnd / 60)}:00 - 24:00`;
     }
 
     if (maxGap >= 120) return bestSlot;
