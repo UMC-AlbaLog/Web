@@ -45,27 +45,24 @@ export const useHomeData = () => {
 
       // 근무 리스트 매핑
       const mappedList: Work[] = schedules.map((item: any) => {
-        const safeFormatTime = (timeStr: string) => {
-          if (!timeStr) return "00:00";
-          if (timeStr.includes(':')) {
-            const parts = timeStr.split(':');
-            const timePart = parts[0].includes('T') ? parts[0].split('T')[1] : parts[0];
-            return `${timePart.padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
-          }
-          return "00:00";
+        const safeFormatTime = (iso: string) => {
+          if (!iso) return "00:00";
+          const timePart = iso.includes('T') ? iso.split('T')[1] : iso;
+          const [hours, minutes] = timePart.split(':');
+          return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
         };
 
         return {
           id: item.workLogId || item.id,
-          name: item.storeName || item.workplace || "알바 매장",
-          category: item.storeCategory || "기타",
+          name: item.workplace || item.storeName || "알바 매장",
+          category: item.category || item.storeCategory || "아르바이트",
           time: `${safeFormatTime(item.startTime)} ~ ${safeFormatTime(item.endTime)}`,
           duration: item.workHours || 0,
           pay: item.hourlyWage || 0,
           expectedPay: item.totalWage || 0,
           status: item.status,
           statusLabel: item.statusLabel,
-          address: item.storeAddress || item.address || "",
+          address: item.address || item.storeAddress || "",
           date: item.workDate || new Date().toISOString().split('T')[0],
         };
       });
@@ -122,12 +119,14 @@ export const useHomeData = () => {
         try {
           if (currentStatus === 'scheduled') {
             await workService.checkIn(id);
+            setWorkList(prev => prev.map(w => w.id === id ? { ...w, status: 'working' } : w));
             alert("출근 처리가 완료되었습니다.");
           } else if (currentStatus === 'working') {
             await workService.checkOut(id); 
+            setWorkList(prev => prev.map(w => w.id === id ? { ...w, status: 'done' } : w));
             alert("퇴근 처리가 완료되었습니다.");
           }
-          await fetchData();
+          setTimeout(() => fetchData(), 500);
         } catch (error) { 
           console.error("출퇴근 처리 실패:", error);
           alert("처리에 실패했습니다. (유효한 근무 기록이 아닐 수 있습니다.)"); 

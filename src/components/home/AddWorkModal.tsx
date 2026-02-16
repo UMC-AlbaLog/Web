@@ -8,6 +8,8 @@ export interface AddWorkRequest {
   endTime: string;
   hourlyWage: number;
   memo: string;
+  category: string;
+  address: string;
 }
 
 interface AddWorkModalProps {
@@ -37,7 +39,9 @@ const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
       startTime: states.startTime,
       endTime: states.endTime,
       hourlyWage: states.pay,
-      memo: states.memo
+      memo: states.memo,
+      category: states.category,
+      address: states.address
     });
     
     if (success) onClose();
