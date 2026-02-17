@@ -41,7 +41,7 @@ const Header: React.FC = () => {
 
   const pageTitle = getPageTitle();
 
-  const name = profile?.userName ?? "유엠시";
+  const name = profile?.userName ?? "UMC";
   const image =
     profile?.profileImage ?? "https://placehold.co/40x40";
 
