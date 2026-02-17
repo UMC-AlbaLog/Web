@@ -17,10 +17,13 @@ export const useHomeData = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
+      
+      const timestamp = new Date().getTime();
+
       // 근무 정보와 정산 내역
       const [s, schedules, settlementData] = await Promise.all([
-        workService.getTodaySummary(),
-        workService.getTodayWorkLogs(),
+        workService.getTodaySummary(timestamp),
+        workService.getTodayWorkLogs(timestamp),
         getSettlementHistory("all").catch(() => ({ settlements: [] })) 
       ]);
 
@@ -39,7 +42,7 @@ export const useHomeData = () => {
       // 알림 요약 세팅 (정산 대기 연동)
       setNotifSummary({
         scheduled: schedules.filter((item: any) => item.status === 'scheduled').length,
-        completed: schedules.filter((item: any) => ['completed', 'done', 'working'].includes(item.status)).length,
+        completed: schedules.filter((item: any) => ['completed', 'done', 'settled'].includes(item.status)).length,
         pending: pendingSettlementCount,
       });
 
@@ -112,7 +115,7 @@ export const useHomeData = () => {
       fetchData,
       handleAddWork: async (data: AddWorkRequest) => {
         await workService.addSchedule(data);
-        await fetchData();
+        setTimeout(() => fetchData(), 1000);
         return true;
       },
       handleAction: async (id: string, currentStatus: string) => { 
@@ -129,7 +132,8 @@ export const useHomeData = () => {
           setTimeout(() => fetchData(), 1500);
         } catch (error) { 
           console.error("출퇴근 처리 실패:", error);
-          alert("처리에 실패했습니다. (유효한 근무 기록이 아닐 수 있습니다.)"); 
+          alert("처리에 실패했습니다."); 
+          fetchData();
         }
       },
     }

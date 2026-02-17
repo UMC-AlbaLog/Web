@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useWorkForm } from "../../hooks/useWorkForm";
+import CalendarModal from "../CalendarModal"; 
 
 export interface AddWorkRequest {
   workplace: string;
@@ -19,14 +20,13 @@ interface AddWorkModalProps {
 
 const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
   const { states, setters, actions } = useWorkForm();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     if (!states.searchKeyword.trim()) return;
-
     const timer = setTimeout(() => {
       actions.handleSearch(states.searchKeyword);
     }, 500);
-
     return () => clearTimeout(timer);
   }, [states.searchKeyword]);
 
@@ -55,6 +55,7 @@ const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
       <div className="bg-white rounded-4xl w-150 p-9 shadow-2xl relative flex flex-col">
         <button onClick={onClose} className="absolute right-8 top-8 text-2xl text-gray-400 hover:text-black">&times;</button>
         <h2 className="text-xl font-black mb-6 text-gray-900 text-left">알바 일정 추가</h2>
+        
         <div className="space-y-5">
           <div className="relative">
             <label className={labelStyle}>근무지</label>
@@ -68,11 +69,7 @@ const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
             {states.searchResults.length > 0 && (
               <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-lg max-h-40 overflow-y-auto">
                 {states.searchResults.map((place: any, i: number) => (
-                  <div 
-                    key={i} 
-                    onClick={() => actions.handleSelectPlace(place)} 
-                    className="p-3 hover:bg-[#F2F3FF] cursor-pointer border-b border-gray-50 last:border-0 text-left transition-colors"
-                  >
+                  <div key={i} onClick={() => actions.handleSelectPlace(place)} className="p-3 hover:bg-[#F2F3FF] cursor-pointer border-b border-gray-50 last:border-0 text-left transition-colors">
                     <p className="text-sm font-bold text-gray-800">{place.placeName}</p>
                     <p className="text-[10px] text-gray-400">{place.addressName}</p>
                   </div>
@@ -83,44 +80,66 @@ const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
               {states.name} ({states.category})
             </div>}
           </div>
+
           <div className="grid grid-cols-2 gap-5">
-            <div className="text-left">
+            <div className="text-left relative">
               <label className={labelStyle}>날짜</label>
-              <input type="date" 
-                     value={states.date} 
-                     onChange={(e) => setters.setDate(e.target.value)} 
-                     className={inputStyle}
-               />
+              <div 
+                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                className={`${inputStyle} cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-colors`}
+              >
+                <span>{states.date || "날짜 선택"}</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              
+              <CalendarModal 
+                isOpen={isCalendarOpen}
+                onClose={() => setIsCalendarOpen(false)}
+                selectedDate={states.date}
+                onSelectDate={(date) => {
+                  setters.setDate(date);
+                  setIsCalendarOpen(false);
+                }}
+              />
             </div>
+
             <div className="text-left">
               <label className={labelStyle}>시간</label>
               <div className="flex items-center justify-around bg-white rounded-xl border border-gray-300 px-1.5 h-10.5">
-                <div className="flex items-center gap-0.5 flex-1">
-                  <input type="time" 
-                         value={states.startTime} 
-                         onChange={(e) => setters.setStartTime(e.target.value)} 
-                         className="w-full outline-none border-none text-sm font-bold bg-transparent text-center p-0"
-                   />
-                </div>
+                <input 
+                  type="time" 
+                  value={states.startTime} 
+                  onChange={(e) => 
+                    setters.setStartTime(e.target.value)
+                  } 
+                  className="w-full outline-none border-none text-sm font-bold bg-transparent text-center p-0"
+                 />
                 <span className="text-gray-400 font-bold mx-0.5 text-xs">→</span>
-                <div className="flex items-center gap-0.5 flex-1">
-                  <input type="time" 
-                         value={states.endTime} 
-                         onChange={(e) => setters.setEndTime(e.target.value)} 
-                         className="w-full outline-none border-none text-sm font-bold bg-transparent text-center p-0"
-                   />
-                </div>
+                <input 
+                  type="time" 
+                  value={states.endTime} 
+                  onChange={(e) => 
+                    setters.setEndTime(e.target.value)
+                  } 
+                  className="w-full outline-none border-none text-sm font-bold bg-transparent text-center p-0"
+                 />
               </div>
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-5">
             <div className="text-left">
               <label className={labelStyle}>시급</label>
               <div className="relative flex items-center">
-                <input type="number" 
-                       value={states.pay} 
-                       onChange={(e) => setters.setPay(Number(e.target.value))} 
-                       className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                <input 
+                  type="number" 
+                  value={states.pay} 
+                  onChange={(e) => 
+                    setters.setPay(Number(e.target.value))
+                  } 
+                  className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                  />
                 <span className="absolute right-3 text-sm font-bold text-gray-800">원</span>
               </div>
@@ -133,16 +152,25 @@ const AddWorkModal: React.FC<AddWorkModalProps> = ({ onAdd, onClose }) => {
               </div>
             </div>
           </div>
+
           <div className="text-left">
             <label className={labelStyle}>메모</label>
-            <textarea value={states.memo} 
-                      onChange={(e) => setters.setMemo(e.target.value)} 
-                      placeholder="예) 휴게 30분 포함, 대타 근무" 
-                      className={`${inputStyle} h-16 resize-none py-2`}
+            <textarea 
+              value={states.memo} 
+              onChange={(e) => 
+                setters.setMemo(e.target.value)
+              } 
+              placeholder="예) 휴게 30분 포함, 대타 근무" 
+              className={`${inputStyle} h-16 resize-none py-2`}
              />
           </div>
         </div>
-        <button onClick={handleSubmit} className="w-full bg-[#5D5FEF] text-white py-4 rounded-2xl font-black text-lg mt-7 hover:bg-[#4A4BCF] shadow-lg transition-all active:scale-95">일정 추가하기</button>
+        
+        <button 
+          onClick={handleSubmit} 
+          className="w-full bg-[#5D5FEF] text-white py-4 rounded-2xl font-black text-lg mt-7 hover:bg-[#4A4BCF] shadow-lg transition-all active:scale-95">
+            일정 추가하기
+        </button>
       </div>
     </div>
   );
