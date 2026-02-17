@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import NotificationModal from "./NotificationModal";
 import { getProfile } from "../api/profile";
 import type { ProfileData } from "../api/profile";
- // 경로 맞게 수정
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -13,25 +12,21 @@ const Header: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  const userId = sessionStorage.getItem("userId");
-
   /* ============================= */
   /* 프로필 API 호출 */
   /* ============================= */
   useEffect(() => {
-    if (!userId) return;
-
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       try {
-        const data = await getProfile(userId);
+        const data = await getProfile();  // ✅ Profile 페이지와 동일
         setProfile(data);
       } catch (err) {
-        console.error("프로필 불러오기 실패:", err);
+        console.error("헤더 프로필 불러오기 실패:", err);
       }
     };
 
-    fetchProfile();
-  }, [userId]);
+    loadProfile();
+  }, []);
 
   const getPageTitle = () => {
     if (location.pathname.startsWith("/profile")) return "프로필";
@@ -54,7 +49,6 @@ const Header: React.FC = () => {
       )}
 
       <div className="flex items-center gap-6 ml-auto">
-        {/* 알림 버튼 */}
         <button
           type="button"
           onClick={() => setIsNotificationOpen(true)}
@@ -68,7 +62,6 @@ const Header: React.FC = () => {
           onClose={() => setIsNotificationOpen(false)}
         />
 
-        {/* 프로필 */}
         <button
           type="button"
           onClick={() => setOpen((prev) => !prev)}
@@ -90,7 +83,6 @@ const Header: React.FC = () => {
         </button>
       </div>
 
-      {/* 드롭다운 */}
       {open && (
         <div className="absolute right-4 top-full mt-2 w-56 bg-white border rounded-xl shadow-lg p-3 z-50">
           <p className="text-sm font-semibold text-gray-800">
