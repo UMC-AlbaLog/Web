@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NotificationModal from "./NotificationModal";
-import { getProfile, ProfileData } from "../api/profile"; // 경로 맞게 수정
+import { getProfile } from "../api/profile";
+import type { ProfileData } from "../api/profile";
+ // 경로 맞게 수정
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -39,7 +41,7 @@ const Header: React.FC = () => {
 
   const pageTitle = getPageTitle();
 
-  const name = profile?.userName ?? "유엠씨";
+  const name = profile?.userName ?? "유엠시";
   const image =
     profile?.profileImage ?? "https://placehold.co/40x40";
 
