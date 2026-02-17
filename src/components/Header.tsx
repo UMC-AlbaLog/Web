@@ -23,7 +23,7 @@ const Header: React.FC = () => {
 
     const fetchProfile = async () => {
       try {
-        const data = await getProfile(userId);
+        const data = await getProfile();
         setProfile(data);
       } catch (err) {
         console.error("프로필 불러오기 실패:", err);
