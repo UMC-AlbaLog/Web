@@ -77,7 +77,7 @@ const OnboardingRegion = () => {
 
       const query = `${selectedSido} ${selectedGugun}`;
 
-      // 1️⃣ region_id 조회
+      // 1️ region_id 조회
       const results = await searchRegion(query);
 
       if (!results || results.length === 0) {
@@ -87,10 +87,10 @@ const OnboardingRegion = () => {
 
       const regionId = results[0].region_id;
 
-      // 2️⃣ DB 저장
+      // 2️ DB 저장
       await saveUserRegion(regionId);
 
-      // 3️⃣ 저장 성공 후 홈 이동
+      // 3️ 저장 성공 후 홈 이동
       navigate("/home", { replace: true });
 
     } catch (err) {

@@ -16,6 +16,7 @@ interface IncomeDashboardApiResponse {
     actualIncome: number;
     expectedIncome: number;
     incomeGoal: number;
+    incomeChangeRate: number;
     breakdown: {
       key: string;
       income: number;
@@ -47,7 +48,7 @@ interface SettlementRow {
 
 const Income = () => {
   const now = new Date();
-
+const [incomeChangeRate, setIncomeChangeRate] = useState(0);
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
 
@@ -86,6 +87,7 @@ const Income = () => {
         setActualIncome(success.actualIncome);
         setExpectedIncome(success.expectedIncome);
         setIncomeGoal(success.incomeGoal);
+         setIncomeChangeRate(success.incomeChangeRate);
         setIncomeByStore(
           success.breakdown.map((b) => ({
             name: b.key,
@@ -179,7 +181,7 @@ const Income = () => {
           <IncomeSummary
             expectedIncome={expectedIncome}
             currentMonthIncome={actualIncome}
-            monthOverMonthGrowth={0}
+             monthOverMonthGrowth={incomeChangeRate}
           />
           <IncomeChart incomeByStore={incomeByStore} />
         </div>
