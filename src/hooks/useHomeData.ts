@@ -18,12 +18,10 @@ export const useHomeData = () => {
     try {
       setIsLoading(true);
       
-      const timestamp = new Date().getTime();
-
       // 근무 정보와 정산 내역
       const [s, schedules, settlementData] = await Promise.all([
-        workService.getTodaySummary(timestamp),
-        workService.getTodayWorkLogs(timestamp),
+        workService.getTodaySummary(), // 📍 인자 제거 (404 방지)
+        workService.getTodayWorkLogs(), // 📍 인자 제거
         getSettlementHistory("all").catch(() => ({ settlements: [] })) 
       ]);
 

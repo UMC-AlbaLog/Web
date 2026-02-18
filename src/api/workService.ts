@@ -3,14 +3,14 @@ import api from './client';
 
 export const workService = {
   // 오늘의 근무 요약
-  getTodaySummary: async (t?: number) => {
-    const res = await api.get(`/works/today/summary${t ? `?t=${t}` : ''}`);
+  getTodaySummary: async () => {
+    const res = await api.get('/works/today/summary');
     return res.data.success || res.data;
   },
 
   // 오늘의 근무 리스트
-  getTodayWorkLogs: async (t?: number) => {
-    const res = await api.get(`/api/work-logs/today${t ? `?t=${t}` : ''}`);
+  getTodayWorkLogs: async () => {
+    const res = await api.get('/api/work-logs/today');
     return res.data.success?.schedules || [];
   },
 
@@ -28,7 +28,7 @@ export const workService = {
 
   // 퇴근하기 
   checkOut: async (workLogId: string) => {
-    const res = await api.patch(`/api/work-logs/work-logs/${workLogId}/check-out`);
+    const res = await api.patch(`/api/work-logs/${workLogId}/check-out`);
     return res.data.success || res.data;
   }
 };
