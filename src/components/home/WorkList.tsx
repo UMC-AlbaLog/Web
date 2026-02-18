@@ -36,7 +36,7 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction }) => {
 
   return (
     <div 
-      onClick={() => isDone && navigate(`/review/${id}`)}
+      onClick={() => isDone && navigate(`/review/write/${id}`)}
       className={`bg-white p-8 rounded-[35px] relative border border-gray-50 transition-all ${
         isDone ? 'opacity-60 cursor-pointer hover:bg-gray-50' : 'shadow-sm hover:shadow-md'
       }`}

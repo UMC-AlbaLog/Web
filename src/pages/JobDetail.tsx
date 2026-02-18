@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useJobDetail } from "../hooks/useJobDetail";
 import { albaService } from "../api/albaService";
 import ApplyConfirmModal from "../components/jobs/ApplyConfirmModal";
+import KakaoMap from "../components/KakaoMap";
 
 const JobDetail: React.FC = () => {
   const { id } = useParams();
@@ -61,11 +62,15 @@ const JobDetail: React.FC = () => {
               </button>
             </div>
             <p className="text-gray-700 text-[15px] font-bold">{job.storeAddress || "주소 정보 없음"}</p>
-            <div className="w-full h-80 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative">
-              <div className="absolute inset-0 flex items-center justify-center font-bold text-gray-300">
-                지도를 불러오는 중입니다
+              <div className="w-full h-80 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative">
+                {job.storeAddress ? (
+                  <KakaoMap address={job.storeAddress} storeName={job.storeName} />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center font-bold text-gray-300">
+                    주소 정보가 없어 지도를 불러올 수 없습니다
+                  </div>
+                )}
               </div>
-            </div>
           </section>
 
           <section className="space-y-10 border-t border-gray-100 pt-12">
@@ -116,7 +121,7 @@ const JobDetail: React.FC = () => {
             try {
               await albaService.applyAlba(id!); 
               alert("지원이 완료되었습니다.");
-              navigate("/alba/status");
+              navigate("/jobs/status");
             } catch (e) { 
               alert("이미 지원했거나 오류가 발생했습니다."); 
             }

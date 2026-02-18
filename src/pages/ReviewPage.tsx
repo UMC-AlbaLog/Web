@@ -100,7 +100,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
 
     try {
       const body = {
-        storeId: storeId!,
+        storeId: jobInfo?.storeId || storeId!,
         kindness: selectedKeywords.kindness ? rating : 0,
         communication: selectedKeywords.communication ? rating : 0,
         settlement: selectedKeywords.settlement ? rating : 0,
@@ -118,11 +118,27 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
   return (
     <main className="min-h-screen bg-[#F1F3F9] p-12 font-['Pretendard'] text-left">
       <div className={`max-w-${mode === 'write' ? '6xl' : '4xl'} mx-auto`}>
-        <header className="mb-10">
-          <h1 className="text-[32px] font-black text-gray-900 mb-2">
-            {mode === 'view' ? `근무지 평가 > ${jobInfo?.storeName || "매장"}` : "리뷰 쓰기"}
-          </h1>
-          {mode === 'write' && <p className="text-gray-400 font-bold">완료한 근무에 대해 솔직한 후기를 남겨주세요.</p>}
+        <header className="mb-10 flex items-center gap-4">
+          {mode === 'view' && (
+            <button 
+              onClick={() => navigate(-1)} 
+              className="group p-2 -ml-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-all active:scale-95"
+              aria-label="뒤로 가기"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18L9 12L15 6" stroke="#4B5563" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+          
+          <div>
+            <h1 className="text-[32px] font-black text-gray-900">
+              {mode === 'view' ? `근무지 평가 > ${jobInfo?.storeName || "매장"}` : "리뷰 쓰기"}
+            </h1>
+            {mode === 'write' && (
+              <p className="text-gray-400 font-bold mt-2">완료한 근무에 대해 솔직한 후기를 남겨주세요.</p>
+            )}
+          </div>
         </header>
 
         <div className={`grid ${mode === 'write' ? 'grid-cols-[1fr_320px]' : 'grid-cols-1'} gap-10 items-start`}>
