@@ -24,7 +24,7 @@ const GlobalAuthGuard = ({ children }: Props) => {
       sessionStorage.setItem("refreshToken", refreshToken);
     }
 
-    // URL 정리
+    // URL 정리 (쿼리만 제거, pathname은 그대로 유지 → /income 새로고침 시 유지)
     if (accessToken || refreshToken) {
       window.history.replaceState({}, document.title, location.pathname);
     }
@@ -32,15 +32,23 @@ const GlobalAuthGuard = ({ children }: Props) => {
     setIsReady(true);
   }, [location.pathname]);
 
-  if (!isReady) return null; // 🔥 토큰 세팅 끝날 때까지 대기
+  // 로딩 중에는 null 대신 짧은 로딩 UI로 깜빡임/잘못된 라우트 방지
+  if (!isReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <span className="text-slate-400 text-sm">로딩 중...</span>
+      </div>
+    );
+  }
 
   const token = sessionStorage.getItem("accessToken");
-  const publicPaths = ["/", "/login"];
+  const publicPaths = ["/", "/login", "/signup", "/onboarding"];
 
   if (!token && !publicPaths.includes(location.pathname)) {
     return <Navigate to="/login" replace />;
   }
 
+  // 로그인 페이지에 토큰이 있을 때만 /home으로 (OAuth 콜백 등). /income 등 다른 경로는 절대 건드리지 않음
   if (token && location.pathname === "/login") {
     return <Navigate to="/home" replace />;
   }
