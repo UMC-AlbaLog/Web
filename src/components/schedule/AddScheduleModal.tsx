@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import type { ScheduleItem, Workplace } from "../../types/schedule";
 import { calculateDuration } from "../../utils/scheduleUtils";
 import AddWorkplaceModal from "./AddWorkplaceModal";
@@ -39,8 +39,8 @@ const AddScheduleModal = ({
   }, [hourlyWage, hours]);
 
   const toggleRepeatDay = (dayIndex: number) => {
-    setRepeatDays((prev: number[]) =>
-      prev.includes(dayIndex) ? prev.filter((d: number) => d !== dayIndex) : [...prev, dayIndex].sort((a, b) => a - b)
+    setRepeatDays((prev) =>
+      prev.includes(dayIndex) ? prev.filter((d) => d !== dayIndex) : [...prev, dayIndex].sort((a, b) => a - b)
     );
   };
 
@@ -72,196 +72,212 @@ const AddScheduleModal = ({
     onSave(newSchedule);
   };
 
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      if ((e.target as HTMLElement).getAttribute("data-modal-backdrop") === "true") {
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
   return (
-    <div
-      data-modal-backdrop="true"
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4"
-      onClick={handleBackdropClick}
-      role="presentation"
-    >
-      <div
-        className="flex w-[797px] max-w-[95vw] flex-col items-start overflow-hidden rounded-xl bg-white p-8 shadow-lg"
-        style={{
-          maxHeight: "80vh",
-          height: "80vh",
-          boxSizing: "border-box",
-        }}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-schedule-title"
-        data-modal-version="2025-02"
-      >
-        {/* 헤더 - 닫기 버튼 항상 보이게 */}
-        <div className="flex shrink-0 items-center justify-between self-stretch border-b border-gray-100 pb-4">
-          <h2 id="add-schedule-title" className="text-base font-semibold text-gray-900">
-            새 알바 일정 추가
-          </h2>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-            >
-              닫기
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-2xl text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-              aria-label="닫기"
-            >
-              ×
-            </button>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-[480px] max-w-[95vw] max-h-[90vh] flex flex-col overflow-hidden rounded-[10px] bg-white px-6 py-8 shadow-[0px_10px_25px_0px_rgba(0,0,0,0.15)]">
+        {/* 헤더 */}
+        <div className="flex shrink-0 items-center justify-between self-stretch">
+          <h2 className="font-['Pretendard'] text-xl font-semibold text-slate-900">새 알바 일정 추가</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-6 w-6 items-center justify-center text-slate-500 hover:text-slate-700"
+            aria-label="닫기"
+          >
+            <span className="text-xl leading-none">×</span>
+          </button>
         </div>
 
-        {/* 스크롤 영역 - 높이 제한으로 내부만 스크롤 */}
-        <div
-          className="mt-4 flex flex-1 flex-col gap-6 self-stretch overflow-y-auto overflow-x-hidden"
-          style={{ minHeight: 0, WebkitOverflowScrolling: "touch" }}
-        >
+        <div className="mt-6 flex flex-1 flex-col items-start gap-6 overflow-y-auto min-h-0">
           {/* 1. 근무지 선택 */}
-          <div className="self-stretch flex flex-col gap-2">
-            <label className="text-gray-700 text-xs font-medium font-['Pretendard']">근무지</label>
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedWorkplace}
-                onChange={(e) => setSelectedWorkplace(e.target.value)}
-                className="flex-1 min-w-0 h-10 px-4 bg-white rounded-lg border border-black/10 text-black text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="">선택</option>
-                {workplaces.map((wp) => (
-                  <option key={wp.id} value={wp.id}>{wp.name}</option>
-                ))}
-              </select>
+          <div className="flex w-full flex-col items-start gap-3">
+            <div className="font-['Pretendard'] text-base font-semibold text-slate-900">1. 근무지 선택</div>
+            <div className="inline-flex w-full flex-wrap items-center gap-3">
+              {workplaces.map((wp) => (
+                <button
+                  key={wp.id}
+                  type="button"
+                  onClick={() => setSelectedWorkplace(wp.id)}
+                  className={`flex h-10 items-center justify-center rounded-md px-4 py-2.5 font-['Pretendard'] text-base font-medium ${
+                    selectedWorkplace === wp.id
+                      ? "bg-indigo-100 text-indigo-800"
+                      : "bg-slate-100 text-black hover:bg-slate-200"
+                  }`}
+                >
+                  {wp.name}
+                </button>
+              ))}
               <button
                 type="button"
                 onClick={() => setShowWorkplaceModal(true)}
-                className="text-indigo-600 text-xs hover:underline shrink-0"
+                className="flex h-10 items-center justify-center rounded-md bg-slate-100 px-4 py-2.5 font-['Pretendard'] text-base font-medium text-black hover:bg-slate-200"
               >
                 + 새 알바 등록하기
               </button>
             </div>
           </div>
 
-          {/* 2. 날짜 · 시간 */}
-          <div className="self-stretch flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:gap-4">
-            <div className="flex-1 min-w-[200px] flex flex-col gap-2">
-              <label className="text-gray-700 text-xs font-medium font-['Pretendard']">날짜</label>
+          {/* 2. 날짜 선택 */}
+          <div className="flex w-full flex-col items-start gap-3">
+            <div className="font-['Pretendard'] text-base font-semibold text-slate-900">2. 날짜 선택</div>
+            <div className="inline-flex w-full items-center gap-3">
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full h-10 px-4 bg-white rounded-lg border border-black/10 text-black text-sm focus:ring-2 focus:ring-indigo-500"
+                className="h-10 w-56 rounded-md border-0 bg-slate-100 px-4 py-2 font-['Pretendard'] text-base font-medium text-black focus:ring-2 focus:ring-indigo-500"
               />
+              <span className="flex h-10 items-center rounded-md bg-slate-100 px-4 py-2.5 font-['Pretendard'] text-base font-medium text-black pointer-events-none">
+                달력
+              </span>
             </div>
-            <div className="w-48 flex flex-col gap-2">
-              <label className="text-gray-700 text-xs font-medium font-['Pretendard']">시작 시간</label>
+          </div>
+
+          {/* 3. 시간 선택 */}
+          <div className="flex w-full flex-col items-start gap-3">
+            <div className="font-['Pretendard'] text-base font-semibold text-slate-900">3. 시간 선택</div>
+            <div className="inline-flex w-full items-center gap-3">
+              <span className="font-['Pretendard'] text-base font-medium text-black">시작</span>
               <input
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full h-10 px-4 bg-white rounded-lg border border-black/10 text-black text-sm focus:ring-2 focus:ring-indigo-500"
+                className="h-10 min-w-[140px] w-36 rounded-md border-0 bg-slate-100 px-4 py-2 font-['Pretendard'] text-base font-medium text-black"
               />
-            </div>
-            <div className="w-48 flex flex-col gap-2">
-              <label className="text-gray-700 text-xs font-medium font-['Pretendard']">종료 시간</label>
+              <span className="pl-3 font-['Pretendard'] text-base font-medium text-black">끝</span>
               <input
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full h-10 px-4 bg-white rounded-lg border border-black/10 text-black text-sm focus:ring-2 focus:ring-indigo-500"
+                className="h-10 min-w-[140px] w-36 rounded-md border-0 bg-slate-100 px-4 py-2 font-['Pretendard'] text-base font-medium text-black"
               />
             </div>
           </div>
 
-          {/* 3. 반복 설정 */}
-          <div className="self-stretch flex flex-col gap-4">
-            <div className="inline-flex items-center gap-2">
-              <span className="text-indigo-600 text-base" aria-hidden>🔄</span>
-              <div className="text-gray-900 text-base font-semibold font-['Pretendard']">반복 설정</div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                {(["none", "daily", "weekly", "biweekly"] as const).map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setRepeatType(type)}
-                    className={`px-4 py-2 rounded-[20px] text-xs font-medium outline outline-1 outline-offset-[-1px] ${
-                      repeatType === type
-                        ? "bg-violet-50 text-indigo-600 outline-indigo-600"
-                        : "text-gray-500 outline-black/10 hover:bg-slate-50"
-                    }`}
-                  >
-                    {type === "none" ? "없음" : type === "daily" ? "매일" : type === "weekly" ? "매주" : "격주"}
-                  </button>
-                ))}
+          {/* 4. 반복 설정 */}
+          <div className="flex w-full flex-col items-start gap-3">
+            <div className="font-['Pretendard'] text-base font-semibold text-slate-900">4. 반복 설정</div>
+            <div className="flex w-full flex-col items-start gap-2.5">
+              <div className="inline-flex w-full items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRepeatType("none")}
+                  className={`rounded-2xl px-4 pt-1.5 pb-2 font-['Pretendard'] text-sm font-medium min-w-14 h-8 ${
+                    repeatType === "none"
+                      ? "bg-indigo-100 text-indigo-800"
+                      : "bg-slate-100 text-black hover:bg-slate-200"
+                  }`}
+                >
+                  없음
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRepeatType("daily")}
+                  className={`rounded-2xl px-4 pt-1.5 pb-2 font-['Pretendard'] text-sm font-medium min-w-14 h-8 ${
+                    repeatType === "daily"
+                      ? "bg-indigo-100 text-indigo-800"
+                      : "bg-slate-100 text-black hover:bg-slate-200"
+                  }`}
+                >
+                  매일
+                </button>
               </div>
-              {(repeatType === "weekly" || repeatType === "biweekly") && (
-                <div className="flex gap-3">
+              <div className="inline-flex w-full items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRepeatType("weekly")}
+                  className={`shrink-0 rounded-2xl px-4 pt-1.5 pb-2 font-['Pretendard'] text-sm font-medium min-w-14 h-8 ${
+                    repeatType === "weekly"
+                      ? "bg-indigo-100 text-indigo-800"
+                      : "bg-slate-100 text-black hover:bg-slate-200"
+                  }`}
+                >
+                  매주
+                </button>
+                <div className="flex items-start gap-1.5">
                   {DAY_INDICES.map((dayIndex, i) => (
                     <button
                       key={dayIndex}
                       type="button"
-                      onClick={() => toggleRepeatDay(dayIndex)}
-                      className={`w-8 h-8 rounded-[20px] flex justify-center items-center text-xs font-medium outline outline-1 outline-offset-[-1px] ${
-                        repeatDays.includes(dayIndex)
-                          ? "bg-violet-50 text-indigo-600 outline-indigo-600"
-                          : "text-gray-500 outline-black/10 hover:bg-slate-50"
+                      onClick={() => repeatType === "weekly" && toggleRepeatDay(dayIndex)}
+                      className={`flex h-7 w-7 items-center justify-center rounded-2xl font-['Pretendard'] text-xs font-medium outline outline-1 outline-offset-[-1px] outline-slate-50 ${
+                        repeatType === "weekly" && repeatDays.includes(dayIndex)
+                          ? "bg-indigo-100 text-indigo-800 outline-indigo-200"
+                          : "bg-violet-50 text-black hover:bg-violet-100"
                       }`}
                     >
                       {DAY_LABELS[i]}
                     </button>
                   ))}
                 </div>
-              )}
+              </div>
+              <div className="inline-flex w-full items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRepeatType("biweekly")}
+                  className={`shrink-0 rounded-2xl px-4 pt-1.5 pb-2 font-['Pretendard'] text-sm font-medium min-w-14 h-8 ${
+                    repeatType === "biweekly"
+                      ? "bg-indigo-100 text-indigo-800"
+                      : "bg-slate-100 text-black hover:bg-slate-200"
+                  }`}
+                >
+                  격주
+                </button>
+                <div className="flex items-start gap-1.5">
+                  {DAY_INDICES.map((dayIndex, i) => (
+                    <button
+                      key={`bi-${dayIndex}`}
+                      type="button"
+                      onClick={() => repeatType === "biweekly" && toggleRepeatDay(dayIndex)}
+                      className={`flex h-7 w-7 items-center justify-center rounded-2xl font-['Pretendard'] text-xs font-medium outline outline-1 outline-offset-[-1px] outline-slate-50 ${
+                        repeatType === "biweekly" && repeatDays.includes(dayIndex)
+                          ? "bg-indigo-100 text-indigo-800 outline-indigo-200"
+                          : "bg-violet-50 text-black hover:bg-violet-100"
+                      }`}
+                    >
+                      {DAY_LABELS[i]}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 4. 시급 · 메모 */}
-          <div className="self-stretch flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:gap-4">
-            <div className="flex-1 min-w-[200px] flex flex-col gap-2">
-              <label className="text-gray-700 text-xs font-medium font-['Pretendard']">시급</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={hourlyWage}
-                  onChange={(e) => handleWageChange(e.target.value)}
-                  placeholder="0"
-                  className="flex-1 min-w-0 h-10 px-4 bg-white rounded-lg border border-black/10 text-black text-sm text-right focus:ring-2 focus:ring-indigo-500"
-                />
-                <span className="text-gray-600 text-sm">원</span>
-                <span className="text-gray-500 text-xs">예상 {estimatedSalary.toLocaleString()}원</span>
-              </div>
-            </div>
-            <div className="flex-1 min-w-[200px] flex flex-col gap-2">
-              <label className="text-gray-700 text-xs font-medium font-['Pretendard']">메모</label>
+          {/* 5. 시급 입력 */}
+          <div className="flex w-full flex-col items-start gap-3">
+            <div className="font-['Pretendard'] text-base font-semibold text-slate-900">5. 시급 입력</div>
+            <div className="inline-flex w-full flex-wrap items-center gap-2">
               <input
                 type="text"
-                value={memo}
-                onChange={(e) => setMemo(e.target.value)}
-                placeholder="메모를 입력하세요"
-                className="w-full h-10 px-4 bg-white rounded-lg border border-black/10 text-black text-sm focus:ring-2 focus:ring-indigo-500"
+                inputMode="numeric"
+                value={hourlyWage}
+                onChange={(e) => handleWageChange(e.target.value)}
+                placeholder="0"
+                className="h-10 w-28 rounded-md border-0 bg-slate-100 pl-4 pr-2 py-2 font-['Pretendard'] text-base font-medium text-black text-right focus:ring-2 focus:ring-indigo-500"
               />
+              <span className="font-['Pretendard'] text-base font-medium text-black">원</span>
+              <span className="font-['Pretendard'] text-base font-semibold text-black">
+                예상금액 {estimatedSalary.toLocaleString()}원
+              </span>
             </div>
+          </div>
+
+          {/* 6. 메모 */}
+          <div className="flex w-full flex-col items-start gap-3">
+            <div className="font-['Pretendard'] text-base font-semibold text-slate-900">6. 메모</div>
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder="메모를 입력하세요"
+              className="h-20 w-full resize-none rounded-lg border-0 bg-slate-100 px-4 py-3 font-['Pretendard'] text-base text-black focus:ring-2 focus:ring-indigo-500"
+              rows={3}
+            />
           </div>
 
           <button
             type="button"
             onClick={handleSubmit}
-            className="shrink-0 self-stretch h-10 flex justify-center items-center rounded-lg bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700"
+            className="h-12 w-full shrink-0 rounded-lg bg-indigo-600 pt-3.5 pb-4 font-['Pretendard'] text-base font-medium text-white hover:bg-indigo-700"
           >
             일정 추가하기
           </button>
