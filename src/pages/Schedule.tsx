@@ -376,7 +376,7 @@ const Schedule = () => {
         {/* 월 = 항상 월간 캘린더, 주 = 항상 주간 캘린더 */}
         {viewMode === 'monthly' ? (
           <>
-            <div className="flex-1 px-4 sm:px-6 pt-2 pb-4 overflow-auto min-h-0 overflow-x-auto">
+            <div className="flex-1 px-4 sm:px-6 pt-2 pb-4 overflow-auto min-h-0 overflow-x-auto min-h-[60vh]">
               <MonthlyView
                 monthInfo={monthInfo}
                 workplaces={workplaces}

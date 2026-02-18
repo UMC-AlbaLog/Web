@@ -80,7 +80,7 @@ const MonthlyView = ({
         {DAY_NAMES.map((day, index) => (
           <div
             key={index}
-            className="p-3 border-r border-gray-100 text-center text-base font-medium text-gray-600 last:border-r-0"
+            className="py-3 px-2 border-r border-gray-100 text-center text-sm sm:text-base font-medium text-gray-600 last:border-r-0"
           >
             {day}
           </div>
@@ -88,7 +88,7 @@ const MonthlyView = ({
       </div>
 
       {monthInfo.weeks.map((week, weekIndex) => (
-        <div key={weekIndex} className="grid grid-cols-7 min-h-[140px]">
+        <div key={weekIndex} className="grid grid-cols-7 min-h-[160px] sm:min-h-[180px]">
           {week.map((day, dayIndex) => {
             const dateStr = formatDate(day);
             const daySchedules = getSchedulesForDate(dateStr);
@@ -101,12 +101,12 @@ const MonthlyView = ({
             return (
               <div
                 key={dayIndex}
-                className={`min-h-[140px] p-3 border-b border-r border-gray-100 cursor-pointer hover:bg-gray-50/50 last:border-r-0 ${
+                className={`min-h-[160px] sm:min-h-[180px] p-2 sm:p-3 border-b border-r border-gray-100 cursor-pointer hover:bg-gray-50/50 last:border-r-0 ${
                   !isCurrentMonth ? 'bg-gray-50/50 text-gray-400' : ''
                 } ${isToday ? 'ring-1 ring-indigo-200 ring-inset bg-indigo-50/30' : ''}`}
                 onClick={(e) => handleCellClick(day, e)}
               >
-                <div className="text-base font-medium text-gray-700 mb-1.5">{day.getDate()}</div>
+                <div className="text-sm sm:text-base font-medium text-gray-700 mb-1.5">{day.getDate()}</div>
                 <div className="space-y-1.5">
                   {daySchedules.slice(0, 3).map((schedule) => {
                     const color = getColor(schedule, workplaces);
