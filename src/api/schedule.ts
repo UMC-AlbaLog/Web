@@ -192,7 +192,7 @@ export async function updateSchedule(id: string, updates: Partial<ScheduleItem>)
 /**
  * 스케줄 삭제
  * DELETE /user/alba/schedule/{userAlbaScheduleId}
- * 200 시 success에 삭제된 user_alba_schedule_id.
+ * @param id userAlbaScheduleId (path parameter)
  */
 export async function deleteSchedule(id: string): Promise<boolean> {
   try {

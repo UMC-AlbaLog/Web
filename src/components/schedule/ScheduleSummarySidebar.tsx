@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { ScheduleItem, Workplace } from '../../types/schedule';
 import {
   getTotalHoursForMonth,
@@ -23,6 +24,7 @@ const ScheduleSummarySidebar = ({
   month,
   onScheduleClick,
 }: ScheduleSummarySidebarProps) => {
+  const navigate = useNavigate();
   const { profile, displayName } = useUser();
   const use24Hour = getUse24HourSetting();
   const totalHours = getTotalHoursForMonth(schedules, year, month + 1);
@@ -60,10 +62,14 @@ const ScheduleSummarySidebar = ({
   ];
 
   return (
-    <aside className="w-80 shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden">
-      {/* 프로필 */}
-      <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-        <div className="flex items-center gap-1 text-gray-400">
+    <aside className="w-full lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white flex flex-col overflow-hidden min-h-0">
+      {/* 프로필 (클릭 시 프로필 페이지로) */}
+      <button
+        type="button"
+        onClick={() => navigate('/profile')}
+        className="w-full p-4 border-b border-gray-100 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-1 text-gray-400 shrink-0">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
@@ -75,10 +81,10 @@ const ScheduleSummarySidebar = ({
           <img
             src={profile.picture}
             alt=""
-            className="w-10 h-10 rounded-full object-cover border border-gray-200"
+            className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-medium">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-medium shrink-0">
             {displayName?.slice(0, 1) ?? '?'}
           </div>
         )}
@@ -86,14 +92,10 @@ const ScheduleSummarySidebar = ({
           <p className="text-sm font-semibold text-gray-800 truncate">{displayName || '사용자'}</p>
           <p className="text-xs text-gray-500">프로알바러</p>
         </div>
-        <button type="button" className="p-1 text-gray-400 hover:text-gray-600" aria-label="메뉴">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="5" r="1.5" />
-            <circle cx="12" cy="12" r="1.5" />
-            <circle cx="12" cy="19" r="1.5" />
-          </svg>
-        </button>
-      </div>
+        <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
 
       {/* N월 총 근무 시간 / 근무 일수 / 예상 급여 */}
       <div className="p-4 border-b border-gray-100">
