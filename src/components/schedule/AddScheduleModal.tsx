@@ -44,6 +44,16 @@ const AddScheduleModal = ({
     );
   };
 
+  /** 요일 클릭 시 해당 타입(매주/격주) 자동 활성화 후 요일 토글 */
+  const handleWeeklyDayClick = (dayIndex: number) => {
+    setRepeatType("weekly");
+    toggleRepeatDay(dayIndex);
+  };
+  const handleBiweeklyDayClick = (dayIndex: number) => {
+    setRepeatType("biweekly");
+    toggleRepeatDay(dayIndex);
+  };
+
   const handleWageChange = (value: string) => {
     const num = value.replace(/,/g, "").replace(/[^0-9]/g, "");
     setHourlyWage(num ? Number(num).toLocaleString() : "");
@@ -199,7 +209,7 @@ const AddScheduleModal = ({
                     <button
                       key={dayIndex}
                       type="button"
-                      onClick={() => repeatType === "weekly" && toggleRepeatDay(dayIndex)}
+                      onClick={() => handleWeeklyDayClick(dayIndex)}
                       className={`flex h-7 w-7 items-center justify-center rounded-2xl font-['Pretendard'] text-xs font-medium outline outline-1 outline-offset-[-1px] outline-slate-50 ${
                         repeatType === "weekly" && repeatDays.includes(dayIndex)
                           ? "bg-indigo-100 text-indigo-800 outline-indigo-200"
@@ -228,7 +238,7 @@ const AddScheduleModal = ({
                     <button
                       key={`bi-${dayIndex}`}
                       type="button"
-                      onClick={() => repeatType === "biweekly" && toggleRepeatDay(dayIndex)}
+                      onClick={() => handleBiweeklyDayClick(dayIndex)}
                       className={`flex h-7 w-7 items-center justify-center rounded-2xl font-['Pretendard'] text-xs font-medium outline outline-1 outline-offset-[-1px] outline-slate-50 ${
                         repeatType === "biweekly" && repeatDays.includes(dayIndex)
                           ? "bg-indigo-100 text-indigo-800 outline-indigo-200"
