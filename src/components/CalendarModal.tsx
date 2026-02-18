@@ -8,18 +8,13 @@ interface CalendarModalProps {
 }
 
 const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, selectedDate, onSelectDate }) => {
-  const getTodayKST = () => {
+  const getTodayLocal = () => {
     const now = new Date();
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
-    const kstDiff = 9 * 60 * 60 * 1000;
-    const todayKST = new Date(utc + kstDiff);
-    return { 
-      dateObj: todayKST, 
-      dateStr: `${todayKST.getFullYear()}-${String(todayKST.getMonth() + 1).padStart(2, '0')}-${String(todayKST.getDate()).padStart(2, '0')}` 
-    };
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return { dateObj: now, dateStr };
   };
 
-  const { dateObj: today, dateStr: todayStr } = getTodayKST();
+  const { dateObj: today, dateStr: todayStr } = getTodayLocal();
   const initialViewDate = selectedDate ? new Date(selectedDate) : today;
   const [viewDate, setViewDate] = useState(initialViewDate);
 

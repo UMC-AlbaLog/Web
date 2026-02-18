@@ -38,13 +38,30 @@ const Jobs: React.FC = () => {
   }, [jobs]);
 
   const filteredJobs = useMemo(() => {
+    const isSearchEmpty = !states.searchKeyword.trim();
+    const isDistanceOff = !states.isDistanceActive;
+
+    if (isSearchEmpty && isDistanceOff) {
+      return jobs;
+    }
+
     return jobs.filter((job) => {
-      if (!userLocation || !coordsMap[job.address]) return true;
-      const coords = coordsMap[job.address];
-      const dist = calculateDistance(userLocation.lat, userLocation.lng, coords.lat, coords.lng);
-      return dist <= states.distance;
+      // 검색어 필터링
+      const matchSearch = isSearchEmpty 
+        ? true 
+        : job.name.toLowerCase().includes(states.searchKeyword.toLowerCase());
+      
+      // 거리 필터링 (위치 정보 있을 때만)
+      let matchDistance = true;
+      if (states.isDistanceActive && userLocation && coordsMap[job.address]) {
+        const coords = coordsMap[job.address];
+        const dist = calculateDistance(userLocation.lat, userLocation.lng, coords.lat, coords.lng);
+        matchDistance = dist <= states.distance;
+      }
+      
+      return matchSearch && matchDistance;
     });
-  }, [jobs, userLocation, coordsMap, states.distance]);
+  }, [jobs, userLocation, coordsMap, states.distance, states.searchKeyword, states.isDistanceActive]);
 
   return (
     <main className="p-12 min-h-screen bg-[#F2F4F7] font-['Pretendard'] text-left">
