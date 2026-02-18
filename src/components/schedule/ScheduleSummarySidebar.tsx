@@ -26,6 +26,8 @@ const ScheduleSummarySidebar = ({
 }: ScheduleSummarySidebarProps) => {
   const navigate = useNavigate();
   const { profile, displayName } = useUser();
+  // 헤더와 동일한 이름 표시 (displayName || profile?.name) → '사용자' 중복/불일치 방지
+  const name = displayName || profile?.name || '프로필';
   const use24Hour = getUse24HourSetting();
   const totalHours = getTotalHoursForMonth(schedules, year, month + 1);
   const estimatedSalary = getEstimatedSalaryForMonth(schedules, year, month + 1);
@@ -63,36 +65,25 @@ const ScheduleSummarySidebar = ({
 
   return (
     <aside className="w-full lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white flex flex-col overflow-hidden min-h-0">
-      {/* 프로필 (클릭 시 프로필 페이지로) */}
+      {/* 내 프로필 링크 (헤더와 동일한 이름 사용, 중복 없이 간단히) */}
       <button
         type="button"
         onClick={() => navigate('/profile')}
-        className="w-full p-4 border-b border-gray-100 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
+        className="w-full p-3 border-b border-gray-100 flex items-center gap-2 text-left hover:bg-gray-50 transition-colors"
       >
-        <div className="flex items-center gap-1 text-gray-400 shrink-0">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
         {profile?.picture ? (
           <img
             src={profile.picture}
             alt=""
-            className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0"
+            className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-medium shrink-0">
-            {displayName?.slice(0, 1) ?? '?'}
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium shrink-0">
+            {name?.slice(0, 1) ?? '?'}
           </div>
         )}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-800 truncate">{displayName || '사용자'}</p>
-          <p className="text-xs text-gray-500">프로알바러</p>
-        </div>
-        <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span className="flex-1 min-w-0 text-sm font-medium text-gray-800 truncate">{name}</span>
+        <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
