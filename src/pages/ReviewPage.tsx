@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { apiRequest } from "../api/client";
 import { albaService } from "../api/albaService";
+import { storeReviewService } from "../api/storeReviewService";
 import RatingRow from "../components/jobs/review/RatingRow";
 import ReviewAccordion from "../components/jobs/review/ReviewAccordion";
 
@@ -13,20 +13,23 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
 
   const [loading, setLoading] = useState(true);
   const [jobInfo, setJobInfo] = useState<any>(null);
-  const [storeReviews, setStoreReviews] = useState<any>(null);
+  const [storeReviews, setStoreReviews] = useState<any[]>([]);
 
   const [rating, setRating] = useState(0);
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [reviewText, setReviewText] = useState("");
 
+  const [selectedKeywords, setSelectedKeywords] = useState<{ [key: string]: boolean }>({
+    kindness: false,
+    communication: false,
+    settlement: false,
+    rest: false
+  });
+
   const keywordOptions = [
-    { key: "settlement", label: "급여 칼지급", icon: "💰" },
     { key: "kindness", label: "사장님이 친절해요", icon: "😊" },
-    { key: "clean", label: "매장이 청결해요", icon: "🧹" },
+    { key: "communication", label: "동료가 좋아요", icon: "🙌" },
+    { key: "settlement", label: "급여 칼지급", icon: "💰" },
     { key: "rest", label: "휴게시간 준수", icon: "☕" },
-    { key: "colleague", label: "동료가 좋아요", icon: "🙌" },
-    { key: "info", label: "업무를 잘 알려줘요", icon: "🎓" },
-    { key: "subway", label: "역세권이에요", icon: "🚇" },
   ];
 
   useEffect(() => {
@@ -38,16 +41,57 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
         setJobInfo(info);
 
         if (mode === "view") {
-          const res = await apiRequest<any>(`/api/store/review/${storeId}`);
-          setStoreReviews(res.success);
+          const reviews = await storeReviewService.getStoreReviews(storeId);
+          setStoreReviews(reviews);
         }
       } catch (e) { console.error(e); } finally { setLoading(false); }
     };
     fetchData();
   }, [mode, storeId]);
 
+  const aggregatedData = useMemo(() => {
+    if (storeReviews.length === 0) return null;
+  
+    const getAverage = (fields: string[]) => {
+      let sum = 0;
+      let validCount = 0;
+
+      storeReviews.forEach(rev => {
+        fields.forEach(field => {
+          if (rev[field] > 0) {
+            sum += rev[field];
+            validCount++;
+          }
+        });
+      });
+
+      return validCount > 0 ? sum / validCount : 0;
+    };
+
+    return {
+      boss: {
+      // kindness와 communication 중 선택된 것들의 평균값 계산
+        rating: getAverage(["kindness", "communication"]),
+        keywords: [
+          storeReviews.some(r => r.kindness > 0) && "kindness",
+          storeReviews.some(r => r.communication > 0) && "communication"
+        ].filter(Boolean) as string[],
+        latestReview: storeReviews[0]?.review || "평가가 없습니다."
+      },
+      workplace: {
+      // settlement와 rest 중 선택된 것들의 평균값 계산
+        rating: getAverage(["settlement", "rest"]),
+        keywords: [
+          storeReviews.some(r => r.settlement > 0) && "settlement",
+          storeReviews.some(r => r.rest > 0) && "rest"
+        ].filter(Boolean) as string[],
+        latestReview: storeReviews[storeReviews.length - 1]?.review || "상세 후기가 없습니다."
+      }
+    };
+  }, [storeReviews]);
+
   const toggleKeyword = (key: string) => {
-    setSelectedKeywords(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+    setSelectedKeywords(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleRegisterReview = async () => {
@@ -56,16 +100,14 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
 
     try {
       const body = {
-        userId: sessionStorage.getItem("userId") || "temp_user",
-        storeId: storeId,
-        kindness: rating,
-        communication: rating,
-        settlement: rating,
-        rest: rating,
+        storeId: storeId!,
+        kindness: selectedKeywords.kindness ? rating : 0,
+        communication: selectedKeywords.communication ? rating : 0,
+        settlement: selectedKeywords.settlement ? rating : 0,
+        rest: selectedKeywords.rest ? rating : 0,
         review: reviewText,
-        keywords: selectedKeywords
       };
-      await apiRequest("/api/store/review", { method: "POST", body });
+      await storeReviewService.createReview(body);
       alert("리뷰가 등록되었습니다!");
       navigate(-1);
     } catch (e) { alert("등록 실패"); }
@@ -78,7 +120,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
       <div className={`max-w-${mode === 'write' ? '6xl' : '4xl'} mx-auto`}>
         <header className="mb-10">
           <h1 className="text-[32px] font-black text-gray-900 mb-2">
-            {mode === 'view' ? `근무지 평가 > ${jobInfo?.storeName}` : "리뷰 쓰기"}
+            {mode === 'view' ? `근무지 평가 > ${jobInfo?.storeName || "매장"}` : "리뷰 쓰기"}
           </h1>
           {mode === 'write' && <p className="text-gray-400 font-bold">완료한 근무에 대해 솔직한 후기를 남겨주세요.</p>}
         </header>
@@ -92,7 +134,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
                   <div className="w-16 h-16 bg-[#F8F9FA] rounded-2xl flex items-center justify-center text-3xl shadow-inner">🏠</div>
                   <div className="space-y-1">
                     <h3 className="text-xl font-black text-gray-800">{jobInfo?.storeName}</h3>
-                    <p className="text-sm text-gray-400 font-bold">{jobInfo?.workDate} • 마감조</p>
+                    <p className="text-sm text-gray-400 font-bold">{jobInfo?.workDate}</p>
                   </div>
                 </section>
 
@@ -111,7 +153,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
                         key={opt.key}
                         onClick={() => toggleKeyword(opt.key)}
                         className={`px-5 py-3 rounded-full border-2 text-[13px] font-bold transition-all flex items-center gap-2 ${
-                          selectedKeywords.includes(opt.key)
+                          selectedKeywords[opt.key]
                             ? 'bg-white border-[#5D5FEF] text-[#5D5FEF]'
                             : 'bg-white border-gray-100 text-gray-400 hover:border-gray-300'
                         }`}
@@ -147,18 +189,26 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
               </>
             ) : (
               <div className="max-w-3xl mx-auto space-y-6">
-                <ReviewAccordion 
-                  title="사장님 평가" 
-                  rating={storeReviews?.bossRating || 4.5} 
-                  keywords={["settlement", "kindness", "rest"]} 
-                  reviewText="친절하고 대타 쿨하게 구해주십니다!" 
-                />
-                <ReviewAccordion 
-                  title="근무지 평가" 
-                  rating={storeReviews?.storeRating || 4.5} 
-                  keywords={["clean"]} 
-                  reviewText="화장실 밖에 있어서 청소 안해도 돼요." 
-                />
+                {aggregatedData ? (
+                  <>
+                    <ReviewAccordion 
+                      title="사장님 평가" 
+                      rating={aggregatedData.boss.rating} 
+                      keywords={aggregatedData.boss.keywords} 
+                      reviewText={aggregatedData.boss.latestReview} 
+                    />
+                    <ReviewAccordion 
+                      title="근무지 평가" 
+                      rating={aggregatedData.workplace.rating} 
+                      keywords={aggregatedData.workplace.keywords} 
+                      reviewText={aggregatedData.workplace.latestReview} 
+                    />
+                  </>
+                ) : (
+                  <div className="bg-white rounded-2xl p-20 text-center border border-gray-100 shadow-sm">
+                    <p className="text-gray-400 font-bold">아직 등록된 리뷰가 없습니다.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

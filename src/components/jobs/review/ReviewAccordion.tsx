@@ -11,13 +11,10 @@ const ReviewAccordion: React.FC<Props> = ({ title, rating, keywords, reviewText 
   const [isOpen, setIsOpen] = useState(false);
 
   const keywordConfig: Record<string, { label: string; icon: string }> = {
-    settlement: { label: "급여 칼지급", icon: "💰" },
     kindness: { label: "사장님이 친절해요", icon: "😊" },
-    clean: { label: "매장이 청결해요", icon: "🧹" },
+    communication: { label: "동료가 좋아요", icon: "🙌" },
+    settlement: { label: "급여 칼지급", icon: "💰" },
     rest: { label: "휴게시간 준수", icon: "☕" },
-    colleague: { label: "동료가 좋아요", icon: "🙌" },
-    info: { label: "업무를 잘 알려줘요", icon: "🎓" },
-    subway: { label: "역세권이에요", icon: "🚇" },
   };
 
   return (
