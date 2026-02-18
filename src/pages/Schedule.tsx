@@ -292,13 +292,13 @@ const Schedule = () => {
   }, [schedules, monthInfo.year, monthInfo.month]);
 
   return (
-    <div className="flex h-full bg-slate-50">
+    <div className="flex flex-col lg:flex-row h-full bg-slate-50 min-w-0 overflow-hidden">
       {/* 메인: 내 스케줄 + 캘린더 */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* 헤더: 내 스케줄 + 월 네비 + 일정 추가 */}
-        <div className="flex items-center justify-between gap-4 p-6 pb-6">
-          <h1 className="text-xl font-bold text-gray-800">내 스케줄</h1>
-          <div className="flex items-center gap-3">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* 헤더: 내 스케줄 + 월 네비 + 일정 추가 (작은 화면에서 줄바꿈) */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 sm:p-6 pb-4 sm:pb-6 shrink-0">
+          <h1 className="text-xl font-bold text-gray-800 shrink-0">내 스케줄</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2">
               <button
                 onClick={
@@ -373,71 +373,10 @@ const Schedule = () => {
           </div>
         </div>
 
-        {/* 빈 상태: 캘린더 그리드 + 아래 빈 상태 박스 */}
-        {viewMode === 'monthly' && schedules.length === 0 ? (
+        {/* 월 = 항상 월간 캘린더, 주 = 항상 주간 캘린더 */}
+        {viewMode === 'monthly' ? (
           <>
-            <div className="flex-1 px-6 pt-2 pb-4 overflow-auto min-h-[65vh]">
-              <WeeklyView
-                weekDays={weekDays}
-                workplaces={workplaces}
-                timeSlots={timeSlots}
-                getSchedulesForDate={getSchedulesForDate}
-                getDaySummary={getDaySummary}
-                formatDate={formatDate}
-                onCellClick={handleCellClick}
-                onScheduleClick={setEditingSchedule}
-                onDayHover={handleDayHover}
-                onDayLeave={handleDayLeave}
-                hoveredDay={hoveredDay}
-                hoverPosition={hoverPosition}
-                weekStartDay={weekStartDay}
-              />
-            </div>
-            <div className="px-6 py-6 flex justify-center">
-              <div className="w-full max-w-[894px] min-h-[280px] bg-slate-100 rounded-lg flex flex-col items-center justify-center py-12 px-4">
-                <div className="w-20 h-20 bg-indigo-200/70 rounded-[40px] border border-black/10 flex items-center justify-center mb-6">
-                  <svg
-                    className="w-8 h-8 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-gray-900 text-base font-medium font-['Pretendard'] mb-2">
-                  등록된 근무 일정이 없어요
-                </p>
-                <p className="text-slate-400 text-xs font-medium font-['Pretendard'] text-center leading-5 mb-6 max-w-[20rem]">
-                  첫 근무 일정을 등록하면 근무 시간과 예상 급여를 한 번에
-                  <br />
-                  확인할 수 있어요.
-                </p>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="px-4 py-2 bg-indigo-600 rounded-lg inline-flex items-center gap-1.5 text-white text-xs font-medium font-['Pretendard'] hover:bg-indigo-700"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  첫 근무 일정 등록하기
-                </button>
-                <p className="text-slate-400 text-xs font-medium font-['Pretendard'] text-center leading-5 mt-6 max-w-[20rem]">
-                  오른쪽 상단 버튼이나 날짜 셀을 눌러서도 일정을 추가할 수
-                  <br />
-                  있어요.
-                </p>
-              </div>
-            </div>
-          </>
-        ) : viewMode === 'monthly' ? (
-          <>
-            <div className="flex-1 px-6 pt-2 pb-4 overflow-auto min-h-[65vh]">
+            <div className="flex-1 px-4 sm:px-6 pt-2 pb-4 overflow-auto min-h-0 overflow-x-auto">
               <MonthlyView
                 monthInfo={monthInfo}
                 workplaces={workplaces}
@@ -458,10 +397,29 @@ const Schedule = () => {
                 {totalEstimatedSalary.toLocaleString()}원
               </p>
             </div>
+            {schedules.length === 0 && (
+              <div className="px-6 py-6 flex justify-center">
+                <div className="w-full max-w-[894px] min-h-[200px] bg-slate-100 rounded-lg flex flex-col items-center justify-center py-10 px-4">
+                  <p className="text-gray-900 text-base font-medium font-['Pretendard'] mb-2">
+                    등록된 근무 일정이 없어요
+                  </p>
+                  <p className="text-slate-400 text-xs font-medium font-['Pretendard'] text-center leading-5 mb-4 max-w-[20rem]">
+                    첫 근무 일정을 등록하면 근무 시간과 예상 급여를 한 번에 확인할 수 있어요.
+                  </p>
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="px-4 py-2 bg-indigo-600 rounded-lg inline-flex items-center gap-1.5 text-white text-xs font-medium font-['Pretendard'] hover:bg-indigo-700"
+                  >
+                    <span className="text-base">+</span>
+                    첫 근무 일정 등록하기
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <>
-            <div className="flex-1 px-6 pt-2 pb-4 overflow-auto min-h-[65vh]">
+            <div className="flex-1 px-4 sm:px-6 pt-2 pb-4 overflow-auto min-h-0 overflow-x-auto">
               <WeeklyView
                 weekDays={weekDays}
                 workplaces={workplaces}
