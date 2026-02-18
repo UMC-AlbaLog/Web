@@ -87,8 +87,9 @@ export function SchedulesProvider({ children }: { children: ReactNode }) {
           fetchWorkplaces(),
         ]);
         if (!cancelled) {
-          if (apiSchedules.length > 0) setSchedules(apiSchedules);
-          if (apiWorkplaces.length > 0) setWorkplaces(apiWorkplaces);
+          // 로그인 사용자별 데이터로 항상 갱신 (빈 배열이어도 적용 → 다른 사용자 데이터가 안 보이게)
+          setSchedules(apiSchedules);
+          setWorkplaces(apiWorkplaces);
         }
       } catch {
         // 실패 시 로컬 데이터 유지
