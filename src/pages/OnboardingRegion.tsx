@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { searchRegion, saveUserRegion } from "../api/region";
 
 const REGION_DATA: Record<string, string[]> = {
   서울특별시: [
@@ -9,15 +10,10 @@ const REGION_DATA: Record<string, string[]> = {
     "영등포구","용산구","은평구","종로구","중구","중랑구"
   ],
   경기도: [
-    "수원시","성남시","고양시","용인시","부천시","안산시","안양시",
-    "남양주시","화성시","평택시","의정부시","시흥시","파주시",
-    "김포시","광명시","군포시","하남시","오산시","이천시",
-    "안성시","구리시","의왕시","포천시","양주시","여주시",
-    "동두천시","과천시","가평군","양평군","연천군"
+    "수원시","성남시","고양시","용인시","부천시","안산시","안양시"
   ],
   인천광역시: [
-    "미추홀구","연수구","부평구","계양구","남동구",
-    "동구","중구","서구","강화군","옹진군"
+    "미추홀구","연수구","부평구","계양구","남동구"
   ],
   제주특별자치도: ["제주시","서귀포시"]
 };
@@ -29,6 +25,7 @@ const OnboardingRegion = () => {
   const [search, setSearch] = useState("");
   const [selectedSido, setSelectedSido] = useState<string | null>(null);
   const [selectedGugun, setSelectedGugun] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const canNext = !!(selectedSido && selectedGugun);
 
@@ -70,26 +67,44 @@ const OnboardingRegion = () => {
   };
 
   /* =========================
-   * 다음 버튼
+   * 다음 버튼 ( region 조회 → DB 저장)
    * ========================= */
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!canNext) return;
 
-    sessionStorage.setItem(
-      "userRegion",
-      JSON.stringify({
-        sido: selectedSido,
-        gugun: selectedGugun,
-      })
-    );
+    try {
+      setLoading(true);
 
-    navigate("/home", { replace: true });
+      const query = `${selectedSido} ${selectedGugun}`;
+
+      // 1️⃣ region_id 조회
+      const results = await searchRegion(query);
+
+      if (!results || results.length === 0) {
+        alert("해당 지역을 찾을 수 없습니다.");
+        return;
+      }
+
+      const regionId = results[0].region_id;
+
+      // 2️⃣ DB 저장
+      await saveUserRegion(regionId);
+
+      // 3️⃣ 저장 성공 후 홈 이동
+      navigate("/home", { replace: true });
+
+    } catch (err) {
+      console.error("지역 저장 실패:", err);
+      alert("지역 저장에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-white flex justify-center relative">
 
-      {/* 🔥 우측 상단 나중에 선택 버튼 */}
+      {/* 나중에 선택 */}
       <button
         onClick={handleSkip}
         className="absolute top-6 right-10 text-sm text-gray-500 hover:text-indigo-600 transition"
@@ -143,7 +158,7 @@ const OnboardingRegion = () => {
           )}
         </div>
 
-        {/* 🔥 스크롤 영역 */}
+        {/* 시/도 & 구/군 선택 */}
         <div className="flex justify-center gap-8">
           {/* 시/도 */}
           <div className="w-[260px] bg-white border rounded-2xl shadow-sm p-5 max-h-[400px] overflow-y-auto">
@@ -198,11 +213,11 @@ const OnboardingRegion = () => {
           </div>
         </div>
 
-        {/* 하단 버튼 */}
+        {/* 다음 버튼 */}
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2">
           <button
             onClick={handleNext}
-            disabled={!canNext}
+            disabled={!canNext || loading}
             className={`px-12 h-14 rounded-2xl text-lg font-semibold transition
               ${
                 canNext
@@ -210,7 +225,7 @@ const OnboardingRegion = () => {
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
           >
-            다음으로 →
+            {loading ? "저장 중..." : "다음으로 →"}
           </button>
         </div>
       </div>
