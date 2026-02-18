@@ -100,6 +100,8 @@ const Sidebar = () => {
           onClick={() => {
             sessionStorage.clear();
             localStorage.removeItem("user_profile");
+            localStorage.removeItem("schedules");
+            localStorage.removeItem("workplaces");
 
             navigate("/", { replace: true });
           }}
