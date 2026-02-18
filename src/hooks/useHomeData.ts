@@ -25,29 +25,36 @@ export const useHomeData = () => {
         getSettlementHistory("all").catch(() => ({ settlements: [] }))
       ]);
 
-      const formatToLocalTime = (isoString: any) => {
-        if (!isoString || typeof isoString !== 'string') return "00:00";
+      const formatToLocalTime = (timeStr: any) => {
+        if (!timeStr || typeof timeStr !== 'string') return "00:00";
 
-        let cleanIso = isoString.replace(/-/g, "/").replace(" ", "T");
-        if (!cleanIso.endsWith('Z') && cleanIso.includes('T')) {
-          cleanIso += 'Z';
+        if (timeStr.includes('-') || timeStr.includes('T')) {
+          let cleanIso = timeStr.replace(/-/g, "/").replace(" ", "T");
+          if (!cleanIso.endsWith('Z') && cleanIso.includes('T')) cleanIso += 'Z';
+          const date = new Date(cleanIso);
+          if (!isNaN(date.getTime())) {
+            return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+          }
         }
 
-        let date = new Date(cleanIso);
-
-        if (isNaN(date.getTime())) {
-          const timePart = isoString.includes('T') ? isoString.split('T')[1] : isoString.split(' ')[1];
-          return timePart ? timePart.slice(0, 5) : "00:00";
+        const timeRegex = /^(\d{1,2}):(\d{1,2})/;
+        const match = timeStr.match(timeRegex);
+  
+        if (match) {
+          let hours = parseInt(match[1], 10);
+          const minutes = match[2];
+    
+          hours = (hours + 9) % 24;
+    
+          return `${String(hours).padStart(2, '0')}:${minutes}`;
         }
 
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${hours}:${minutes}`;
+        return timeStr.slice(0, 5);
       };
 
       // 대시보드 요약 세팅
       setSummary({
-        totalCount: s.workCount || 0,
+        totalCount: s.workCount || 0, 
         totalHours: Math.floor((s.totalWorkMinutes || 0) / 60), 
         totalIncome: s.expectedIncome || 0
       });
@@ -66,7 +73,6 @@ export const useHomeData = () => {
 
       // 근무 리스트 매핑
       const mappedList: Work[] = schedules.map((item: any) => {
-        console.log("서버 체크용:", item.startTime);
 
         return {
           id: item.workLogId || item.id,
