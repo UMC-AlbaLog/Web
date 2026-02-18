@@ -28,17 +28,21 @@ export const useHomeData = () => {
       const formatToLocalTime = (isoString: any) => {
         if (!isoString || typeof isoString !== 'string') return "00:00";
 
-        const cleanIso = isoString.replace(/-/g, "/").replace(" ", "T");
-        let date = new Date(cleanIso);
+        let cleanIso = isoString.replace(/-/g, "/").replace(" ", "T");
+        if (!cleanIso.endsWith('Z') && cleanIso.includes('T')) {
+          cleanIso += 'Z';
+        }
 
-        if (isNaN(date.getTime())) date = new Date(isoString);
+        let date = new Date(cleanIso);
 
         if (isNaN(date.getTime())) {
           const timePart = isoString.includes('T') ? isoString.split('T')[1] : isoString.split(' ')[1];
           return timePart ? timePart.slice(0, 5) : "00:00";
         }
 
-        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
       };
 
       // 대시보드 요약 세팅
@@ -62,6 +66,8 @@ export const useHomeData = () => {
 
       // 근무 리스트 매핑
       const mappedList: Work[] = schedules.map((item: any) => {
+        console.log("서버 체크용:", item.startTime);
+
         return {
           id: item.workLogId || item.id,
           name: item.workplace || item.storeName || "알바 매장",
