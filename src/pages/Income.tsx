@@ -177,6 +177,7 @@ const [incomeChangeRate, setIncomeChangeRate] = useState(0);
             currentMonthIncome={actualIncome}
             incomeGoal={incomeGoal}
             onGoalChange={setIncomeGoal}
+            monthOverMonthGrowth={incomeChangeRate}
           />
           <IncomeSummary
             expectedIncome={expectedIncome}
