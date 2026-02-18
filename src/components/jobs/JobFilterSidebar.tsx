@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CalendarModal from "../CalendarModal";
 
 interface Props {
@@ -8,11 +8,19 @@ interface Props {
 const JobFilterSidebar: React.FC<Props> = ({ states, setters, actions }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
+  useEffect(() => {
+    if (!states.searchKeyword.trim()) return;
+    const timer = setTimeout(() => {
+      actions.handleSearch(states.searchKeyword);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [states.searchKeyword, actions]);
+
   const rowStyle = "flex items-center justify-between relative";
   const labelStyle = "text-[#8E97A4] text-[15px] font-bold shrink-0";
   const inputStyle = "w-[210px] ml-auto h-11 px-4 bg-white border border-[#E5E7EB] rounded-lg text-[15px] font-bold text-gray-800 outline-none focus:border-[#5D5FEF] transition-all text-center";
-
   const newLocal = "w-[340px] bg-white p-7 rounded-xl border border-gray-100 shadow-sm space-y-6 text-left relative z-50";
+  
   return (
     <aside className={newLocal}>
 
@@ -25,7 +33,9 @@ const JobFilterSidebar: React.FC<Props> = ({ states, setters, actions }) => {
           type="text" placeholder="검색창" 
           className="text-[17px] font-black outline-none w-full text-gray-800"
           value={states.searchKeyword}
-          onChange={(e) => { setters.setSearchKeyword(e.target.value); actions.handleSearch(e.target.value); }}
+          onChange={(e) => { 
+            setters.setSearchKeyword(e.target.value);
+          }}
         />
       </div>
 
@@ -34,7 +44,13 @@ const JobFilterSidebar: React.FC<Props> = ({ states, setters, actions }) => {
           <span className={labelStyle}>거리</span>
           <div className="flex bg-[#F3F4F6] p-1 rounded-lg ml-auto">
             {[1, 5].map(d => (
-              <button key={d} onClick={() => setters.setDistance(d)} className={`px-5 py-1.5 rounded-md text-[13px] font-bold transition-all ${states.distance === d ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>{d}km</button>
+              <button 
+                key={d} 
+                onClick={() => {
+                  setters.setDistance(d);
+                  setters.setIsDistanceActive(true);
+                }} 
+                className={`px-5 py-1.5 rounded-md text-[13px] font-bold transition-all ${states.distance === d ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>{d}km</button>
             ))}
           </div>
         </div>
@@ -46,7 +62,12 @@ const JobFilterSidebar: React.FC<Props> = ({ states, setters, actions }) => {
             isOpen={isCalendarOpen} 
             onClose={() => setIsCalendarOpen(false)} 
             selectedDate={states.date} 
-            onSelectDate={(date) => { setters.setDate(date); setIsCalendarOpen(false); }} 
+            onSelectDate={(date) => { 
+              setters.setDate(date); 
+              setters.setIsDistanceActive(false);
+              setters.setSearchKeyword("");
+              setIsCalendarOpen(false);
+            }} 
           />
         </div>
 

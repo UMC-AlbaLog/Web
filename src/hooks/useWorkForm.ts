@@ -2,6 +2,14 @@ import { useState, useMemo } from "react";
 import { placeService } from "../api/placeService";
 
 export const useWorkForm = () => {
+  const getLocalDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [searchKeyword, setSearchKeyword] = useState("");
   const [name, setName] = useState(""); 
   const [address, setAddress] = useState("");
@@ -9,8 +17,9 @@ export const useWorkForm = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isDistanceActive, setIsDistanceActive] = useState(false);
   
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(getLocalDate());
   const [startTime, setStartTime] = useState("00:00");
   const [endTime, setEndTime] = useState("23:59");
   const [pay, setPay] = useState(10320); 
@@ -51,8 +60,20 @@ export const useWorkForm = () => {
     setSearchKeyword(""); 
   };
 
-  const states = { searchKeyword, name, address, category, searchResults, isSearching, hasSearched, date, startTime, endTime, pay, memo, duration, totalPay, distance };
-  const setters = { setSearchKeyword, setDate, setStartTime, setEndTime, setPay, setMemo, setName, setCategory, setDistance, setAddress, setSearchResults, setIsSearching, setHasSearched };
+  const states = { 
+    searchKeyword, name, address, 
+    category, searchResults, isSearching, 
+    hasSearched, isDistanceActive, date, 
+    startTime, endTime, pay, memo, 
+    duration, totalPay, distance 
+  };
+  const setters = { 
+    setSearchKeyword, setDate, setStartTime, 
+    setEndTime, setPay, setMemo, 
+    setName, setCategory, setDistance, 
+    setAddress, setSearchResults, setIsSearching, 
+    setHasSearched, setIsDistanceActive 
+  };
   const actions = { handleSearch, handleSelectPlace };
 
   return { states, setters, actions };

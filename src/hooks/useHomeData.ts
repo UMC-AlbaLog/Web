@@ -48,18 +48,20 @@ export const useHomeData = () => {
 
       // 근무 리스트 매핑
       const mappedList: Work[] = schedules.map((item: any) => {
-        const safeFormatTime = (iso: string) => {
-          if (!iso) return "00:00";
-          const timePart = iso.includes('T') ? iso.split('T')[1] : iso;
-          const [hours, minutes] = timePart.split(':');
-          return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-        };
+        const formatToLocalTime = (isoString: string) => {
+        if (!isoString) return "00:00";
+        // new Date()를 사용하면 'Z'가 붙은 ISO 스트링을 현재 브라우저 시간(KST)으로 자동 변환합니다.
+        const date = new Date(isoString);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      };
 
         return {
           id: item.workLogId || item.id,
           name: item.workplace || item.storeName || "알바 매장",
-          category: item.category || item.storeCategory || "아르바이트",
-          time: `${safeFormatTime(item.startTime)} ~ ${safeFormatTime(item.endTime)}`,
+          category: item.category || item.storeCategory || "기타",
+          time: `${formatToLocalTime(item.startTime)} ~ ${formatToLocalTime(item.endTime)}`,
           duration: item.workHours || 0,
           pay: item.hourlyWage || 0,
           expectedPay: item.totalWage || 0,
