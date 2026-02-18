@@ -20,10 +20,26 @@ export const useHomeData = () => {
       
       // 근무 정보와 정산 내역
       const [s, schedules, settlementData] = await Promise.all([
-        workService.getTodaySummary(), // 📍 인자 제거 (404 방지)
-        workService.getTodayWorkLogs(), // 📍 인자 제거
-        getSettlementHistory("all").catch(() => ({ settlements: [] })) 
+        workService.getTodaySummary(),
+        workService.getTodayWorkLogs(),
+        getSettlementHistory("all").catch(() => ({ settlements: [] }))
       ]);
+
+      const formatToLocalTime = (isoString: any) => {
+        if (!isoString || typeof isoString !== 'string') return "00:00";
+
+        const cleanIso = isoString.replace(/-/g, "/").replace(" ", "T");
+        let date = new Date(cleanIso);
+
+        if (isNaN(date.getTime())) date = new Date(isoString);
+
+        if (isNaN(date.getTime())) {
+          const timePart = isoString.includes('T') ? isoString.split('T')[1] : isoString.split(' ')[1];
+          return timePart ? timePart.slice(0, 5) : "00:00";
+        }
+
+        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+      };
 
       // 대시보드 요약 세팅
       setSummary({
@@ -46,15 +62,6 @@ export const useHomeData = () => {
 
       // 근무 리스트 매핑
       const mappedList: Work[] = schedules.map((item: any) => {
-        const formatToLocalTime = (isoString: string) => {
-        if (!isoString) return "00:00";
-        // new Date()를 사용하면 'Z'가 붙은 ISO 스트링을 현재 브라우저 시간(KST)으로 자동 변환합니다.
-        const date = new Date(isoString);
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${hours}:${minutes}`;
-      };
-
         return {
           id: item.workLogId || item.id,
           name: item.workplace || item.storeName || "알바 매장",
