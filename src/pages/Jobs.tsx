@@ -12,7 +12,7 @@ import JobCard from "../components/jobs/JobCard";
 const Jobs: React.FC = () => {
   const navigate = useNavigate();
   const { states, setters, actions } = useWorkForm();
-  const { nickname, freeSlot, userLocation } = useJobsData(); 
+  const { username, freeSlot, userLocation } = useJobsData(); 
   const { jobs, loading } = useJobs(states); 
 
   const [coordsMap, setCoordsMap] = useState<Record<string, { lat: number; lng: number }>>({});
@@ -66,7 +66,7 @@ const Jobs: React.FC = () => {
   return (
     <main className="p-12 min-h-screen bg-[#F2F4F7] font-['Pretendard'] text-left">
       <div className="max-w-6xl mx-auto">
-        <JobBanner nickname={nickname} freeSlot={freeSlot} />
+        <JobBanner username={username} freeSlot={freeSlot} />
         <div className="mb-1"><JobHeader /></div>
 
         <div className="flex gap-10 items-start">

@@ -3,6 +3,11 @@ import { useLocation } from "react-router-dom";
 import { albaService } from "../api/albaService";
 import { getAlbaStatus } from "../api/albaStatus";
 
+const calculateTimeTag = (startTime: string): string => {
+  const startHour = parseInt(String(startTime || "").split(":")[0], 10);
+  return (startHour >= 18 || startHour < 6) ? "야간" : "주간";
+};
+
 /** 지원현황에서 넘긴 state로 상세와 같은 형태의 job 객체 만들기 */
 function buildJobFromStatusItem(item: any): any {
   const startTime = item.startTime ?? item.start_time ?? "09:00";
@@ -28,11 +33,12 @@ function buildJobFromStatusItem(item: any): any {
     totalWage: Math.round(totalWage),
     status: "채용중",
     category: item.category ?? item.storeCategory ?? "기타",
-    timeTag: "주간",
+    timeTag: calculateTimeTag(startTime),
     isApplied: true,
     applicationStatus: item.processStatus ?? item.applicationStatus ?? null,
     trustScore: item.trustScore ?? 0,
     storeId: item.storeId ?? item.id,
+    notification: item.notification ?? "대타 모집합니다",
     mainTask: item.mainTask ?? "상세 정보는 지원 현황에서 확인한 내용과 동일합니다.",
     requirement: item.requirement ?? "공고 상세 내용을 확인해 주세요.",
   };
@@ -70,15 +76,11 @@ export const useJobDetail = (id: string | undefined) => {
             ...detailRes,
             status: "채용중",
             category: detailRes.storeCategory || "기타",
-            timeTag:
-              parseInt(String(detailRes.startTime || "").split(":")[0], 10) >= 18 ||
-              parseInt(String(detailRes.startTime || "").split(":")[0], 10) < 6
-                ? "야간"
-                : "주간",
+            timeTag: calculateTimeTag(detailRes.startTime),
             isApplied: !!myApp,
             applicationStatus: myApp ? myApp.processStatus : null,
             displayTime: `${detailRes.startTime} ~ ${detailRes.endTime}`,
-            trustScore: detailRes.totalScore ?? 0,
+            trustScore: detailRes.totalScore ?? 0.0,
           });
         } else if (stateItem) {
           setJob(buildJobFromStatusItem(stateItem));

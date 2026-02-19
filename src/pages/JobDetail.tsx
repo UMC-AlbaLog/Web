@@ -35,7 +35,7 @@ const JobDetail: React.FC = () => {
               <span className="px-2.5 py-1 bg-[#F2F4F7] text-gray-400 text-[11px] font-bold rounded-xl">{job.category}</span>
               <span className="px-2.5 py-1 bg-[#F2F4F7] text-gray-400 text-[11px] font-bold rounded-xl">{job.timeTag}</span>
             </div>
-            <h1 className="text-[32px] font-black text-gray-900 leading-snug">{job.storeName} 대타 모집합니다</h1>
+            <h1 className="text-[32px] font-black text-gray-900 leading-snug">{job.storeName} {job.notification || "대타 모집합니다"}</h1>
             <p className="text-gray-400 text-[15px] font-medium flex items-center">
               <LocationIcon /> {job.storeAddress || "등록된 주소 정보가 없습니다."}
             </p>
