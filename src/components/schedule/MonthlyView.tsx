@@ -41,7 +41,7 @@ const MonthlyView = ({
   monthInfo,
   workplaces,
   getSchedulesForDate,
-  getDaySummary,
+  getDaySummary: _getDaySummary,
   formatDate,
   onDayClick,
   onScheduleClick,

@@ -35,7 +35,7 @@ const WeeklyView = ({
   onDayHover,
   onDayLeave,
   hoveredDay,
-  hoverPosition,
+  hoverPosition: _hoverPosition,
   weekStartDay = '일요일',
 }: WeeklyViewProps) => {
   const DAY_NAMES = weekStartDay === '월요일' ? DAY_NAMES_MONDAY : DAY_NAMES_SUNDAY;
