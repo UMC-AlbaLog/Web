@@ -26,7 +26,7 @@ const ReviewAccordion: React.FC<Props> = ({ title, rating, keywords, reviewText 
             {"★".repeat(Math.round(rating)).padEnd(5, "☆")}
           </div>
           <div className="text-sm font-bold text-gray-800">
-            {rating.toFixed(1)} <span className="text-gray-300">/ 5.0</span>
+            {rating.toFixed(2)} <span className="text-gray-300">/ 5.0</span>
           </div>
         </div>
       </div>
