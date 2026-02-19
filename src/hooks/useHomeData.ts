@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { workService } from "../api/workService";
 import { albaService } from "../api/albaService"; 
 import { getSettlementHistory } from "../api/settlement";
+import { getProfile } from "../api/profile";
 import { findDynamicFreeSlot } from "../utils/scheduleUtils";
 import type { Work } from "../types/work";
 import type { AddWorkRequest } from "../components/home/AddWorkModal";
@@ -12,6 +13,7 @@ export const useHomeData = () => {
   const [notifSummary, setNotifSummary] = useState({ completed: 0, scheduled: 0, pending: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [username, setUsername] = useState("회원");
   const [recommendCount, setRecommendCount] = useState(0);
 
   const fetchData = async () => {
@@ -19,11 +21,16 @@ export const useHomeData = () => {
       setIsLoading(true);
       
       // 근무 정보와 정산 내역
-      const [s, schedules, settlementData] = await Promise.all([
+      const [s, schedules, settlementData, profileData] = await Promise.all([
         workService.getTodaySummary(),
         workService.getTodayWorkLogs(),
-        getSettlementHistory("all").catch(() => ({ settlements: [] }))
+        getSettlementHistory("all").catch(() => ({ settlements: [] })),
+        getProfile().catch(() => null)
       ]);
+
+      if (profileData && profileData.userName) {
+        setUsername(profileData.userName);
+      }
 
       const formatToLocalTime = (timeStr: any) => {
         if (!timeStr || typeof timeStr !== 'string') return "00:00";
@@ -102,7 +109,13 @@ export const useHomeData = () => {
       // 추천 공고 로직
       const scheduleItemsForCalc = mappedList.map((w: Work) => {
         const [start, end] = w.time.split(" ~ ");
-        return { workplaceId: w.id, startTime: start, endTime: end };
+        return { 
+          id: w.id, 
+          workplaceId: w.id, 
+          startTime: start, 
+          endTime: end, 
+          date: w.date
+         };
       });
 
       const currentFreeSlot = findDynamicFreeSlot(scheduleItemsForCalc as any);
@@ -132,13 +145,19 @@ export const useHomeData = () => {
     if (isLoading || !workList.length) return "알바를 등록하고 빈 시간을 확인해보세요!";
     const scheduleItems = workList.map((w: Work) => {
       const [start, end] = w.time.split(" ~ ");
-      return { workplaceId: w.id, startTime: start, endTime: end };
+      return { 
+        id: w.id, 
+        workplaceId: w.id, 
+        startTime: start, 
+        endTime: end, 
+        date: w.date
+       };
     });
     return findDynamicFreeSlot(scheduleItems as any);
   }, [workList, isLoading]);
 
   return {
-    workList, summary, notifSummary, freeSlot, recommendCount, isLoading, isModalOpen, setIsModalOpen,
+    username, workList, summary, notifSummary, freeSlot, recommendCount, isLoading, isModalOpen, setIsModalOpen,
     actions: { 
       fetchData,
       handleAddWork: async (data: AddWorkRequest) => {
