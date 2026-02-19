@@ -88,6 +88,33 @@ function extractUuid(value: string | null | undefined): string | null {
   return match ? match[0] : null;
 }
 
+/** API 응답 한 건을 ScheduleItem으로 정규화 (snake_case → camelCase, work_time 분리) */
+function normalizeScheduleItem(raw: Record<string, unknown>): ScheduleItem {
+  const id = String(raw.id ?? raw.user_alba_schedule_id ?? "");
+  const date =
+    String(raw.date ?? raw.work_date ?? "").slice(0, 10) ||
+    new Date().toISOString().slice(0, 10);
+  const workTime = String(raw.work_time ?? `${raw.startTime ?? ""}-${raw.endTime ?? ""}`).trim();
+  const [startTime = "09:00", endTime = "18:00"] = workTime
+    ? workTime.split("-").map((s) => s.trim().slice(0, 5))
+    : ["09:00", "18:00"];
+  const workplaceId = String(raw.workplaceId ?? raw.workplace ?? "");
+  return {
+    id,
+    workplaceId,
+    date,
+    startTime: startTime.length === 5 ? startTime : "09:00",
+    endTime: endTime.length === 5 ? endTime : "18:00",
+    hourlyWage: typeof raw.hourly_wage === "number" ? raw.hourly_wage : (raw.hourlyWage as number | undefined),
+    memo: raw.memo as string | undefined,
+    ...(raw.scheduleName != null && { scheduleName: String(raw.scheduleName) }),
+    ...(raw.scheduleType != null && { scheduleType: raw.scheduleType as ScheduleItem["scheduleType"] }),
+    ...(raw.salaryType != null && { salaryType: raw.salaryType as ScheduleItem["salaryType"] }),
+    ...(raw.repeatType != null && { repeatType: raw.repeatType as ScheduleItem["repeatType"] }),
+    ...(raw.repeatDays != null && { repeatDays: Array.isArray(raw.repeatDays) ? (raw.repeatDays as number[]) : undefined }),
+  } as ScheduleItem;
+}
+
 /**
  * 스케줄 목록 조회
  * GET /user/alba/schedule?month=YYYY-MM (예: month=2026-02)
@@ -98,13 +125,17 @@ export async function getSchedules(params?: { month?: string }): Promise<Schedul
     const now = new Date();
     const month = params?.month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const path = `/user/alba/schedule?month=${encodeURIComponent(month)}`;
-    const data = await apiRequest<ScheduleItem[] | { items?: ScheduleItem[]; success?: ScheduleItem[] | unknown }>(path, { method: "GET" });
-    let list: ScheduleItem[] = [];
-    if (Array.isArray(data)) list = data;
+    const data = await apiRequest<ScheduleItem[] | { items?: unknown[]; success?: unknown }>(path, { method: "GET" });
+    let rawList: unknown[] = [];
+    if (Array.isArray(data)) rawList = data;
     else if (data && typeof data === "object") {
-      if (Array.isArray((data as { items?: ScheduleItem[] }).items)) list = (data as { items: ScheduleItem[] }).items;
-      else if (Array.isArray((data as { success?: ScheduleItem[] }).success)) list = (data as { success: ScheduleItem[] }).success;
+      const d = data as { items?: unknown[]; success?: unknown };
+      if (Array.isArray(d.items)) rawList = d.items;
+      else if (Array.isArray(d.success)) rawList = d.success;
     }
+    const list = rawList
+      .filter((item): item is Record<string, unknown> => item != null && typeof item === "object")
+      .map((item) => normalizeScheduleItem(item));
     if (import.meta.env.DEV) {
       console.log("[API] 스케줄 목록 조회 성공", { month, count: list.length, path });
     }
