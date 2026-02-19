@@ -8,6 +8,27 @@ const calculateTimeTag = (startTime: string): string => {
   return (startHour >= 18 || startHour < 6) ? "야간" : "주간";
 };
 
+// 카카오 API로 주소와 가게명으로 실제 업종을 찾아주는 함수
+const fetchCategoryFromKakao = (address: string, storeName: string): Promise<string> => {
+  return new Promise((resolve) => {
+    if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
+      resolve("기타");
+      return;
+    }
+
+    const ps = new window.kakao.maps.services.Places();
+    ps.keywordSearch(`${address} ${storeName}`, (data: any, status: any) => {
+      if (status === window.kakao.maps.services.Status.OK && data.length > 0) {
+        const fullCategory = data[0].category_name;
+        const parts = fullCategory.split(" > ");
+        resolve(parts[1] || parts[0] || "기타");
+      } else {
+        resolve("기타");
+      }
+    });
+  });
+};
+
 /** 지원현황에서 넘긴 state로 상세와 같은 형태의 job 객체 만들기 */
 function buildJobFromStatusItem(item: any): any {
   const startTime = item.startTime ?? item.start_time ?? "09:00";
@@ -52,39 +73,45 @@ export const useJobDetail = (id: string | undefined) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) {
-        if (stateItem) setJob(buildJobFromStatusItem(stateItem));
-        setLoading(false);
-        return;
-      }
       setLoading(true);
       try {
-        const [detailRes, statusRes]: [any, any] = await Promise.all([
-          albaService.getAlbaDetail(id),
-          getAlbaStatus("all"),
-        ]);
+        let baseJob = null;
 
-        const statusList = (Array.isArray(statusRes) ? statusRes : statusRes?.success) || [];
-        const myApp = statusList.find((item: any) => {
-          const itemDate = item.workDate?.substring(0, 10);
-          const detailDate = detailRes?.workDate?.substring(0, 10);
-          return item.storeName === detailRes?.storeName && itemDate === detailDate;
-        });
+        if (id) {
+          const [detailRes, statusRes]: [any, any] = await Promise.all([
+            albaService.getAlbaDetail(id),
+            getAlbaStatus("all"),
+          ]);
 
-        if (detailRes) {
-          setJob({
-            ...detailRes,
-            status: "채용중",
-            category: detailRes.storeCategory || "기타",
-            timeTag: calculateTimeTag(detailRes.startTime),
-            isApplied: !!myApp,
-            applicationStatus: myApp ? myApp.processStatus : null,
-            displayTime: `${detailRes.startTime} ~ ${detailRes.endTime}`,
-            trustScore: detailRes.totalScore ?? 0.0,
+          const statusList = (Array.isArray(statusRes) ? statusRes : statusRes?.success) || [];
+          const myApp = statusList.find((item: any) => {
+            const itemDate = item.workDate?.substring(0, 10);
+            const detailDate = detailRes?.workDate?.substring(0, 10);
+            return item.storeName === detailRes?.storeName && itemDate === detailDate;
           });
+
+          if (detailRes) {
+            baseJob = {
+              ...detailRes,
+              status: "채용중",
+              category: detailRes.storeCategory || "기타",
+              timeTag: calculateTimeTag(detailRes.startTime),
+              isApplied: !!myApp,
+              applicationStatus: myApp ? myApp.processStatus : null,
+              displayTime: `${detailRes.startTime} ~ ${detailRes.endTime}`,
+              trustScore: detailRes.totalScore ?? 0.0,
+            };
+          }
         } else if (stateItem) {
-          setJob(buildJobFromStatusItem(stateItem));
+          baseJob = buildJobFromStatusItem(stateItem);
         }
+
+        if (baseJob && (baseJob.category === "기타" || !baseJob.category)) {
+          const kakaoCategory = await fetchCategoryFromKakao(baseJob.storeAddress, baseJob.storeName);
+          baseJob.category = kakaoCategory;
+        }
+
+        setJob(baseJob);
       } catch (e) {
         console.error("데이터 로드 실패:", e);
         if (stateItem) setJob(buildJobFromStatusItem(stateItem));
@@ -92,6 +119,7 @@ export const useJobDetail = (id: string | undefined) => {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [id]);
 
