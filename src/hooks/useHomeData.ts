@@ -107,31 +107,14 @@ export const useHomeData = () => {
       setWorkList(mappedList);
 
       // 추천 공고 로직
-      const scheduleItemsForCalc = mappedList.map((w: Work) => {
-        const [start, end] = w.time.split(" ~ ");
-        return { 
-          id: w.id, 
-          workplaceId: w.id, 
-          startTime: start, 
-          endTime: end, 
-          date: w.date
-         };
-      });
-
-      const currentFreeSlot = findDynamicFreeSlot(scheduleItemsForCalc as any);
-
-      if (currentFreeSlot && currentFreeSlot.includes("-")) {
-        const timePart = currentFreeSlot.split("요일")[1]?.trim();
-        if (timePart) {
-          const [start, end] = timePart.split("-").map(t => t.trim());
-          const albaList = await albaService.getAlbaList({ 
-            workTime: `${start}~${end}` 
-          });
-          setRecommendCount(albaList.length || 0);
-        }
-      } else {
+      try {
+        const recommendations = await albaService.getRecommendations(); //
+        setRecommendCount(recommendations.length || 0);
+      } catch (e) {
+        console.error("추천 데이터 로드 실패:", e);
         setRecommendCount(0);
       }
+
     } catch (error) {
       console.error("데이터 로드 실패:", error);
     } finally {
