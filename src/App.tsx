@@ -7,7 +7,7 @@ import OnboardingRegion from "./pages/OnboardingRegion";
 
 import HomeLayout from "./layouts/HomeLayout";
 import GlobalAuthGuard from "./components/GlobalAuthGuard";
-
+import ProfileEdit2 from "./pages/ProfileEdit2";
 import Home from "./pages/Home";
 import Schedule from "./pages/Schedule";
 import Income from "./pages/Income";
@@ -18,7 +18,6 @@ import ApplicationManagement from "./pages/ApplicationManagement";
 import ReviewPage from "./pages/ReviewPage";
 import Profile from "./pages/Profile";
 import ProfileReviews from "./pages/ProfileReviews";
-import ProfileEdit from "./pages/ProfileEdit";
 import Settings from "./pages/Settings";
 import SettlementHistory from "./pages/SettlementHistory";
 
@@ -45,7 +44,8 @@ const App = () => {
           <Route path="/review/view/:storeId" element={<ReviewPage mode="view" />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/reviews" element={<ProfileReviews />} />
-          <Route path="/profile/edit" element={<ProfileEdit />} />
+          <Route path="/profile/edit" element={<ProfileEdit2/>} />
+          
           <Route path="/settings" element={<Settings />} />
           <Route path="/settings/settlement-history" element={<SettlementHistory />} />
         </Route>
