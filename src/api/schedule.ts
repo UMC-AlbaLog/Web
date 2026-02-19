@@ -15,6 +15,7 @@ function toRepeatDaysString(repeatDays: number[]): string {
  * POST /user/alba/schedule/manual 요청 body
  * - day_of_week: 보내지 않음 (백엔드 변경)
  * - repeat_days: weekly/biweekly일 때만, MON~SUN 7자리 0/1 문자열. daily/none이면 미포함.
+ * - workplace_name, workplace_color: 표시용 (있으면 전송)
  */
 export interface CreateManualScheduleBody {
   workplace: string;
@@ -25,6 +26,10 @@ export interface CreateManualScheduleBody {
   /** weekly/biweekly일 때만 포함. daily/none이면 생략 */
   repeat_type?: "daily" | "weekly" | "biweekly";
   repeat_days?: string;
+  /** 근무지명 (표시용) */
+  workplace_name?: string;
+  /** 근무지 색상 (표시용, 예: #RRGGBB) */
+  workplace_color?: string;
 }
 
 /** ScheduleItem → API 요청 body 변환 */
@@ -47,6 +52,12 @@ function toCreateManualBody(item: Partial<ScheduleItem>): CreateManualScheduleBo
       body.repeat_days = toRepeatDaysString(days);
     }
   }
+  if (item.scheduleName != null && String(item.scheduleName).trim()) {
+    body.workplace_name = String(item.scheduleName).trim();
+  }
+  if (item.color != null && String(item.color).trim()) {
+    body.workplace_color = String(item.color).trim();
+  }
   return body;
 }
 
@@ -60,6 +71,8 @@ function toUpdateManualBody(updates: Partial<ScheduleItem>): Record<string, unkn
   }
   if (updates.hourlyWage !== undefined) body.hourly_wage = Number(updates.hourlyWage);
   if (updates.memo !== undefined) body.memo = String(updates.memo);
+  if (updates.scheduleName !== undefined) body.workplace_name = String(updates.scheduleName);
+  if (updates.color !== undefined) body.workplace_color = String(updates.color);
   if (updates.repeatType !== undefined || updates.repeatDays !== undefined) {
     const repeatType = updates.repeatType ?? "none";
     body.repeat_type = repeatType;
@@ -98,10 +111,27 @@ function normalizeScheduleItem(raw: Record<string, unknown>): ScheduleItem {
   const [startTime = "09:00", endTime = "18:00"] = workTime
     ? workTime.split("-").map((s) => s.trim().slice(0, 5))
     : ["09:00", "18:00"];
-  // API는 workplace를 장소 이름(문자열)으로만 줌 → scheduleName에 넣고, workplaceId는 이름으로 둠(매칭용)
+  // workplace_name / scheduleName / workplace 순으로 근무지명, workplace_color / color 로 색상 (조회 시 모두 표시)
   const workplaceFromApi = String(raw.workplace ?? raw.workplaceId ?? "");
   const workplaceId = String(raw.workplaceId ?? raw.workplace ?? "");
-  const scheduleName = raw.scheduleName != null ? String(raw.scheduleName) : workplaceFromApi || undefined;
+  const looksLikeId =
+    /^\d+$/.test(workplaceFromApi) ||
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(workplaceFromApi) ||
+    (workplaceFromApi.length >= 10 && /^[\w-]+$/.test(workplaceFromApi));
+  const scheduleName =
+    raw.workplace_name != null && String(raw.workplace_name).trim()
+      ? String(raw.workplace_name).trim()
+      : raw.scheduleName != null && String(raw.scheduleName).trim()
+        ? String(raw.scheduleName).trim()
+        : !looksLikeId && workplaceFromApi.trim()
+          ? workplaceFromApi.trim()
+          : undefined;
+  const color =
+    raw.workplace_color != null && String(raw.workplace_color).trim()
+      ? String(raw.workplace_color).trim()
+      : raw.color != null && String(raw.color).trim()
+        ? String(raw.color).trim()
+        : undefined;
   const repeatType = (raw.repeat_type ?? raw.repeatType) as ScheduleItem["repeatType"] | undefined;
   let repeatDays: number[] | undefined;
   if (Array.isArray(raw.repeatDays)) repeatDays = raw.repeatDays as number[];
@@ -120,6 +150,7 @@ function normalizeScheduleItem(raw: Record<string, unknown>): ScheduleItem {
     hourlyWage: typeof raw.hourly_wage === "number" ? raw.hourly_wage : (raw.hourlyWage as number | undefined),
     memo: raw.memo as string | undefined,
     ...(scheduleName && { scheduleName }),
+    ...(color && { color }),
     ...(raw.scheduleType != null && { scheduleType: raw.scheduleType as ScheduleItem["scheduleType"] }),
     ...(raw.salaryType != null && { salaryType: raw.salaryType as ScheduleItem["salaryType"] }),
     ...(repeatType != null && { repeatType }),
