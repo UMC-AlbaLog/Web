@@ -11,7 +11,7 @@ interface WorkListProps {
 const WorkList: React.FC<WorkListProps> = ({ work, onAction }) => {
   const navigate = useNavigate();
   const [isMapOpen, setIsMapOpen] = useState(false);
-  const { status, name, category, time, duration, pay, expectedPay, address, id } = work;
+  const { status, name, category, time, duration, pay, expectedPay, address, id, date } = work;
 
   const isDone = status === "done" || status === "settled" || status === "pending";
   const isWorking = status === "working";
@@ -36,7 +36,12 @@ const WorkList: React.FC<WorkListProps> = ({ work, onAction }) => {
 
   return (
     <div 
-      onClick={() => isDone && navigate(`/review/write/${id}`)}
+      onClick={() => isDone && navigate(`/review/write/${id}`, {
+        state: {
+          storeName: name,
+          workDate: date
+        }
+      })}
       className={`bg-white p-8 rounded-[35px] relative border border-gray-50 transition-all ${
         isDone ? 'opacity-60 cursor-pointer hover:bg-gray-50' : 'shadow-sm hover:shadow-md'
       }`}

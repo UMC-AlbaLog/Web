@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { albaService } from "../api/albaService";
 import { storeReviewService } from "../api/storeReviewService";
 import RatingRow from "../components/jobs/review/RatingRow";
@@ -10,6 +10,9 @@ interface ReviewPageProps { mode: "view" | "write"; }
 const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
   const { storeId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const passedData = location.state as { storeName: string; workDate: string } | null;
 
   const [loading, setLoading] = useState(true);
   const [jobInfo, setJobInfo] = useState<any>(null);
@@ -146,11 +149,22 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
           <div className="space-y-8">
             {mode === 'write' ? (
               <>
-                <section className="bg-white rounded-2xl p-8 border border-gray-100 flex items-center gap-6 shadow-sm">
-                  <div className="w-16 h-16 bg-[#F8F9FA] rounded-2xl flex items-center justify-center text-3xl shadow-inner">🏠</div>
+                <section className="bg-[#F1F3F9] rounded-2xl p-8 border border-gray-100 flex items-center gap-6 shadow-sm transition-all">
+                  <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 21H21" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M3 7L12 3L21 7V21H3V7Z" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 21V12H15V21" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>                
+
                   <div className="space-y-1">
-                    <h3 className="text-xl font-black text-gray-800">{jobInfo?.storeName}</h3>
-                    <p className="text-sm text-gray-400 font-bold">{jobInfo?.workDate}</p>
+                    <h3 className="text-xl font-black text-gray-800">
+                      {passedData?.storeName || jobInfo?.storeName || "매장 정보"}
+                    </h3>
+                    <p className="text-sm text-gray-400 font-bold">
+                      {passedData?.workDate || jobInfo?.workDate || "날짜 정보"}
+                    </p>
                   </div>
                 </section>
 
