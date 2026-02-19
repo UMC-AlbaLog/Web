@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { albaService } from "../api/albaService";
 import { storeReviewService } from "../api/storeReviewService";
 import RatingRow from "../components/jobs/review/RatingRow";
 import ReviewAccordion from "../components/jobs/review/ReviewAccordion";
@@ -47,9 +46,6 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
       }
         
       try {
-        const info = await albaService.getAlbaDetail(storeId);
-        setJobInfo(info);
-
         if (mode === "view") {
           const reviews = await storeReviewService.getStoreReviews(storeId);
           setStoreReviews(reviews);
