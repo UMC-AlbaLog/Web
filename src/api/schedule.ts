@@ -89,13 +89,21 @@ function extractUuid(value: string | null | undefined): string | null {
 }
 
 /**
- * 스케줄 목록 조회 (백엔드에 GET 목록 API가 있으면 경로만 맞추면 됨)
+ * 스케줄 목록 조회
+ * GET /user/alba/schedule?month=YYYY-MM (예: month=2026-02)
+ * @param params.month 조회 월 (YYYY-MM). 생략 시 이번 달.
  */
-export async function getSchedules(_params?: { start?: string; end?: string }): Promise<ScheduleItem[]> {
+export async function getSchedules(params?: { month?: string }): Promise<ScheduleItem[]> {
   try {
-    const data = await apiRequest<ScheduleItem[] | { items: ScheduleItem[] }>("/user/alba/schedule", { method: "GET" });
+    const now = new Date();
+    const month = params?.month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const path = `/user/alba/schedule?month=${encodeURIComponent(month)}`;
+    const data = await apiRequest<ScheduleItem[] | { items?: ScheduleItem[]; success?: ScheduleItem[] | unknown }>(path, { method: "GET" });
     if (Array.isArray(data)) return data;
-    if (data?.items) return data.items;
+    if (data && typeof data === "object") {
+      if (Array.isArray((data as { items?: ScheduleItem[] }).items)) return (data as { items: ScheduleItem[] }).items;
+      if (Array.isArray((data as { success?: ScheduleItem[] }).success)) return (data as { success: ScheduleItem[] }).success;
+    }
     return [];
   } catch (e) {
     if (import.meta.env.DEV) {
