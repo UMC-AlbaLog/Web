@@ -57,41 +57,41 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
   const aggregatedData = useMemo(() => {
     if (storeReviews.length === 0) return null;
   
-    const getAverage = (fields: string[]) => {
-      let sum = 0;
-      let validCount = 0;
+    let totalBossAvgSum = 0;
+    let totalWorkplaceAvgSum = 0;
+    const bossReviews: any[] = [];
+    const workplaceReviews: any[] = [];
 
-      storeReviews.forEach(rev => {
-        fields.forEach(field => {
-          if (rev[field] > 0) {
-            sum += rev[field];
-            validCount++;
-          }
-        });
-      });
+    storeReviews.forEach(rev => {
+      // 각 리뷰어의 사장님/근무지 개별 평균 계산
+      const individualBossAvg = ((rev.kindness || 0) + (rev.communication || 0)) / 2;
+      const individualWorkplaceAvg = ((rev.settlement || 0) + (rev.rest || 0)) / 2;
 
-      return validCount > 0 ? sum / validCount : 0;
-    };
+      // 전체 평균을 내기 위해 합산
+      totalBossAvgSum += individualBossAvg;
+      totalWorkplaceAvgSum += individualWorkplaceAvg;
+
+      const reviewItem = {
+        ...rev,
+        keywords: [
+          rev.kindness > 0 && "kindness",
+          rev.communication > 0 && "communication",
+          rev.settlement > 0 && "settlement",
+          rev.rest > 0 && "rest"
+        ].filter(Boolean) as string[]
+      };
+
+      // 개인별 평균이 더 높은 섹션으로 배치
+      if (individualBossAvg >= individualWorkplaceAvg) bossReviews.push(reviewItem);
+      else workplaceReviews.push(reviewItem);
+    });
 
     return {
-      boss: {
-      // kindness와 communication 중 선택된 것들의 평균값 계산
-        rating: getAverage(["kindness", "communication"]),
-        keywords: [
-          storeReviews.some(r => r.kindness > 0) && "kindness",
-          storeReviews.some(r => r.communication > 0) && "communication"
-        ].filter(Boolean) as string[],
-        latestReview: storeReviews[0]?.review || "평가가 없습니다."
-      },
-      workplace: {
-      // settlement와 rest 중 선택된 것들의 평균값 계산
-        rating: getAverage(["settlement", "rest"]),
-        keywords: [
-          storeReviews.some(r => r.settlement > 0) && "settlement",
-          storeReviews.some(r => r.rest > 0) && "rest"
-        ].filter(Boolean) as string[],
-        latestReview: storeReviews[storeReviews.length - 1]?.review || "상세 후기가 없습니다."
-      }
+      // 모든 리뷰어의 평균값들의 평균
+      bossRating: totalBossAvgSum / storeReviews.length,
+      workplaceRating: totalWorkplaceAvgSum / storeReviews.length,
+      bossReviews,
+      workplaceReviews
     };
   }, [storeReviews]);
 
@@ -223,18 +223,47 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
               <div className="max-w-3xl mx-auto space-y-6">
                 {aggregatedData ? (
                   <>
-                    <ReviewAccordion 
-                      title="사장님 평가" 
-                      rating={aggregatedData.boss.rating} 
-                      keywords={aggregatedData.boss.keywords} 
-                      reviewText={aggregatedData.boss.latestReview} 
-                    />
-                    <ReviewAccordion 
-                      title="근무지 평가" 
-                      rating={aggregatedData.workplace.rating} 
-                      keywords={aggregatedData.workplace.keywords} 
-                      reviewText={aggregatedData.workplace.latestReview} 
-                    />
+                    <section className="space-y-6">
+                      <div className="flex justify-between items-end px-2">
+                        <h2 className="text-2xl font-black text-gray-800">사장님 평가</h2>
+                        <div className="text-right">
+                          <span className="text-3xl font-black text-[#5D5FEF]">{aggregatedData.bossRating.toFixed(1)}</span>
+                          <span className="text-gray-300 font-bold ml-1">/ 5.0</span>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        {aggregatedData.bossReviews.map(rev => (
+                          <ReviewAccordion 
+                            key={rev.reviewId}
+                            title={`${rev.totalScore.toFixed(1)} ★`} 
+                            rating={rev.totalScore}
+                            keywords={rev.keywords}
+                            reviewText={rev.review}
+                          />
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="space-y-6">
+                      <div className="flex justify-between items-end px-2">
+                        <h2 className="text-2xl font-black text-gray-800">근무지 평가</h2>
+                        <div className="text-right">
+                          <span className="text-3xl font-black text-[#5D5FEF]">{aggregatedData.workplaceRating.toFixed(1)}</span>
+                          <span className="text-gray-300 font-bold ml-1">/ 5.0</span>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        {aggregatedData.workplaceReviews.map(rev => (
+                          <ReviewAccordion 
+                            key={rev.reviewId}
+                            title={`${rev.totalScore.toFixed(1)} ★`} 
+                            rating={rev.totalScore}
+                            keywords={rev.keywords}
+                            reviewText={rev.review}
+                          />
+                        ))}
+                      </div>
+                    </section>
                   </>
                 ) : (
                   <div className="bg-white rounded-2xl p-20 text-center border border-gray-100 shadow-sm">
