@@ -35,7 +35,7 @@ const WeeklyView = ({
   onDayHover,
   onDayLeave,
   hoveredDay,
-  hoverPosition,
+  hoverPosition: _hoverPosition,
   weekStartDay = '일요일',
 }: WeeklyViewProps) => {
   const DAY_NAMES = weekStartDay === '월요일' ? DAY_NAMES_MONDAY : DAY_NAMES_SUNDAY;
@@ -182,32 +182,6 @@ const WeeklyView = ({
           </div>
         </div>
       </div>
-
-      {/* 호버 툴팁 */}
-      {hoveredDay && hoverPosition && (
-        <div
-          className="fixed bg-white border-2 border-gray-300 rounded-lg shadow-lg p-4 z-50"
-          style={{
-            left: `${hoverPosition.x + 10}px`,
-            top: `${hoverPosition.y + 10}px`,
-            minWidth: '200px',
-          }}
-        >
-          <div className="font-bold text-lg mb-2">알바 현황</div>
-          {getDaySummary(hoveredDay)?.map((summary, index) => (
-            <div
-              key={index}
-              className="mb-2 p-2 rounded"
-              style={{ backgroundColor: summary.color + '20' }}
-            >
-              <div className="font-semibold" style={{ color: summary.color }}>
-                {summary.workplaceName}
-              </div>
-              <div className="text-sm text-gray-600">{summary.time}</div>
-            </div>
-          ))}
-        </div>
-      )}
     </>
   );
 };
