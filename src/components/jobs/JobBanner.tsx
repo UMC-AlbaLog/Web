@@ -1,15 +1,15 @@
 import React from "react";
 
 interface JobBannerProps {
-  nickname: string;
+  username: string;
   freeSlot: string;
 }
 
-const JobBanner: React.FC<JobBannerProps> = ({ nickname, freeSlot }) => {
+const JobBanner: React.FC<JobBannerProps> = ({ username, freeSlot }) => {
   return (
     <section className="bg-white rounded-xl p-10 mb-10 shadow-sm border border-gray-50 text-left">
       <h2 className="font-pretendard font-semibold text-[18px] leading-[100%] align-middle mb-4">
-        이번 주, <span>{nickname || "회원"}</span>님을 위한 빈 시간대
+        이번 주, <span>{username || "회원"}</span>님을 위한 빈 시간대
       </h2>
 
       <div className="inline-block border-b border-gray-200 pb-3 mb-1">
