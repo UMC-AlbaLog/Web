@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { ScheduleItem, Workplace } from '../../types/schedule';
+import type { ScheduleItem, Workplace, DaySummary } from '../../types/schedule';
 import { getEstimatedPayForSchedule } from '../../utils/scheduleUtils';
 import { formatTimeRange, getUse24HourSetting } from '../../utils/timeFormat';
 
@@ -14,10 +14,15 @@ interface MonthlyViewProps {
   };
   workplaces: Workplace[];
   getSchedulesForDate: (date: string) => ScheduleItem[];
+  getDaySummary: (date: string) => DaySummary[] | null;
   formatDate: (date: Date) => string;
   onDayClick: (day: Date, e: React.MouseEvent) => void;
   onScheduleClick: (schedule: ScheduleItem) => void;
   onDatePopupEdit?: (schedule: ScheduleItem) => void;
+  onDayHover?: (date: string, e: React.MouseEvent) => void;
+  onDayLeave?: () => void;
+  hoveredDay?: string | null;
+  hoverPosition?: { x: number; y: number } | null;
   weekStartDay?: '일요일' | '월요일';
 }
 
@@ -36,10 +41,14 @@ const MonthlyView = ({
   monthInfo,
   workplaces,
   getSchedulesForDate,
+  getDaySummary,
   formatDate,
   onDayClick,
   onScheduleClick,
   onDatePopupEdit,
+  onDayHover,
+  onDayLeave,
+  hoveredDay,
   weekStartDay = '일요일',
 }: MonthlyViewProps) => {
   const DAY_NAMES = weekStartDay === '월요일' ? DAY_NAMES_MONDAY : DAY_NAMES_SUNDAY;
@@ -105,6 +114,15 @@ const MonthlyView = ({
                   !isCurrentMonth ? 'bg-gray-50/50 text-gray-400' : ''
                 } ${isToday ? 'ring-1 ring-indigo-200 ring-inset bg-indigo-50/30' : ''}`}
                 onClick={(e) => handleCellClick(day, e)}
+                onMouseEnter={(e) => {
+                  if (daySchedules.length > 0 && onDayHover) onDayHover(dateStr, e);
+                }}
+                onMouseMove={(e) => {
+                  if (daySchedules.length > 0 && hoveredDay === dateStr && onDayHover) onDayHover(dateStr, e);
+                }}
+                onMouseLeave={() => {
+                  if (onDayLeave) onDayLeave();
+                }}
               >
                 <div className="text-sm sm:text-base font-medium text-gray-700 mb-1.5">{day.getDate()}</div>
                 <div className="space-y-1.5">

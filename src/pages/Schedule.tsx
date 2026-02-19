@@ -157,6 +157,15 @@ const Schedule = () => {
     return schedules.filter(schedule => schedule.date === date);
   };
 
+  // ID처럼 보이는 값(숫자만·긴 숫자)은 노출하지 않고 '근무처'로 통일 (재로그인 시 API가 id만 내려주는 경우 대비)
+  const getDisplayWorkplaceName = (schedule: ScheduleItem): string => {
+    const workplace = workplaces.find(w => w.id === schedule.workplaceId);
+    if (workplace?.name) return workplace.name;
+    const fallback = schedule.scheduleName || schedule.workplaceId || '';
+    const looksLikeId = /^\d+$/.test(fallback) || (fallback.length >= 10 && /^[\w-]+$/.test(fallback));
+    return looksLikeId ? '근무처' : (fallback || '알 수 없음');
+  };
+
   // 특정 날짜의 알바 현황 요약 가져오기
   const getDaySummary = (date: string): DaySummary[] | null => {
     const daySchedules = getSchedulesForDate(date);
@@ -165,7 +174,7 @@ const Schedule = () => {
     const summaries = daySchedules.map(schedule => {
       const workplace = workplaces.find(w => w.id === schedule.workplaceId);
       return {
-        workplaceName: workplace?.name || schedule.scheduleName || schedule.workplaceId || '알 수 없음',
+        workplaceName: getDisplayWorkplaceName(schedule),
         time: `${schedule.startTime} - ${schedule.endTime}`,
         color: workplace?.color || '#gray',
       };
@@ -412,10 +421,15 @@ const Schedule = () => {
                 monthInfo={monthInfo}
                 workplaces={workplaces}
                 getSchedulesForDate={getSchedulesForDate}
+                getDaySummary={getDaySummary}
                 formatDate={formatDate}
                 onDayClick={handleMonthDayCellClick}
                 onScheduleClick={setEditingSchedule}
                 onDatePopupEdit={setEditingSchedule}
+                onDayHover={handleDayHover}
+                onDayLeave={handleDayLeave}
+                hoveredDay={hoveredDay}
+                hoverPosition={hoverPosition}
                 weekStartDay={weekStartDay}
               />
             </div>
@@ -509,6 +523,32 @@ const Schedule = () => {
           onClose={() => setEditingSchedule(null)}
           onAddWorkplace={(workplace) => setWorkplaces((prev) => [...prev, workplace])}
         />
+      )}
+
+      {/* 주간/월간 공통: 날짜 호버 시 알바 현황 툴팁 */}
+      {hoveredDay && hoverPosition && getDaySummary(hoveredDay) && getDaySummary(hoveredDay)!.length > 0 && (
+        <div
+          className="fixed bg-white border-2 border-gray-300 rounded-lg shadow-lg p-4 z-50 pointer-events-none"
+          style={{
+            left: `${hoverPosition.x + 10}px`,
+            top: `${hoverPosition.y + 10}px`,
+            minWidth: '200px',
+          }}
+        >
+          <div className="font-bold text-lg mb-2">알바 현황</div>
+          {getDaySummary(hoveredDay)!.map((summary, index) => (
+            <div
+              key={index}
+              className="mb-2 p-2 rounded"
+              style={{ backgroundColor: summary.color + '20' }}
+            >
+              <div className="font-semibold" style={{ color: summary.color }}>
+                {summary.workplaceName}
+              </div>
+              <div className="text-sm text-gray-600">{summary.time}</div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
