@@ -9,6 +9,10 @@ import RepresentativeHistory from "../components/profile/RepresentativeHistory";
 import TrustScoreCard from "../components/profile/TrustScoreCard";
 import BadgeSection from "../components/profile/BadgeSection";
 import ReviewSection from "../components/profile/ReviewSection";
+import WorkExperienceSection from "../components/profile/WorkExperienceSection";
+import CertificationSection from "../components/profile/CertificationSection";
+import WorkExperienceModal from "../components/profile/WorkExperienceModal";
+import CertificationModal from "../components/profile/CertificationModal";
 
 interface GoogleUser {
   email: string;
@@ -30,6 +34,19 @@ interface Review {
   rating: number;
 }
 
+interface WorkExperience {
+  id: string;
+  company: string;
+  location: string;
+  period: string;
+  description?: string;
+}
+
+interface Certification {
+  id: string;
+  name: string;
+}
+
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { profile, displayName, age, address } = useUser();
@@ -38,6 +55,12 @@ const Profile: React.FC = () => {
   const [apiProfile, setApiProfile] = useState<any>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [isWorkExperienceModalOpen, setIsWorkExperienceModalOpen] = useState(false);
+  const [isCertificationModalOpen, setIsCertificationModalOpen] = useState(false);
+  const [editingWorkExperience, setEditingWorkExperience] = useState<WorkExperience | null>(null);
+  const [editingCertification, setEditingCertification] = useState<Certification | null>(null);
 
   // user 변수 안전하게 가져오기
   const user: GoogleUser | null = React.useMemo(() => {
@@ -235,6 +258,103 @@ const Profile: React.FC = () => {
     navigate("/profile/reviews");
   };
 
+  // 알바 경험 이력 관련 핸들러
+  const handleAddWorkExperience = () => {
+    setEditingWorkExperience(null);
+    setIsWorkExperienceModalOpen(true);
+  };
+
+  const handleEditWorkExperience = (id: string) => {
+    const experience = workExperiences.find((exp) => exp.id === id);
+    if (experience) {
+      setEditingWorkExperience(experience);
+      setIsWorkExperienceModalOpen(true);
+    }
+  };
+
+  const handleSaveWorkExperience = (experience: WorkExperience) => {
+    let updated: WorkExperience[];
+    if (editingWorkExperience) {
+      // 수정
+      updated = workExperiences.map((exp) => 
+        exp.id === experience.id ? experience : exp
+      );
+    } else {
+      // 추가
+      updated = [...workExperiences, experience];
+    }
+    setWorkExperiences(updated);
+    // 로컬 스토리지에 저장
+    sessionStorage.setItem("workExperiences", JSON.stringify(updated));
+  };
+
+  const handleDeleteWorkExperience = (id: string) => {
+    if (window.confirm("이 경험을 삭제하시겠습니까?")) {
+      const updated = workExperiences.filter((exp) => exp.id !== id);
+      setWorkExperiences(updated);
+      sessionStorage.setItem("workExperiences", JSON.stringify(updated));
+    }
+  };
+
+  // 자격증 관련 핸들러
+  const handleAddCertification = () => {
+    setEditingCertification(null);
+    setIsCertificationModalOpen(true);
+  };
+
+  const handleEditCertification = (id: string) => {
+    const cert = certifications.find((c) => c.id === id);
+    if (cert) {
+      setEditingCertification(cert);
+      setIsCertificationModalOpen(true);
+    }
+  };
+
+  const handleSaveCertification = (certification: Certification) => {
+    let updated: Certification[];
+    if (editingCertification) {
+      // 수정
+      updated = certifications.map((c) => 
+        c.id === certification.id ? certification : c
+      );
+    } else {
+      // 추가
+      updated = [...certifications, certification];
+    }
+    setCertifications(updated);
+    // 로컬 스토리지에 저장
+    sessionStorage.setItem("certifications", JSON.stringify(updated));
+  };
+
+  const handleDeleteCertification = (id: string) => {
+    if (window.confirm("이 자격증을 삭제하시겠습니까?")) {
+      const updated = certifications.filter((c) => c.id !== id);
+      setCertifications(updated);
+      sessionStorage.setItem("certifications", JSON.stringify(updated));
+    }
+  };
+
+  // 로컬 스토리지에서 데이터 로드
+  useEffect(() => {
+    const savedWorkExperiences = sessionStorage.getItem("workExperiences");
+    if (savedWorkExperiences) {
+      try {
+        setWorkExperiences(JSON.parse(savedWorkExperiences));
+      } catch (error) {
+        console.error("작업 경험 로드 실패:", error);
+      }
+    }
+
+    const savedCertifications = sessionStorage.getItem("certifications");
+    if (savedCertifications) {
+      try {
+        setCertifications(JSON.parse(savedCertifications));
+      } catch (error) {
+        console.error("자격증 로드 실패:", error);
+      }
+    }
+  }, []);
+
   const averageRating = reviews && reviews.length > 0 
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
     : 0;
@@ -272,6 +392,13 @@ const Profile: React.FC = () => {
             />
           )}
 
+          <WorkExperienceSection
+            experiences={workExperiences}
+            onAdd={handleAddWorkExperience}
+            onEdit={handleEditWorkExperience}
+            onDelete={handleDeleteWorkExperience}
+          />
+
           <ReviewSection
             reviews={reviews.slice(0, 2)}
             totalReviewsCount={reviews.length}
@@ -279,12 +406,38 @@ const Profile: React.FC = () => {
           />
         </div>
 
-        {/* 오른쪽 열 - 신뢰 지표, 활동 뱃지 */}
+        {/* 오른쪽 열 - 신뢰 지표, 활동 뱃지, 자격증 */}
         <div className="space-y-6">
           <TrustScoreCard trustScore={trustScore} scoreAnimation={scoreAnimation} />
           <BadgeSection badges={badges} />
+          <CertificationSection
+            certifications={certifications}
+            onAdd={handleAddCertification}
+            onEdit={handleEditCertification}
+            onDelete={handleDeleteCertification}
+          />
         </div>
       </div>
+
+      {/* 모달 */}
+      <WorkExperienceModal
+        isOpen={isWorkExperienceModalOpen}
+        experience={editingWorkExperience}
+        onClose={() => {
+          setIsWorkExperienceModalOpen(false);
+          setEditingWorkExperience(null);
+        }}
+        onSave={handleSaveWorkExperience}
+      />
+      <CertificationModal
+        isOpen={isCertificationModalOpen}
+        certification={editingCertification}
+        onClose={() => {
+          setIsCertificationModalOpen(false);
+          setEditingCertification(null);
+        }}
+        onSave={handleSaveCertification}
+      />
     </div>
     );
   } catch (error) {

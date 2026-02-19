@@ -8,12 +8,14 @@ interface Certification {
 interface CertificationSectionProps {
   certifications: Certification[];
   onAdd: () => void;
+  onEdit?: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
 const CertificationSection: React.FC<CertificationSectionProps> = ({
   certifications,
   onAdd,
+  onEdit,
   onDelete,
 }) => {
   return (
@@ -41,12 +43,22 @@ const CertificationSection: React.FC<CertificationSectionProps> = ({
               </svg>
               <p className="text-sm font-medium text-gray-800">{cert.name}</p>
             </div>
-            <button
-              onClick={() => onDelete(cert.id)}
-              className="text-xs text-gray-600 hover:text-gray-800"
-            >
-              삭제
-            </button>
+            <div className="flex gap-2">
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(cert.id)}
+                  className="text-xs text-gray-600 hover:text-blue-600"
+                >
+                  수정
+                </button>
+              )}
+              <button
+                onClick={() => onDelete(cert.id)}
+                className="text-xs text-gray-600 hover:text-red-600"
+              >
+                삭제
+              </button>
+            </div>
           </div>
         ))}
       </div>
