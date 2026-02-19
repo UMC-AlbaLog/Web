@@ -7,27 +7,23 @@ const LoginLanding = () => {
   /* =========================
    *  로그인 후 accessToken 처리
    * ========================= */
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const accessToken = params.get("accessToken");
-  const refreshToken = params.get("refreshToken");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get("accessToken");
+    const refreshToken = params.get("refreshToken");
 
-  if (!accessToken) return;
+    if (!accessToken) return;
 
-  sessionStorage.setItem("accessToken", accessToken);
+    sessionStorage.setItem("accessToken", accessToken);
 
-  if (refreshToken) {
-    sessionStorage.setItem("refreshToken", refreshToken);
-  }
+    if (refreshToken) {
+      sessionStorage.setItem("refreshToken", refreshToken);
+    }
 
-  // URL 정리
-  window.history.replaceState({}, document.title, "/login");
+    window.history.replaceState({}, document.title, "/login");
+    window.location.href = "/home";
 
- 
-  window.location.href = "/home";
-
-}, []);
-
+  }, []);
 
   /* =========================
    *  구글 로그인 이동
@@ -37,8 +33,33 @@ useEffect(() => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-blue-50 to-sky-50">
-      <div className="w-[520px] rounded-2xl bg-white/70 backdrop-blur shadow-xl px-12 py-14 text-center">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#e9edff]">
+
+      {/* ===== Base Gradient ===== */}
+      <div className="absolute inset-0 bg-gradient-to-br 
+        from-[#e4e9ff] 
+        via-[#d8e0ff] 
+        to-[#cfe7f5] 
+        opacity-95"
+      />
+
+      {/* ===== Purple Glow ===== */}
+      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] 
+        bg-purple-300/40 rounded-full blur-[160px]"
+      />
+
+      {/* ===== Blue Glow ===== */}
+      <div className="absolute bottom-[-200px] right-[-200px] w-[700px] h-[700px] 
+        bg-blue-300/40 rounded-full blur-[180px]"
+      />
+
+      {/* ===== Soft Teal Glow ===== */}
+      <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] 
+        bg-teal-200/30 rounded-full blur-[160px]"
+      />
+
+      {/* ===== Login Card (구조 그대로) ===== */}
+      <div className="relative z-10 w-[520px] rounded-2xl bg-white/70 backdrop-blur-xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] px-12 py-14 text-center">
 
         <h1 className="text-sm font-medium text-gray-500 mb-2">
           알바 관리를 한번에
@@ -53,7 +74,7 @@ useEffect(() => {
           스마트한 알바 생활을 시작해보세요.
         </p>
 
-        {/*  구글 로그인 버튼 */}
+        {/* 구글 로그인 버튼 */}
         <div className="flex justify-center mb-4">
           <button
             onClick={handleGoogleLogin}
