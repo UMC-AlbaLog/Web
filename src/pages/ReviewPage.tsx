@@ -63,11 +63,11 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
     const workplaceReviews: any[] = [];
 
     storeReviews.forEach(rev => {
-      // 각 리뷰어의 사장님/근무지 개별 평균 계산
+      // 각 리뷰어 개별의 사장님/근무지 평균 계산
       const individualBossAvg = ((rev.kindness || 0) + (rev.communication || 0)) / 2;
       const individualWorkplaceAvg = ((rev.settlement || 0) + (rev.rest || 0)) / 2;
 
-      // 전체 평균을 내기 위해 합산
+      // 전체 평균(평균의 평균)을 내기 위한 합산
       totalBossAvgSum += individualBossAvg;
       totalWorkplaceAvgSum += individualWorkplaceAvg;
 
@@ -81,15 +81,14 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
         ].filter(Boolean) as string[]
       };
 
-      // 개인별 평균이 더 높은 섹션으로 배치
+      // 점수가 더 높은 섹션으로 배치
       if (individualBossAvg >= individualWorkplaceAvg) bossReviews.push(reviewItem);
       else workplaceReviews.push(reviewItem);
     });
 
     return {
-      // 모든 리뷰어의 평균값들의 평균
-      bossRating: totalBossAvgSum / storeReviews.length,
-      workplaceRating: totalWorkplaceAvgSum / storeReviews.length,
+      bossRating: totalBossAvgSum / (storeReviews.length || 1),
+      workplaceRating: totalWorkplaceAvgSum / (storeReviews.length || 1),
       bossReviews,
       workplaceReviews
     };
@@ -235,7 +234,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
                         {aggregatedData.bossReviews.map(rev => (
                           <ReviewAccordion 
                             key={rev.reviewId}
-                            title={`${rev.totalScore.toFixed(1)} ★`} 
+                            title="" 
                             rating={rev.totalScore}
                             keywords={rev.keywords}
                             reviewText={rev.review}
@@ -256,7 +255,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
                         {aggregatedData.workplaceReviews.map(rev => (
                           <ReviewAccordion 
                             key={rev.reviewId}
-                            title={`${rev.totalScore.toFixed(1)} ★`} 
+                            title=""
                             rating={rev.totalScore}
                             keywords={rev.keywords}
                             reviewText={rev.review}
