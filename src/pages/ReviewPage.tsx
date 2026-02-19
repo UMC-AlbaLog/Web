@@ -12,7 +12,11 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const passedData = location.state as { storeName: string; workDate: string } | null;
+  const passedData = location.state as { 
+    storeName: string; 
+    workDate: string;
+    realStoreId: string;
+   } | null;
 
   const [loading, setLoading] = useState(true);
   const [jobInfo, setJobInfo] = useState<any>(null);
@@ -103,7 +107,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
 
     try {
       const body = {
-        storeId: jobInfo?.storeId || storeId!,
+        storeId: passedData?.realStoreId || storeId!, 
         kindness: selectedKeywords.kindness ? rating : 0,
         communication: selectedKeywords.communication ? rating : 0,
         settlement: selectedKeywords.settlement ? rating : 0,
