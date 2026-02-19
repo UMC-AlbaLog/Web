@@ -299,7 +299,7 @@ const ProfileEdit: React.FC = () => {
           <div className="flex items-center gap-4 mb-6">
             <div className="relative">
               <img
-                src={profileImage || user.picture}
+                src={profileImage || user?.picture || "https://placehold.co/96x96?text=프로필"}
                 alt="profile"
                 className="w-24 h-24 rounded-full bg-gray-200 object-cover"
               />
