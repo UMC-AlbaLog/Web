@@ -91,7 +91,7 @@ const WeeklyView = ({
                   return currentHour >= startHour && currentHour < endHour;
                 });
                 const cellColor = currentSchedule
-                  ? workplaces.find((w) => w.id === currentSchedule.workplaceId)?.color
+                  ? (workplaces.find((w) => w.id === currentSchedule.workplaceId)?.color ?? currentSchedule.color)
                   : null;
                 return (
                   <div
@@ -148,6 +148,7 @@ const WeeklyView = ({
                   const workplace = workplaces.find((w) => w.id === schedule.workplaceId);
                   const displayName =
                     workplace?.name ?? schedule.scheduleName ?? '일정';
+                  const blockColor = workplace?.color ?? schedule.color ?? '#6366f1';
                   return (
                     <div
                       key={schedule.id}
@@ -157,7 +158,7 @@ const WeeklyView = ({
                         width: `calc((100% - 80px) / 7 - 8px)`,
                         top: `${topPx}px`,
                         height: `${heightPx}px`,
-                        backgroundColor: workplace?.color || '#6366f1',
+                        backgroundColor: blockColor,
                       }}
                       onClick={(e) => {
                         e.stopPropagation();

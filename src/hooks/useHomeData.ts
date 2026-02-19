@@ -71,12 +71,20 @@ export const useHomeData = () => {
         pending: pendingSettlementCount,
       });
 
-      // 근무 리스트 매핑
-      const mappedList: Work[] = schedules.map((item: any) => {
+      // 근무 리스트 매핑 (workplace_name 우선, ID는 이름으로 표시하지 않음)
+      const getWorkplaceDisplayName = (item: any) => {
+        const byName = item.workplace_name ?? item.workplaceName ?? item.storeName ?? "";
+        if (byName && String(byName).trim()) return String(byName).trim();
+        const raw = item.workplace ?? "";
+        const s = String(raw).trim();
+        const looksLikeId = /^\d+$/.test(s) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s) || (s.length >= 10 && /^[\w-]+$/.test(s));
+        return looksLikeId ? "알바 매장" : s || "알바 매장";
+      };
 
+      const mappedList: Work[] = schedules.map((item: any) => {
         return {
           id: item.workLogId || item.id,
-          name: item.workplace || item.storeName || "알바 매장",
+          name: getWorkplaceDisplayName(item),
           category: item.category || item.storeCategory || "기타",
           time: `${formatToLocalTime(item.startTime)} ~ ${formatToLocalTime(item.endTime)}`,
           duration: item.workHours || 0,
