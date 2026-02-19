@@ -25,7 +25,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 }) => {
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-      <div className="relative bg-gradient-to-r from-purple-400 via-purple-500 to-blue-600 h-36">
+      <div className="relative bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-36">
         <div className="absolute bottom-0 left-8 transform translate-y-1/2">
           <div className="relative">
             <img

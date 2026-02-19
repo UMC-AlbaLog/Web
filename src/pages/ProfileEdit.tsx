@@ -20,6 +20,7 @@ interface WorkExperience {
 const ProfileEdit: React.FC = () => {
   const navigate = useNavigate();
   const { profile, displayName, age, address, updateProfile } = useUser();
+  // ProfileEdit component
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [apiProfile, setApiProfile] = useState<any>(null);
@@ -289,7 +290,7 @@ const ProfileEdit: React.FC = () => {
         {/* 내 정보 수정하기 */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <h2 className="text-lg font-bold text-gray-800">내 정보 수정하기</h2>
@@ -309,7 +310,7 @@ const ProfileEdit: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={handleProfileImageChange}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50"
                 >
                   사진 변경
                 </button>
@@ -416,7 +417,7 @@ const ProfileEdit: React.FC = () => {
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
               <h2 className="text-lg font-bold text-gray-800">대표 이력 수정하기</h2>
@@ -589,7 +590,7 @@ const ProfileEdit: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={isLoading}
-            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "저장 중..." : "저장하기"}
           </button>
