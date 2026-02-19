@@ -99,12 +99,16 @@ export async function getSchedules(params?: { month?: string }): Promise<Schedul
     const month = params?.month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const path = `/user/alba/schedule?month=${encodeURIComponent(month)}`;
     const data = await apiRequest<ScheduleItem[] | { items?: ScheduleItem[]; success?: ScheduleItem[] | unknown }>(path, { method: "GET" });
-    if (Array.isArray(data)) return data;
-    if (data && typeof data === "object") {
-      if (Array.isArray((data as { items?: ScheduleItem[] }).items)) return (data as { items: ScheduleItem[] }).items;
-      if (Array.isArray((data as { success?: ScheduleItem[] }).success)) return (data as { success: ScheduleItem[] }).success;
+    let list: ScheduleItem[] = [];
+    if (Array.isArray(data)) list = data;
+    else if (data && typeof data === "object") {
+      if (Array.isArray((data as { items?: ScheduleItem[] }).items)) list = (data as { items: ScheduleItem[] }).items;
+      else if (Array.isArray((data as { success?: ScheduleItem[] }).success)) list = (data as { success: ScheduleItem[] }).success;
     }
-    return [];
+    if (import.meta.env.DEV) {
+      console.log("[API] 스케줄 목록 조회 성공", { month, count: list.length, path });
+    }
+    return list;
   } catch (e) {
     if (import.meta.env.DEV) {
       console.warn("[API] 스케줄 목록 조회 실패:", e instanceof Error ? e.message : e);
