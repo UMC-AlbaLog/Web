@@ -40,17 +40,20 @@ const WeeklyView = ({
 
   return (
     <>
-      <div className="flex-1 overflow-auto border border-gray-300 rounded-xl">
-        <div className="min-w-[900px]">
-          {/* 요일 헤더 */}
-          <div className="grid grid-cols-8 bg-gray-100 sticky top-0 z-10">
+      <div className="flex-1 overflow-auto border border-gray-300 rounded-xl min-w-0">
+        <div className="min-w-[800px]" style={{ minWidth: 'max(800px, 100%)' }}>
+          {/* 요일 헤더: 시간 열 고정 + 요일 열 최소 너비 */}
+          <div
+            className="grid bg-gray-100 sticky top-0 z-10"
+            style={{ gridTemplateColumns: '80px repeat(7, minmax(90px, 1fr))' }}
+          >
             <div className="p-4 border-b border-r border-gray-300 text-center text-base font-semibold">
               시간
             </div>
             {weekDays.map((day, index) => (
               <div
                 key={index}
-                className="p-4 border-b border-r border-gray-300 text-center text-base font-semibold"
+                className="p-4 border-b border-r border-gray-300 text-center text-base font-semibold min-w-0"
               >
                 <div>{DAY_NAMES[day.getDay()]}</div>
                 <div className="text-sm text-gray-600">{day.getDate()}</div>
@@ -60,8 +63,12 @@ const WeeklyView = ({
 
           {/* 시간대별 그리드 */}
           {timeSlots.map((time, timeIndex) => (
-            <div key={timeIndex} className="grid grid-cols-8 relative">
-              <div className="p-3 border-b border-r border-gray-300 text-center text-sm text-gray-600">
+            <div
+              key={timeIndex}
+              className="grid relative"
+              style={{ gridTemplateColumns: '80px repeat(7, minmax(90px, 1fr))' }}
+            >
+              <div className="p-3 border-b border-r border-gray-300 text-center text-sm text-gray-600 min-w-0">
                 {formatTime(time, use24Hour)}
               </div>
               {weekDays.map((day, dayIndex) => {
@@ -84,7 +91,7 @@ const WeeklyView = ({
                 return (
                   <div
                     key={dayIndex}
-                    className="relative p-2 border-b border-r border-gray-300 min-h-[80px] cursor-pointer"
+                    className="relative p-2 border-b border-r border-gray-300 min-h-[80px] cursor-pointer overflow-hidden min-w-0"
                     style={{
                       backgroundColor: cellColor ? `${cellColor}30` : 'transparent',
                       transition: 'background-color 0.2s',
@@ -130,7 +137,7 @@ const WeeklyView = ({
                       return (
                         <div
                           key={schedule.id}
-                          className="absolute left-2 right-2 p-2 rounded text-white text-xs cursor-pointer hover:opacity-90 shadow-sm overflow-hidden"
+                          className="absolute left-1 right-1 p-1.5 rounded text-white text-xs cursor-pointer hover:opacity-90 shadow-sm overflow-hidden min-w-0 flex flex-col"
                           style={{
                             backgroundColor: workplace?.color || '#6366f1',
                             height: `${Math.round(durationHours * pxPerHour)}px`,
@@ -143,12 +150,12 @@ const WeeklyView = ({
                           }}
                         >
                           <div
-                            className="font-semibold truncate"
+                            className="font-semibold truncate min-w-0"
                             title={displayName}
                           >
                             {displayName}
                           </div>
-                          <div className="truncate">
+                          <div className="truncate min-w-0 text-[10px]">
                             {formatTimeRange(
                               schedule.startTime,
                               schedule.endTime,

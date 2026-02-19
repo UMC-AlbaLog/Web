@@ -7,9 +7,10 @@ import WeeklyView from '../components/schedule/WeeklyView';
 import ScheduleSummarySidebar from '../components/schedule/ScheduleSummarySidebar';
 import { getEstimatedSalaryForMonth } from '../utils/scheduleUtils';
 import { useSchedules } from '../contexts/SchedulesContext';
+import { getSchedules } from '../api/schedule';
 
 const Schedule = () => {
-  const { schedules, workplaces, setWorkplaces, addSchedule, updateSchedule, deleteSchedule } = useSchedules();
+  const { schedules, workplaces, setSchedules, setWorkplaces, addSchedule, updateSchedule, deleteSchedule } = useSchedules();
 
   const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
@@ -18,6 +19,26 @@ const Schedule = () => {
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
   const [weekStartDay, setWeekStartDay] = useState<'일요일' | '월요일'>('일요일');
+
+  // 스케줄 화면 진입 시 + 보는 달 변경 시 해당 월 내 스케줄 조회 (내 데이터로 갱신)
+  const visibleMonth = useMemo(
+    () =>
+      `${currentWeek.getFullYear()}-${String(currentWeek.getMonth() + 1).padStart(2, '0')}`,
+    [currentWeek]
+  );
+  useEffect(() => {
+    let cancelled = false;
+    getSchedules({ month: visibleMonth })
+      .then((list) => {
+        if (!cancelled) setSchedules(list);
+      })
+      .catch(() => {
+        if (!cancelled) setSchedules([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleMonth, setSchedules]);
 
   // 설정에서 주 시작 요일 불러오기
   useEffect(() => {
@@ -314,10 +335,14 @@ const Schedule = () => {
               >
                 ◀
               </button>
-              <span className="text-base font-semibold text-gray-800 min-w-[120px] text-center">
+              <span className="text-base font-semibold text-gray-800 min-w-[140px] sm:min-w-[200px] text-center">
                 | {viewMode === 'monthly'
                   ? `${monthInfo.year}년 ${monthInfo.month + 1}월`
-                  : `${startOfWeek.getFullYear()}년 ${startOfWeek.getMonth() + 1}월`}
+                  : (() => {
+                      const endOfWeek = new Date(startOfWeek);
+                      endOfWeek.setDate(endOfWeek.getDate() + 6);
+                      return `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()} ~ ${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}`;
+                    })()}
               </span>
               <button
                 onClick={
