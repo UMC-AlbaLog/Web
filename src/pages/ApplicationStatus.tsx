@@ -219,10 +219,19 @@ const ApplicationStatusPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         const jobId = item.jobId ?? item.id;
-                        const state = jobId
-                          ? { fromStatusItem: { storeName: item.storeName, workDate: item.workDate, dayOfWeek: item.dayOfWeek, startTime: item.startTime, endTime: item.endTime, processStatus: item.processStatus } }
-                          : undefined;
-                        navigate(jobId ? `/jobs/${jobId}` : "/jobs", state ? { state } : undefined);
+                        const fromStatusItem = {
+                          storeName: item.storeName,
+                          workDate: item.workDate,
+                          dayOfWeek: item.dayOfWeek,
+                          startTime: item.startTime,
+                          endTime: item.endTime,
+                          processStatus: item.processStatus,
+                        };
+                        if (jobId) {
+                          navigate(`/jobs/${jobId}`, { state: { fromStatusItem } });
+                        } else {
+                          navigate("/jobs/from-status", { state: { fromStatusItem } });
+                        }
                       }}
                       className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
                     >
