@@ -18,7 +18,6 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
    } | null;
 
   const [loading, setLoading] = useState(true);
-  const [jobInfo, setJobInfo] = useState<any>(null);
   const [storeReviews, setStoreReviews] = useState<any[]>([]);
 
   const [rating, setRating] = useState(0);
@@ -139,7 +138,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
           
           <div>
             <h1 className="text-[32px] font-black text-gray-900">
-              {mode === 'view' ? `근무지 평가 > ${jobInfo?.storeName || "매장"}` : "리뷰 쓰기"}
+              {mode === 'view' ? `근무지 평가 > ${passedData?.storeName || "매장"}` : "리뷰 쓰기"}
             </h1>
             {mode === 'write' && (
               <p className="text-gray-400 font-bold mt-2">완료한 근무에 대해 솔직한 후기를 남겨주세요.</p>
@@ -163,10 +162,10 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
 
                   <div className="space-y-1">
                     <h3 className="text-xl font-black text-gray-800">
-                      {passedData?.storeName || jobInfo?.storeName || "매장 정보"}
+                      {passedData?.storeName || passedData?.storeName || "매장 정보"}
                     </h3>
                     <p className="text-sm text-gray-400 font-bold">
-                      {passedData?.workDate || jobInfo?.workDate || "날짜 정보"}
+                      {passedData?.workDate || passedData?.workDate || "날짜 정보"}
                     </p>
                   </div>
                 </section>
