@@ -226,7 +226,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
                       <div className="flex justify-between items-end px-2">
                         <h2 className="text-2xl font-black text-gray-800">사장님 평가</h2>
                         <div className="text-right">
-                          <span className="text-3xl font-black text-[#5D5FEF]">{aggregatedData.bossRating.toFixed(1)}</span>
+                          <span className="text-3xl font-black text-[#5D5FEF]">{aggregatedData.bossRating.toFixed(2)}</span>
                           <span className="text-gray-300 font-bold ml-1">/ 5.0</span>
                         </div>
                       </div>
@@ -247,7 +247,7 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
                       <div className="flex justify-between items-end px-2">
                         <h2 className="text-2xl font-black text-gray-800">근무지 평가</h2>
                         <div className="text-right">
-                          <span className="text-3xl font-black text-[#5D5FEF]">{aggregatedData.workplaceRating.toFixed(1)}</span>
+                          <span className="text-3xl font-black text-[#5D5FEF]">{aggregatedData.workplaceRating.toFixed(2)}</span>
                           <span className="text-gray-300 font-bold ml-1">/ 5.0</span>
                         </div>
                       </div>
