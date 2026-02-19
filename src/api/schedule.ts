@@ -98,7 +98,19 @@ function normalizeScheduleItem(raw: Record<string, unknown>): ScheduleItem {
   const [startTime = "09:00", endTime = "18:00"] = workTime
     ? workTime.split("-").map((s) => s.trim().slice(0, 5))
     : ["09:00", "18:00"];
+  // API는 workplace를 장소 이름(문자열)으로만 줌 → scheduleName에 넣고, workplaceId는 이름으로 둠(매칭용)
+  const workplaceFromApi = String(raw.workplace ?? raw.workplaceId ?? "");
   const workplaceId = String(raw.workplaceId ?? raw.workplace ?? "");
+  const scheduleName = raw.scheduleName != null ? String(raw.scheduleName) : workplaceFromApi || undefined;
+  const repeatType = (raw.repeat_type ?? raw.repeatType) as ScheduleItem["repeatType"] | undefined;
+  let repeatDays: number[] | undefined;
+  if (Array.isArray(raw.repeatDays)) repeatDays = raw.repeatDays as number[];
+  else if (typeof raw.repeat_days === "string" && raw.repeat_days.length >= 7) {
+    repeatDays = raw.repeat_days
+      .slice(0, 7)
+      .split("")
+      .reduce<number[]>((acc, c, i) => (c === "1" ? [...acc, MON_TO_SUN_JS_DAY[i]] : acc), []);
+  }
   return {
     id,
     workplaceId,
@@ -107,11 +119,11 @@ function normalizeScheduleItem(raw: Record<string, unknown>): ScheduleItem {
     endTime: endTime.length === 5 ? endTime : "18:00",
     hourlyWage: typeof raw.hourly_wage === "number" ? raw.hourly_wage : (raw.hourlyWage as number | undefined),
     memo: raw.memo as string | undefined,
-    ...(raw.scheduleName != null && { scheduleName: String(raw.scheduleName) }),
+    ...(scheduleName && { scheduleName }),
     ...(raw.scheduleType != null && { scheduleType: raw.scheduleType as ScheduleItem["scheduleType"] }),
     ...(raw.salaryType != null && { salaryType: raw.salaryType as ScheduleItem["salaryType"] }),
-    ...(raw.repeatType != null && { repeatType: raw.repeatType as ScheduleItem["repeatType"] }),
-    ...(raw.repeatDays != null && { repeatDays: Array.isArray(raw.repeatDays) ? (raw.repeatDays as number[]) : undefined }),
+    ...(repeatType != null && { repeatType }),
+    ...(repeatDays != null && repeatDays.length > 0 && { repeatDays }),
   } as ScheduleItem;
 }
 
@@ -125,14 +137,17 @@ export async function getSchedules(params?: { month?: string }): Promise<Schedul
     const now = new Date();
     const month = params?.month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const path = `/user/alba/schedule?month=${encodeURIComponent(month)}`;
-    const data = await apiRequest<ScheduleItem[] | { items?: unknown[]; success?: unknown }>(path, { method: "GET" });
+    const data = await apiRequest<{ resultType?: string; success?: { schedules?: unknown[] } | unknown[] }>(path, { method: "GET" });
     let rawList: unknown[] = [];
-    if (Array.isArray(data)) rawList = data;
-    else if (data && typeof data === "object") {
-      const d = data as { items?: unknown[]; success?: unknown };
-      if (Array.isArray(d.items)) rawList = d.items;
-      else if (Array.isArray(d.success)) rawList = d.success;
+    if (data && typeof data === "object") {
+      const s = (data as { success?: { schedules?: unknown[] } | unknown[] }).success;
+      if (s && typeof s === "object" && !Array.isArray(s) && Array.isArray((s as { schedules?: unknown[] }).schedules)) {
+        rawList = (s as { schedules: unknown[] }).schedules;
+      } else if (Array.isArray(s)) {
+        rawList = s;
+      }
     }
+    if (Array.isArray(data)) rawList = data as unknown[];
     const list = rawList
       .filter((item): item is Record<string, unknown> => item != null && typeof item === "object")
       .map((item) => normalizeScheduleItem(item));
