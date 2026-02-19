@@ -84,6 +84,7 @@ export const useHomeData = () => {
       const mappedList: Work[] = schedules.map((item: any) => {
         return {
           id: item.workLogId || item.id,
+          storeId: item.storeId,
           name: getWorkplaceDisplayName(item),
           category: item.category || item.storeCategory || "기타",
           time: `${formatToLocalTime(item.startTime)} ~ ${formatToLocalTime(item.endTime)}`,
