@@ -219,7 +219,10 @@ const ApplicationStatusPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         const jobId = item.jobId ?? item.id;
-                        navigate(jobId ? `/jobs/${jobId}` : "/jobs");
+                        const state = jobId
+                          ? { fromStatusItem: { storeName: item.storeName, workDate: item.workDate, dayOfWeek: item.dayOfWeek, startTime: item.startTime, endTime: item.endTime, processStatus: item.processStatus } }
+                          : undefined;
+                        navigate(jobId ? `/jobs/${jobId}` : "/jobs", state ? { state } : undefined);
                       }}
                       className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
                     >
@@ -284,7 +287,23 @@ const ApplicationStatusPage: React.FC = () => {
                     {job.applicationStatus === "approved" && (
                       <button
                         type="button"
-                        onClick={() => navigate(`/jobs/${job.id}`)}
+                        onClick={() =>
+                          navigate(`/jobs/${job.id}`, {
+                            state: {
+                              fromStatusItem: {
+                                storeName: job.name,
+                                address: job.address,
+                                startTime: job.time?.split(" ~ ")[0],
+                                endTime: job.time?.split(" ~ ")[1],
+                                pay: job.pay,
+                                duration: job.duration,
+                                expectedPay: job.expectedPay,
+                                date: job.date,
+                                applicationStatus: job.applicationStatus,
+                              },
+                            },
+                          })
+                        }
                         className="bg-[#5D5FEF] hover:bg-[#4A4BCF] text-white px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
                       >
                         상세보기
@@ -293,7 +312,23 @@ const ApplicationStatusPage: React.FC = () => {
                     {job.applicationStatus === "rejected" && (
                       <button
                         type="button"
-                        onClick={() => navigate(`/jobs/${job.id}`)}
+                        onClick={() =>
+                          navigate(`/jobs/${job.id}`, {
+                            state: {
+                              fromStatusItem: {
+                                storeName: job.name,
+                                address: job.address,
+                                startTime: job.time?.split(" ~ ")[0],
+                                endTime: job.time?.split(" ~ ")[1],
+                                pay: job.pay,
+                                duration: job.duration,
+                                expectedPay: job.expectedPay,
+                                date: job.date,
+                                applicationStatus: job.applicationStatus,
+                              },
+                            },
+                          })
+                        }
                         className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
                       >
                         다시 지원하기
@@ -302,7 +337,23 @@ const ApplicationStatusPage: React.FC = () => {
                     {job.applicationStatus === "pending" && (
                       <button
                         type="button"
-                        onClick={() => navigate(`/jobs/${job.id}`)}
+                        onClick={() =>
+                          navigate(`/jobs/${job.id}`, {
+                            state: {
+                              fromStatusItem: {
+                                storeName: job.name,
+                                address: job.address,
+                                startTime: job.time?.split(" ~ ")[0],
+                                endTime: job.time?.split(" ~ ")[1],
+                                pay: job.pay,
+                                duration: job.duration,
+                                expectedPay: job.expectedPay,
+                                date: job.date,
+                                applicationStatus: job.applicationStatus,
+                              },
+                            },
+                          })
+                        }
                         className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
                       >
                         상세보기
