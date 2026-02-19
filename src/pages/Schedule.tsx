@@ -33,7 +33,8 @@ const Schedule = () => {
         if (!cancelled) setSchedules(list);
       })
       .catch(() => {
-        if (!cancelled) setSchedules([]);
+        // 실패 시 기존 목록 유지 (빈 배열로 덮어쓰지 않음 → 내가 등록한 일정이 사라지지 않게)
+        if (import.meta.env.DEV) console.warn("[스케줄] 해당 월 조회 실패, 기존 데이터 유지");
       });
     return () => {
       cancelled = true;
@@ -263,6 +264,11 @@ const Schedule = () => {
 
     newSchedules.forEach((s) => addSchedule(s));
     setShowAddModal(false);
+    // 서버 반영 후 해당 월 다시 조회해 목록 동기화 (새로고침/다른 달 갔다 와도 유지되도록)
+    const month = `${currentWeek.getFullYear()}-${String(currentWeek.getMonth() + 1).padStart(2, '0')}`;
+    setTimeout(() => {
+      getSchedules({ month }).then((list) => setSchedules(list)).catch(() => {});
+    }, 600);
   };
 
   // 일정 수정
