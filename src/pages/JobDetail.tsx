@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useJobDetail } from "../hooks/useJobDetail";
 import { albaService } from "../api/albaService";
 import ApplyConfirmModal from "../components/jobs/ApplyConfirmModal";
@@ -8,8 +8,15 @@ import KakaoMap from "../components/KakaoMap";
 const JobDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { job, loading } = useJobDetail(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!id && !loading && !job && location.pathname === "/jobs/from-status") {
+      navigate("/jobs/status", { replace: true });
+    }
+  }, [id, loading, job, location.pathname, navigate]);
 
   const LocationIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 inline-block -mt-1">
