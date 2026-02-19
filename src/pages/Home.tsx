@@ -9,7 +9,6 @@ import QuickAction from "../components/home/QuickAction";
 import Recommend from "../components/home/Recommend";
 import TodayWork from "../components/home/TodayWork";
 import WorkList from "../components/home/WorkList";
-import { useUser } from "../hooks/useUser";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -40,6 +39,7 @@ const Home: React.FC = () => {
    * 데이터 훅 및 유저 정보
    * ========================= */
   const { 
+    username,
     workList, 
     summary, 
     notifSummary, 
@@ -51,8 +51,6 @@ const Home: React.FC = () => {
     actions 
   } = useHomeData();
 
-  const { profile, displayName } = useUser();
-  const name = displayName || profile?.name || "회원";
   const timeRemainingMessage = useWorkTimeMessage(workList);
 
   const hasToken = sessionStorage.getItem("accessToken");
@@ -106,7 +104,7 @@ const Home: React.FC = () => {
         </section>
         
         <Recommend 
-          nickname={name}
+          username={username}
           freeSlot={freeSlot}
           recommendCount={recommendCount}
           hasWork={workList.length > 0} 

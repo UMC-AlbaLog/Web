@@ -1,19 +1,19 @@
 import React from "react";
 
 interface RecommendProps {
-  nickname: string;
+  username: string;
   freeSlot: string;
   recommendCount: number;
   hasWork: boolean;
   onDetailClick: () => void | Promise<void>;
 }
 
-const Recommend: React.FC<RecommendProps> = ({ nickname, freeSlot, recommendCount, hasWork, onDetailClick }) => {
+const Recommend: React.FC<RecommendProps> = ({ username, freeSlot, recommendCount, hasWork, onDetailClick }) => {
   const isActualTime = freeSlot && !freeSlot.includes("확인해보세요");
 
   const displayMessage = (hasWork && isActualTime)
-    ? `${nickname}님 비는 시간(${freeSlot})에는 추천 공고가 ${recommendCount}건 입니다.`
-    : `${nickname}님에게 맞는 아르바이트 추천 공고입니다.`;
+    ? `${username}님 비는 시간(${freeSlot})에는 추천 공고가 ${recommendCount}건 입니다.`
+    : `${username}님에게 맞는 아르바이트 추천 공고입니다.`;
 
   return (
     <section className="space-y-6">

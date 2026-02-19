@@ -4,7 +4,7 @@ export const findDynamicFreeSlot = (schedules: ScheduleItem[]) => {
   if (!schedules || schedules.length === 0) return "이번 주 전체가 비어있어요!";
 
   const now = new Date();
-  const dayStart = 10 * 60;
+  const dayStart = 6 * 60;
   const dayEnd = 24 * 60;
 
   // 당일부터 일주일 간의 데이터를 탐색
