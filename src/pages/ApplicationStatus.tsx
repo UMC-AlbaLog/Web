@@ -217,7 +217,10 @@ const ApplicationStatusPage: React.FC = () => {
                   <div className="flex items-center justify-end pt-4 border-t border-gray-100">
                     <button
                       type="button"
-                      onClick={() => navigate("/jobs")}
+                      onClick={() => {
+                        const jobId = item.jobId ?? item.id;
+                        navigate(jobId ? `/jobs/${jobId}` : "/jobs");
+                      }}
                       className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-[20px] font-black text-sm active:scale-95 transition-all"
                     >
                       상세보기
