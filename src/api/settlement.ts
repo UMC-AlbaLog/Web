@@ -125,7 +125,7 @@ export async function getSettlementHistory(
 
   const queryString = params.toString();
   const path =
-    `/api/users/me/settlement-history` +
+    `/api/settlement-history/me` +
     (queryString ? `?${queryString}` : "");
 
   const data = await apiRequest<TsoaResponse<SettlementHistoryResponse>>(
