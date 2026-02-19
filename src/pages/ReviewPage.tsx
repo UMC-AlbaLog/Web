@@ -41,8 +41,11 @@ const ReviewPage: React.FC<ReviewPageProps> = ({ mode }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!storeId) return;
-      setLoading(true);
+      if (!storeId || mode === "write") {
+        setLoading(false);
+        return;
+      }
+        
       try {
         const info = await albaService.getAlbaDetail(storeId);
         setJobInfo(info);
