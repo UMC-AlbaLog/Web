@@ -165,7 +165,7 @@ const Schedule = () => {
     const summaries = daySchedules.map(schedule => {
       const workplace = workplaces.find(w => w.id === schedule.workplaceId);
       return {
-        workplaceName: workplace?.name || '알 수 없음',
+        workplaceName: workplace?.name || schedule.scheduleName || schedule.workplaceId || '알 수 없음',
         time: `${schedule.startTime} - ${schedule.endTime}`,
         color: workplace?.color || '#gray',
       };
