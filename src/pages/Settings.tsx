@@ -285,9 +285,18 @@ const Settings: React.FC = () => {
       <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="flex-1 p-8 overflow-y-auto bg-[#F3F4F6] h-full">
-        {activeTab === "notification" && (
+        {activeTab === "notification" && notifications && (
           <NotificationSettings
-            notifications={notifications}
+            notifications={{
+              all: notifications.all ?? false,
+              workRelated: notifications.workRelated ?? false,
+              clockInOut: notifications.clockInOut ?? false,
+              preWorkStart: notifications.preWorkStart ?? false,
+              substituteRecommendation: notifications.substituteRecommendation ?? false,
+              newCustomJob: notifications.newCustomJob ?? false,
+              salaryDeposit: notifications.salaryDeposit ?? false,
+              doNotDisturb: notifications.doNotDisturb ?? false,
+            }}
             onNotificationChange={handleNotificationChange}
           />
         )}
