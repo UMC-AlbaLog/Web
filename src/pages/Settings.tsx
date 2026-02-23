@@ -20,11 +20,13 @@ const Settings: React.FC = () => {
   });
   const [isLoadingSettlement, setIsLoadingSettlement] = useState(false);
 
-  // 저장된 알림 설정 불러오기
-  const loadNotificationSettings = () => {
-    const saved = sessionStorage.getItem("notificationSettings");
-    if (saved) {
-      return JSON.parse(saved);
+  // 저장된 알림 설정 불러오기 (손상된 저장값 방지)
+  const loadNotificationSettings = (): Record<string, boolean> => {
+    try {
+      const saved = sessionStorage.getItem("notificationSettings");
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
     }
     return {
       all: true,
@@ -38,13 +40,15 @@ const Settings: React.FC = () => {
     };
   };
 
-  const [notifications, setNotifications] = useState(loadNotificationSettings());
+  const [notifications, setNotifications] = useState(loadNotificationSettings);
 
-  // 저장된 근무 환경 설정 불러오기
-  const loadWorkEnvironment = () => {
-    const saved = localStorage.getItem("workEnvironment");
-    if (saved) {
-      return JSON.parse(saved);
+  // 저장된 근무 환경 설정 불러오기 (손상된 저장값 방지)
+  const loadWorkEnvironment = (): { selectedAreas: string[]; weekStartDay: string; use24Hour: boolean } => {
+    try {
+      const saved = localStorage.getItem("workEnvironment");
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
     }
     return {
       selectedAreas: ["서울 강남구", "경기 성남시 분당구"],
@@ -53,7 +57,7 @@ const Settings: React.FC = () => {
     };
   };
 
-  const [workEnvironment, setWorkEnvironment] = useState(loadWorkEnvironment());
+  const [workEnvironment, setWorkEnvironment] = useState(loadWorkEnvironment);
 
   const koreanRegions = [
     "서울", "경기", "인천", "부산", "대구", "광주", "대전", "울산",
@@ -123,7 +127,7 @@ const Settings: React.FC = () => {
   // 알림 권한 요청 및 알림 보내기
   const requestNotificationPermission = async (key: keyof typeof notifications) => {
     if (!("Notification" in window)) {
-      console.log("이 브라우저는 알림을 지원하지 않습니다.");
+      if (import.meta.env.DEV) console.log("이 브라우저는 알림을 지원하지 않습니다.");
       return;
     }
 
@@ -218,9 +222,7 @@ const Settings: React.FC = () => {
 
       // 오후 10시 ~ 오전 7시 사이에는 알림이 꺼짐
       if (hours >= 22 || hours < 7) {
-        // 이 시간대에는 알림을 보내지 않음
-        // 실제로는 알림 서비스에서 이 시간대를 체크해야 함
-        console.log("야간 방해 금지 시간대입니다.");
+        if (import.meta.env.DEV) console.log("야간 방해 금지 시간대입니다.");
       }
     };
 

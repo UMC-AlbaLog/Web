@@ -21,47 +21,48 @@ export const useUser = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [region, setRegion] = useState<UserRegion | null>(null);
 
-  // 초기 데이터 로드
+  // 초기 데이터 로드 (손상된 저장값 방지)
   useEffect(() => {
-    // localStorage에서 프로필 정보 로드
-    const savedProfile = localStorage.getItem(USER_STORAGE_KEY);
-    if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
-    } else {
-      // localStorage에 없으면 sessionStorage에서 회원가입 정보 가져오기
-      const signupInfo = sessionStorage.getItem("signupInfo");
-      const googleUser = sessionStorage.getItem("googleUser");
-      
-      if (signupInfo && googleUser) {
-        const signup = JSON.parse(signupInfo);
-        const google = JSON.parse(googleUser);
-        
-        const userProfile: UserProfile = {
-          email: google.email,
-          name: google.name,
-          picture: google.picture,
-          nickname: signup.nickname,
-          birth: signup.birth,
-          gender: signup.gender,
-        };
-        
-        setProfile(userProfile);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userProfile));
+    try {
+      const savedProfile = localStorage.getItem(USER_STORAGE_KEY);
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile));
+      } else {
+        const signupInfo = sessionStorage.getItem("signupInfo");
+        const googleUser = sessionStorage.getItem("googleUser");
+        if (signupInfo && googleUser) {
+          const signup = JSON.parse(signupInfo);
+          const google = JSON.parse(googleUser);
+          const userProfile: UserProfile = {
+            email: google.email,
+            name: google.name,
+            picture: google.picture,
+            nickname: signup.nickname,
+            birth: signup.birth,
+            gender: signup.gender,
+          };
+          setProfile(userProfile);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userProfile));
+        }
       }
+    } catch {
+      // ignore corrupted profile storage
     }
 
-    // localStorage에서 지역 정보 로드
-    const savedRegion = localStorage.getItem(REGION_STORAGE_KEY);
-    if (savedRegion) {
-      setRegion(JSON.parse(savedRegion));
-    } else {
-      // localStorage에 없으면 sessionStorage에서 지역 정보 가져오기
-      const userRegion = sessionStorage.getItem("userRegion");
-      if (userRegion) {
-        const regionData = JSON.parse(userRegion);
-        setRegion(regionData);
-        localStorage.setItem(REGION_STORAGE_KEY, JSON.stringify(regionData));
+    try {
+      const savedRegion = localStorage.getItem(REGION_STORAGE_KEY);
+      if (savedRegion) {
+        setRegion(JSON.parse(savedRegion));
+      } else {
+        const userRegion = sessionStorage.getItem("userRegion");
+        if (userRegion) {
+          const regionData = JSON.parse(userRegion);
+          setRegion(regionData);
+          localStorage.setItem(REGION_STORAGE_KEY, JSON.stringify(regionData));
+        }
       }
+    } catch {
+      // ignore corrupted region storage
     }
   }, []);
 

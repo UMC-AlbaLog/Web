@@ -44,23 +44,29 @@ const Schedule = () => {
   // 설정에서 주 시작 요일 불러오기
   useEffect(() => {
     const loadWorkEnvironment = () => {
-      const saved = localStorage.getItem('workEnvironment');
-      if (saved) {
-        const env = JSON.parse(saved);
-        if (env.weekStartDay === '일요일' || env.weekStartDay === '월요일') {
-          setWeekStartDay(env.weekStartDay);
+      try {
+        const saved = localStorage.getItem('workEnvironment');
+        if (saved) {
+          const env = JSON.parse(saved);
+          if (env?.weekStartDay === '일요일' || env?.weekStartDay === '월요일') {
+            setWeekStartDay(env.weekStartDay);
+          }
         }
+      } catch {
+        // ignore corrupted storage
       }
     };
     loadWorkEnvironment();
 
-    // localStorage 변경 감지
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'workEnvironment' && e.newValue) {
+      if (e.key !== 'workEnvironment' || !e.newValue) return;
+      try {
         const env = JSON.parse(e.newValue);
-        if (env.weekStartDay === '일요일' || env.weekStartDay === '월요일') {
+        if (env?.weekStartDay === '일요일' || env?.weekStartDay === '월요일') {
           setWeekStartDay(env.weekStartDay);
         }
+      } catch {
+        // ignore
       }
     };
     window.addEventListener('storage', handleStorageChange);
