@@ -95,7 +95,7 @@ const [incomeChangeRate, setIncomeChangeRate] = useState(0);
           }))
         );
 
-        console.log("Dashboard API 성공", data);
+        if (import.meta.env.DEV) console.log("Dashboard API 성공", data);
       })
       .catch((err) => {
         console.error("Dashboard API 실패", err);
@@ -132,7 +132,7 @@ const [incomeChangeRate, setIncomeChangeRate] = useState(0);
                 : undefined,
           }));
         setSettlementRows(rows);
-        console.log("Settlement API 성공", res.data);
+        if (import.meta.env.DEV) console.log("Settlement API 성공", res.data);
       })
       .catch(() => setSettlementRows([]));
   }, [monthParam]);

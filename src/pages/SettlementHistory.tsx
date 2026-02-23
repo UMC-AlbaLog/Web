@@ -17,50 +17,49 @@ const SettlementHistory: React.FC = () => {
   const [totalExpectedIncome, setTotalExpectedIncome] = useState(0);
   const [totalActualIncome, setTotalActualIncome] = useState(0);
 
-  // 정산 내역 조회
+  // 정산 내역 조회 (언마운트 시 setState 방지)
   useEffect(() => {
+    let cancelled = false;
     const loadSettlementHistory = async () => {
       try {
         setIsLoading(true);
         const data = await getSettlementHistory("all");
-        
-        // 데이터 변환
+        if (cancelled) return;
+
         const settlements: Settlement[] = data.settlements.map((item: SettlementHistoryItem) => {
-          // 날짜 포맷팅 (YYYY-MM-DD -> YYYY.MM.DD)
           const formattedDate = item.workDate.replace(/-/g, ".");
-          
-          // 상태 한글 변환
           const statusMap: Record<string, string> = {
-            "paid": "지급완료",
-            "waiting": "정산 대기",
-            "unpaid": "미정산",
+            paid: "지급완료",
+            waiting: "정산 대기",
+            unpaid: "미정산",
           };
-          const statusText = statusMap[item.settlementStatus] || item.settlementStatus;
-          
-          // 금액 포맷팅
+          const statusText = statusMap[item.settlementStatus] ?? item.settlementStatus;
           const amount = item.actualIncome > 0 ? item.actualIncome : item.expectedIncome;
-          const formattedAmount = `${amount.toLocaleString()}원`;
-          
           return {
             date: formattedDate,
             description: item.storeName,
-            amount: formattedAmount,
+            amount: `${amount.toLocaleString()}원`,
             status: statusText,
           };
         });
-        
+
         setAllSettlements(settlements);
         setTotalExpectedIncome(data.totalExpectedIncome);
         setTotalActualIncome(data.totalActualIncome);
       } catch (error) {
-        console.error("정산 내역 로드 실패:", error);
-        setAllSettlements([]);
+        if (!cancelled) {
+          console.error("정산 내역 로드 실패:", error);
+          setAllSettlements([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     loadSettlementHistory();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const sortedSettlements = [...allSettlements].sort((a, b) => {

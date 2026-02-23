@@ -30,7 +30,7 @@ const Home: React.FC = () => {
 
     const savedAccess = sessionStorage.getItem("accessToken");
     if (!savedAccess) {
-      console.log("No access token, redirecting to login.");
+      if (import.meta.env.DEV) console.log("No access token, redirecting to login.");
       navigate("/login", { replace: true });
     }
   }, [navigate]);
